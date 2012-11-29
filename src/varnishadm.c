@@ -24,7 +24,7 @@
 
 static double timeout = 5;
 
-static void
+static int
 cli_write(int sock, const char *s)
 {
 	int i, l;
@@ -237,8 +237,6 @@ vadmin_init(int argc, char **argv)
 		case 't':
 			timeout = strtod(optarg, NULL);
 			break;
-		default:
-			usage();
 		}
 	}
 
@@ -247,7 +245,7 @@ vadmin_init(int argc, char **argv)
 
 	if (n_arg != NULL) {
 		if (T_arg != NULL || S_arg != NULL) {
-			usage();
+			return -1;
 		}
 		sock = n_arg_sock(n_arg);
 	} else if (T_arg == NULL) {
