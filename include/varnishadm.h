@@ -1,14 +1,27 @@
 #ifndef VARNISHADM_H
 #define VARNISHADM_H
 
-int vadmin_init(int argc, char **argv);
-int vadmin_send(char *str);
 
 struct vadmin_ret {
 	unsigned int status;
 	char *answer;
 };
-void
-vadmin_run(int sock, char *cmd, struct vadmin_ret *ret);
 
+struct vadmin_config_t {
+	double timeout;
+	char *T_arg;
+	char *S_arg;
+	char *n_arg;
+	int sock;
+};
+
+
+struct vadmin_config_t *
+vadmin_preconf(void);
+
+void
+vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct vadmin_ret *ret);
+
+int vadmin_init(struct vadmin_config_t *vadmin);
+int vadmin_send(char *str);
 #endif

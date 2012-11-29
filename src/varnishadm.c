@@ -7,8 +7,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -22,7 +22,6 @@
 #include "varnishadm.h"
 #define RL_EXIT(s) exit(s)
 
-static double timeout = 5;
 
 static int
 cli_write(int sock, const char *s)
@@ -45,70 +44,69 @@ cli_write(int sock, const char *s)
  * returned
  */
 static int
-cli_sock(const char *T_arg, const char *S_arg)
+cli_sock(struct vadmin_config_t *vadmin)
 {
 	int fd;
-	int sock;
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
 
-	sock = VSS_open(T_arg, timeout);
-	if (sock < 0) {
-		fprintf(stderr, "Connection failed (%s)\n", T_arg);
+	vadmin->sock = VSS_open(vadmin->T_arg, vadmin->timeout);
+	if (vadmin->sock < 0) {
+		fprintf(stderr, "Connection failed (%s)\n", vadmin->T_arg);
 		return (-1);
 	}
 
-	(void)VCLI_ReadResult(sock, &status, &answer, timeout);
+	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
 	if (status == CLIS_AUTH) {
-		if (S_arg == NULL) {
+		if (vadmin->S_arg == NULL) {
 			fprintf(stderr, "Authentication required\n");
-			AZ(close(sock));
+			AZ(close(vadmin->sock));
 			return(-1);
 		}
-		fd = open(S_arg, O_RDONLY);
+		fd = open(vadmin->S_arg, O_RDONLY);
 		if (fd < 0) {
 			fprintf(stderr, "Cannot open \"%s\": %s\n",
-			    S_arg, strerror(errno));
-			AZ(close(sock));
+			    vadmin->S_arg, strerror(errno));
+			AZ(close(vadmin->sock));
 			return (-1);
 		}
 		VCLI_AuthResponse(fd, answer, buf);
 		AZ(close(fd));
 		free(answer);
 
-		cli_write(sock, "auth ");
-		cli_write(sock, buf);
-		cli_write(sock, "\n");
-		(void)VCLI_ReadResult(sock, &status, &answer, timeout);
+		cli_write(vadmin->sock, "auth ");
+		cli_write(vadmin->sock, buf);
+		cli_write(vadmin->sock, "\n");
+		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
 	}
 	if (status != CLIS_OK) {
 		fprintf(stderr, "Rejected %u\n%s\n", status, answer);
-		AZ(close(sock));
+		AZ(close(vadmin->sock));
 		return (-1);
 	}
 	free(answer);
 
-	cli_write(sock, "ping\n");
-	(void)VCLI_ReadResult(sock, &status, &answer, timeout);
+	cli_write(vadmin->sock, "ping\n");
+	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
 		fprintf(stderr, "No pong received from server\n");
-		AZ(close(sock));
+		AZ(close(vadmin->sock));
 		return(-1);
 	}
 	free(answer);
 
-	return (sock);
+	return (vadmin->sock);
 }
 
 void
-vadmin_run(int sock, char *cmd, struct vadmin_ret *ret)
+vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct vadmin_ret *ret)
 {
 	assert(cmd);
-	cli_write(sock, cmd);
-	cli_write(sock, "\n");
+	cli_write(vadmin->sock, cmd);
+	cli_write(vadmin->sock, "\n");
 
-	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
+	(void)VCLI_ReadResult(vadmin->sock, &ret->status, &ret->answer, 2000);
 
 }
 
@@ -138,7 +136,7 @@ pass(int sock)
 			/* Get rid of the prompt, kinda hackish */
 			u = write(1, "\r           \r", 13);
 			u = VCLI_ReadResult(fds[0].fd, &status, &answer,
-			    timeout);
+			    5);
 			if (u) {
 				if (status == CLIS_COMMS)
 					RL_EXIT(0);
@@ -172,17 +170,15 @@ pass(int sock)
 }
 
 static int
-n_arg_sock(const char *n_arg)
+n_arg_sock(struct vadmin_config_t *vadmin)
 {
-	char *T_arg = NULL, *T_start = NULL;
-	char *S_arg = NULL;
+	char *T_start;
 	struct VSM_data *vsd;
 	char *p;
-	int sock;
 	struct VSM_fantom vt;
 
 	vsd = VSM_New();
-	assert(VSL_Arg(vsd, 'n', n_arg));
+	assert(VSL_Arg(vsd, 'n', vadmin->n_arg));
 	if (VSM_Open(vsd)) {
 		fprintf(stderr, "%s\n", VSM_Error(vsd));
 		return (-1);
@@ -193,68 +189,50 @@ n_arg_sock(const char *n_arg)
 		return (-1);
 	}
 	AN(vt.b);
-	T_start = T_arg = strdup(vt.b);
+	T_start = vadmin->T_arg = strdup(vt.b);
 
 	if (VSM_Get(vsd, &vt, "Arg", "-S", "")) {
 		AN(vt.b);
-		S_arg = strdup(vt.b);
+		vadmin->S_arg = strdup(vt.b);
 	}
 
-	sock = -1;
-	while (*T_arg) {
-		p = strchr(T_arg, '\n');
-		AN(p);
-		*p = '\0';
-		sock = cli_sock(T_arg, S_arg);
-		if (sock >= 0)
-			break;
-		T_arg = p + 1;
-	}
-	free(T_start);
-	free(S_arg);
-	return (sock);
+	
+	p = strchr(vadmin->T_arg, '\n');
+	AN(p);
+	*p = '\0';
+	return (1);
+}
+
+struct vadmin_config_t *
+vadmin_preconf(void)
+{
+	struct vadmin_config_t *vadmin;
+	vadmin = malloc(sizeof(struct vadmin_config_t));
+
+	vadmin->n_arg = NULL;
+	vadmin->S_arg = NULL;
+	vadmin->T_arg = NULL;
+	vadmin->timeout = 5;
+	vadmin->sock = -1;
+	return vadmin;
 }
 
 int
-vadmin_init(int argc, char **argv)
+vadmin_init(struct vadmin_config_t *vadmin)
 {
-	const char *T_arg = NULL;
-	const char *S_arg = NULL;
-	const char *n_arg = NULL;
-	int opt, sock;
-
-	while ((opt = getopt(argc, argv, "n:S:T:t:")) != -1) {
-		switch (opt) {
-		case 'n':
-			n_arg = optarg;
-			break;
-		case 'S':
-			S_arg = optarg;
-			break;
-		case 'T':
-			T_arg = optarg;
-			break;
-		case 't':
-			timeout = strtod(optarg, NULL);
-			break;
-		}
-	}
-
-	argc -= optind;
-	argv += optind;
-
-	if (n_arg != NULL) {
-		if (T_arg != NULL || S_arg != NULL) {
+	if (vadmin->n_arg != NULL) {
+		if (vadmin->T_arg != NULL || vadmin->S_arg != NULL) {
 			return -1;
 		}
-		sock = n_arg_sock(n_arg);
-	} else if (T_arg == NULL) {
-		sock = n_arg_sock("");
+		n_arg_sock(vadmin);
+	} else if (vadmin->T_arg == NULL) {
+		vadmin->n_arg = "";
+		n_arg_sock(vadmin);
 	} else {
-		assert(T_arg != NULL);
-		sock = cli_sock(T_arg, S_arg);
+		assert(vadmin->T_arg != NULL);
 	}
-	if (sock < 0)
+	cli_sock(vadmin);
+	if (vadmin->sock < 0)
 		exit(2);
-	return (sock);
+	return (1);
 }
