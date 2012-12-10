@@ -6,10 +6,8 @@
 #include <assert.h>
 
 #include "varnishadm.h"
-
-struct agent_core_t {
-	struct vadmin_config_t *vadmin;
-};
+#include "main.h"
+#include "plugins.h"
 
 
 void
@@ -40,17 +38,23 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	argv += optind;
 }
 
+int
+core_plugins(struct agent_core_t *core)
+{
+	pingd_init(core);
+	return 1;
+}
+
 int main(int argc, char **argv)
 {
-	struct vadmin_ret vret;
 	struct agent_core_t core;
 
 	core_opt(&core, argc, argv);
+	core_plugins(&core);
 	
 	vadmin_init(core.vadmin);
-	vadmin_run(core.vadmin,"ping",&vret);
-	printf("Return: %d msg: %s\n", vret.status, vret.answer);
-	vadmin_run(core.vadmin,"help",&vret);
-	printf("Return: %d msg: %s\n", vret.status, vret.answer);
+	vadmin_start(core.vadmin);
+	pingd_start(&core);
+	sleep(100);
 	return 0;
 }

@@ -2,6 +2,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <pthread.h>
 
 
 #include <errno.h>
@@ -20,6 +21,8 @@
 #include "vss.h"
 
 #include "varnishadm.h"
+#include "main.h"
+
 #define RL_EXIT(s) exit(s)
 
 
@@ -100,70 +103,61 @@ cli_sock(struct vadmin_config_t *vadmin)
 }
 
 void
-vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct vadmin_ret *ret)
+vadmin_run(int sock, char *cmd, struct vadmin_ret *ret)
 {
 	assert(cmd);
-	cli_write(vadmin->sock, cmd);
-	cli_write(vadmin->sock, "\n");
+	cli_write(sock, cmd);
+	cli_write(sock, "\n");
 
-	(void)VCLI_ReadResult(vadmin->sock, &ret->status, &ret->answer, 2000);
+	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
+}
 
+int
+read_cmd(int fd, struct vadmin_config_t *vadmin)
+{
+	char buf[1024];
+	char c;
+	int i, iret;
+	struct vadmin_ret ret;
+
+	for (i=0; i<1024; i++) {
+		iret = read(fd, &c, 1);
+		assert (iret == 1);
+		buf[i] = c;
+		if (c == '\n')
+			break;
+	}
+	assert(i < 1024);
+	buf[i] = '\0';
+	vadmin_run(vadmin->sock, buf, &ret);
+	VCLI_WriteResult(fd, ret.status, ret.answer);
+	return 1;
 }
 
 /*
  * No arguments given, simply pass bytes on stdin/stdout and CLI socket
  * Send a "banner" to varnish, to provoke a welcome message.
  */
-void
-pass(int sock)
+void *
+pass(void *data)
 {
-	struct pollfd fds[2];
-	char buf[1024];
+	struct vadmin_config_t *vadmin = data;
+	struct pollfd fds[MAX_LISTENERS+1];
 	int i;
-	char *answer = NULL;
-	unsigned u, status;
+	int ret;
 	int n;
 
-	cli_write(sock, "banner\n");
-	fds[0].fd = sock;
-	fds[0].events = POLLIN;
-	fds[1].fd = 0;
-	fds[1].events = POLLIN;
+//	cli_write(vadmin->sock, "banner\n");
+	for (i=0; i < vadmin->nlisteners; i ++) {
+		fds[i].fd = vadmin->listeners[i];
+		fds[i].events = POLLIN;
+	}
 	while (1) {
-		i = poll(fds, 2, -1);
-		assert(i > 0);
-		if (fds[0].revents & POLLIN) {
-			/* Get rid of the prompt, kinda hackish */
-			u = write(1, "\r           \r", 13);
-			u = VCLI_ReadResult(fds[0].fd, &status, &answer,
-			    5);
-			if (u) {
-				if (status == CLIS_COMMS)
-					RL_EXIT(0);
-				if (answer)
-					fprintf(stderr, "%s\n", answer);
-				RL_EXIT(1);
-			}
-
-			sprintf(buf, "%u\n", status);
-			u = write(1, buf, strlen(buf));
-			if (answer) {
-				u = write(1, answer, strlen(answer));
-				u = write(1, "\n", 1);
-				free(answer);
-				answer = NULL;
-			}
-		}
-		if (fds[1].revents & POLLIN) {
-			n = read(fds[1].fd, buf, sizeof buf);
-			if (n == 0) {
-				AZ(shutdown(sock, SHUT_WR));
-				fds[1].fd = -1;
-			} else if (n < 0) {
-				RL_EXIT(0);
-			} else {
-				buf[n] = '\0';
-				cli_write(sock, buf);
+		ret = poll(fds, vadmin->nlisteners, -1);
+		assert(ret > 0);
+		for (i=0; i < vadmin->nlisteners; i++) {
+			if (fds[i].revents & POLLIN) {
+				n = read_cmd(fds[i].fd, vadmin);
 			}
 		}
 	}
@@ -214,9 +208,33 @@ vadmin_preconf(void)
 	vadmin->T_arg = NULL;
 	vadmin->timeout = 5;
 	vadmin->sock = -1;
+	vadmin->nlisteners = 0;
 	return vadmin;
 }
 
+int
+vadmin_register(struct agent_core_t *core)
+{
+	struct vadmin_config_t *vadmin = core->vadmin;
+	int sv[2];
+	int ret;
+
+	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+	assert(ret == 0);
+	assert(vadmin->nlisteners < MAX_LISTENERS);
+	vadmin->listeners[vadmin->nlisteners++] = sv[0];
+	return sv[1];
+}
+
+int
+vadmin_start(struct vadmin_config_t *vadmin)
+{
+	pthread_t thread;
+	
+	pthread_create(&thread,NULL,(pass),vadmin);
+
+	return 1;
+}
 int
 vadmin_init(struct vadmin_config_t *vadmin)
 {
@@ -234,5 +252,6 @@ vadmin_init(struct vadmin_config_t *vadmin)
 	cli_sock(vadmin);
 	if (vadmin->sock < 0)
 		exit(2);
+		
 	return (1);
 }

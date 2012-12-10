@@ -8,6 +8,8 @@ bin_PROGRAMS = vagent2
 vagent2_SOURCES = \
 	main.c \
 	varnishadm.c \
+	pingd.c \
+	plugins.c \
 	$(varnish_dir)/lib/libvarnish/vas.c \
 	$(varnish_dir)/lib/libvarnish/vtcp.c \
 	$(varnish_dir)/lib/libvarnish/vss.c
