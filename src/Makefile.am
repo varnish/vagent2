@@ -10,6 +10,8 @@ vagent2_SOURCES = \
 	varnishadm.c \
 	pingd.c \
 	plugins.c \
+	logd.c \
+	ipc.c \
 	$(varnish_dir)/lib/libvarnish/vas.c \
 	$(varnish_dir)/lib/libvarnish/vtcp.c \
 	$(varnish_dir)/lib/libvarnish/vss.c

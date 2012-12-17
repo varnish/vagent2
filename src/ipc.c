@@ -1,0 +1,156 @@
+/*
+ * General IPC mechanisms for use between various plugins.
+ *
+ * Usage:
+ * Step 1: Provider has a single ipc_t *handle structure. This structure
+ *         must be readable from the consumers/users. Issue ipc_init.
+ * Step 2: While plugins/modules load, they issue ipc_register(handle) and
+ *         store the returned value.
+ * Step 3: (or 2... whichever). Provider sets handle->cb to a command
+ *         handler and handle->priv respectively.
+ * Step 4: Provider issues ipc_start, this returns a thread structure and
+ *         the provider is open for business.
+ * Step 5: A consumer/user issues ipc_run(sock, command, return), where the
+ *         sock is what ipc_register() returned earlier, the command is the
+ *         message to send and the return is a ipc_ret_t structure that
+ *         will be used to return the status.
+ * Step 6: The provider sees the message and the callback is run with the
+ *         private data, command and a /different/ ipc_ret_t structure.
+ *
+ */
+
+
+#include "config.h"
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <pthread.h>
+
+
+#include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include "ipc.h"
+#include "plugins.h"
+
+#include "vapi/vsl.h"
+#include "vapi/vsm.h"
+#include "vas.h"
+#include "vcli.h"
+#include "vss.h"
+
+#include "varnishadm.h"
+#include "main.h"
+
+
+/*
+ * Client
+ */
+static int ipc_write(int sock, const char *s)
+{
+	int i, l;
+
+	i = strlen(s);
+	l = write (sock, s, i);
+	if (i == l)
+		return 1;
+	perror("Write error CLI socket");
+	assert(close(sock));
+	return 0;
+}
+
+void ipc_run(int handle, char *cmd, struct ipc_ret_t *ret)
+{
+	assert(cmd);
+	ipc_write(handle, cmd);
+	ipc_write(handle, "\n");
+
+	(void)VCLI_ReadResult(handle, &ret->status, &ret->answer, 2000);
+}
+
+int ipc_register(struct agent_core_t *core, char *name) 
+{
+	struct agent_plugin_t *v;
+	int sv[2];
+	int ret;
+	v  = plugin_find(core, name);
+
+	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
+	assert(ret == 0);
+	assert(v->ipc->nlisteners < MAX_LISTENERS);
+	v->ipc->listeners[v->ipc->nlisteners++] = sv[0];
+	return sv[1];
+}
+
+/*
+ * Server
+ */
+static int ipc_cmd(int fd, struct ipc_t *ipc)
+{
+	char buf[1024];
+	char c;
+	int i, iret;
+	struct ipc_ret_t ret;
+
+	for (i=0; i<1024; i++) {
+		iret = read(fd, &c, 1);
+		assert (iret == 1);
+		buf[i] = c;
+		if (c == '\n')
+			break;
+	}
+	assert(i < 1024);
+	buf[i] = '\0';
+	ipc->cb(ipc->priv, buf, &ret);
+	VCLI_WriteResult(fd, ret.status, ret.answer);
+	return 1;
+}
+
+static void *ipc_loop(void *data)
+{
+	struct ipc_t *ipc = (struct ipc_t *)data;
+	struct pollfd fds[MAX_LISTENERS+1];
+	int i;
+	int ret;
+	int n;
+
+	for (i=0; i < ipc->nlisteners; i ++) {
+		fds[i].fd = ipc->listeners[i];
+		fds[i].events = POLLIN;
+	}
+	while (1) {
+		ret = poll(fds, ipc->nlisteners, -1);
+		assert(ret > 0);
+		for (i=0; i < ipc->nlisteners; i++) {
+			if (fds[i].revents & POLLIN) {
+				n = ipc_cmd(fds[i].fd, ipc);
+			}
+		}
+	}
+	return NULL;
+}
+
+void ipc_init(struct ipc_t *ipc)
+{
+	ipc->nlisteners = 0;
+}
+
+/*
+ * Does the actual threading and returns the thread.
+ */
+pthread_t *ipc_start(struct agent_core_t *core, const char *name)
+{
+	struct agent_plugin_t *plug;	
+	pthread_t *thread = malloc(sizeof (pthread_t));
+	plug = plugin_find(core, name);
+	
+	pthread_create(thread,NULL,(ipc_loop),plug->ipc);
+	plug->thread = thread;
+	return thread;
+}

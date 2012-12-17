@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "varnishadm.h"
 #include "main.h"
@@ -14,7 +15,6 @@ void
 core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
-	core->vadmin = vadmin_preconf();
 	assert(core->vadmin != NULL);
 
 	while ((opt = getopt(argc, argv, "n:S:T:t:")) != -1) {
@@ -38,23 +38,51 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	argv += optind;
 }
 
+static void core_alloc_plugins(struct agent_core_t *core)
+{
+	struct agent_plugin_t *v;
+	
+	plugin_alloc("pingd",core);
+	plugin_alloc("logd",core);
+	plugin_alloc("vadmin",core);
+
+	v  = plugin_find(core,"vadmin");
+	vadmin_preconf(core);
+	core->vadmin = (struct vadmin_config_t *)v->data;
+}
+
 int
 core_plugins(struct agent_core_t *core)
 {
 	pingd_init(core);
+	logd_init(core);
+	vadmin_init(core);
 	return 1;
 }
 
 int main(int argc, char **argv)
 {
 	struct agent_core_t core;
-
+	struct agent_plugin_t *plug;
+	core.plugins = NULL;
+	core_alloc_plugins(&core);
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
-	
-	vadmin_init(core.vadmin);
-	vadmin_start(core.vadmin);
-	pingd_start(&core);
-	sleep(100);
+	for (plug = core.plugins; plug != NULL; plug = plug->next) {
+		printf("hopping to %s\n", plug->name);
+	}
+	for (plug = core.plugins; plug != NULL; plug = plug->next) {
+		printf("Starting %s\n", plug->name);
+		plug->start(&core, plug->name);
+	}
+
+	for (plug = core.plugins; plug; plug = plug->next) {
+		if (plug->thread) {
+			printf("Waiting for %s\n", plug->name);
+			pthread_join(*plug->thread, NULL);
+		} else {
+			printf("Plugin %s has no threads\n", plug->name);
+		}
+	}
 	return 0;
 }
