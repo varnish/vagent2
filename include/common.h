@@ -7,18 +7,22 @@ struct vadmin_ret {
 	char *answer;
 };
 
-struct vadmin_config_t {
+struct agent_config_t {
 	double timeout;
 	char *T_arg;
 	char *S_arg;
 	char *n_arg;
+	char *c_arg;
+};
+
+struct vadmin_config_t {
 	int sock;
 	struct ipc_t *ipc;
 	int logger;
 };
 
 struct agent_core_t {
-	struct vadmin_config_t *vadmin;
+	struct agent_config_t *config;
 	struct agent_plugin_t *plugins;
 };
 struct agent_plugin_t {

@@ -49,30 +49,30 @@ cli_write(int sock, const char *s)
  * returned
  */
 static int
-cli_sock(struct vadmin_config_t *vadmin)
+cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 {
 	int fd;
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
 
-	vadmin->sock = VSS_open(vadmin->T_arg, vadmin->timeout);
+	vadmin->sock = VSS_open(core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
-		fprintf(stderr, "Connection failed (%s)\n", vadmin->T_arg);
+		fprintf(stderr, "Connection failed (%s)\n", core->config->T_arg);
 		return (-1);
 	}
 
-	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
+	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status == CLIS_AUTH) {
-		if (vadmin->S_arg == NULL) {
+		if (core->config->S_arg == NULL) {
 			fprintf(stderr, "Authentication required\n");
 			AZ(close(vadmin->sock));
 			return(-1);
 		}
-		fd = open(vadmin->S_arg, O_RDONLY);
+		fd = open(core->config->S_arg, O_RDONLY);
 		if (fd < 0) {
 			fprintf(stderr, "Cannot open \"%s\": %s\n",
-			    vadmin->S_arg, strerror(errno));
+			    core->config->S_arg, strerror(errno));
 			AZ(close(vadmin->sock));
 			return (-1);
 		}
@@ -83,7 +83,7 @@ cli_sock(struct vadmin_config_t *vadmin)
 		cli_write(vadmin->sock, "auth ");
 		cli_write(vadmin->sock, buf);
 		cli_write(vadmin->sock, "\n");
-		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
+		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	}
 	if (status != CLIS_OK) {
 		fprintf(stderr, "Rejected %u\n%s\n", status, answer);
@@ -93,7 +93,7 @@ cli_sock(struct vadmin_config_t *vadmin)
 	free(answer);
 
 	cli_write(vadmin->sock, "ping\n");
-	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, vadmin->timeout);
+	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
 		fprintf(stderr, "No pong received from server\n");
 		AZ(close(vadmin->sock));
@@ -122,7 +122,7 @@ read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 }
 
 static int
-n_arg_sock(struct vadmin_config_t *vadmin)
+n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 {
 	char *T_start;
 	struct VSM_data *vsd;
@@ -130,7 +130,7 @@ n_arg_sock(struct vadmin_config_t *vadmin)
 	struct VSM_fantom vt;
 
 	vsd = VSM_New();
-	assert(VSL_Arg(vsd, 'n', vadmin->n_arg));
+	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
 	if (VSM_Open(vsd)) {
 		fprintf(stderr, "%s\n", VSM_Error(vsd));
 		return (-1);
@@ -141,15 +141,15 @@ n_arg_sock(struct vadmin_config_t *vadmin)
 		return (-1);
 	}
 	AN(vt.b);
-	T_start = vadmin->T_arg = strdup(vt.b);
+	T_start = core->config->T_arg = strdup(vt.b);
 
 	if (VSM_Get(vsd, &vt, "Arg", "-S", "")) {
 		AN(vt.b);
-		vadmin->S_arg = strdup(vt.b);
+		core->config->S_arg = strdup(vt.b);
 	}
 
 	
-	p = strchr(vadmin->T_arg, '\n');
+	p = strchr(core->config->T_arg, '\n');
 	AN(p);
 	*p = '\0';
 	return (1);
@@ -158,21 +158,6 @@ n_arg_sock(struct vadmin_config_t *vadmin)
 void
 vadmin_preconf(struct agent_core_t *core)
 {
-	struct vadmin_config_t *vadmin;
-	struct agent_plugin_t *v;
-	v  = plugin_find(core, "vadmin");
-	v->ipc->cb = read_cmd;
-	vadmin = malloc(sizeof(struct vadmin_config_t ));
-	v->data = vadmin;
-	v->ipc->priv = vadmin;
-	v->start = ipc_start;
-	
-	vadmin->n_arg = NULL;
-	vadmin->S_arg = NULL;
-	vadmin->T_arg = NULL;
-	vadmin->timeout = 5;
-	vadmin->sock = -1;
-	
 }
 
 pthread_t *
@@ -184,19 +169,29 @@ vadmin_start(struct agent_core_t *core, char *name)
 int
 vadmin_init(struct agent_core_t *core)
 {
-	struct vadmin_config_t *vadmin = (struct vadmin_config_t *)core->vadmin;
-	if (vadmin->n_arg != NULL) {
-		if (vadmin->T_arg != NULL || vadmin->S_arg != NULL) {
+	struct vadmin_config_t *vadmin;
+	struct agent_plugin_t *v;
+
+	v  = plugin_find(core, "vadmin");
+	v->ipc->cb = read_cmd;
+	vadmin = malloc(sizeof(struct vadmin_config_t ));
+	v->data = vadmin;
+	v->ipc->priv = vadmin;
+	v->start = ipc_start;
+	vadmin->sock = -1;
+
+	if (core->config->n_arg != NULL) {
+		if (core->config->T_arg != NULL || core->config->S_arg != NULL) {
 			return -1;
 		}
-		n_arg_sock(vadmin);
-	} else if (vadmin->T_arg == NULL) {
-		vadmin->n_arg = "";
-		n_arg_sock(vadmin);
+		n_arg_sock(vadmin,core);
+	} else if (core->config->T_arg == NULL) {
+		core->config->n_arg = "";
+		n_arg_sock(vadmin, core);
 	} else {
-		assert(vadmin->T_arg != NULL);
+		assert(core->config->T_arg != NULL);
 	}
-	cli_sock(vadmin);
+	cli_sock(vadmin, core);
 	if (vadmin->sock < 0)
 		exit(2);
 		
