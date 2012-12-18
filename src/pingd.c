@@ -6,9 +6,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
+#include <string.h>
 
 struct pingd_priv_t {
 	int vadmin_sock;
+	int logger;
 };
 
 void *pingd_run(void *data)
@@ -21,10 +23,16 @@ void *pingd_run(void *data)
 	plug = plugin_find(core,"pingd");
 	ping = (struct pingd_priv_t *) plug->data;
 
+	logger(ping->logger, "Health check starting at 1 second intervals");
 	while (1) {
 		sleep(1);
 		ipc_run(ping->vadmin_sock, "ping", &vret);
-		printf("PING Return: %d msg: %s\n", vret.status, vret.answer);
+		if (vret.status != 200)
+			logger(ping->logger, "Ping failed. %d %s", vret.status, vret.answer);
+
+		ipc_run(ping->vadmin_sock, "status", &vret);
+		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
+			logger(ping->logger, "%d %s", vret.status, vret.answer);
 	}
 	return NULL;
 }
@@ -44,6 +52,7 @@ pingd_init(struct agent_core_t *core)
 	plug = plugin_find(core,"pingd");
 	
 	priv->vadmin_sock = ipc_register(core,"vadmin");	
+	priv->logger = ipc_register(core,"logd");
 	plug->data = (void *)priv;
 	plug->start = pingd_start;
 }

@@ -37,5 +37,8 @@ struct agent_plugin_t {
 int logd_register(struct agent_core_t *core);
 
 
+#define logger(l,...) logger_real(l, __FILE__, __func__, __LINE__, __VA_ARGS__)
+void logger_real(int handle, const char *file, const char *func, const unsigned int line, const char *fmt, ...);
+
 #endif
 

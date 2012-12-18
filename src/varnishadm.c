@@ -155,17 +155,6 @@ n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	return (1);
 }
 
-void
-vadmin_preconf(struct agent_core_t *core)
-{
-}
-
-pthread_t *
-vadmin_start(struct agent_core_t *core, char *name)
-{
-	return ipc_start(core, name);
-}
-
 int
 vadmin_init(struct agent_core_t *core)
 {

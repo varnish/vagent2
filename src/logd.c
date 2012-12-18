@@ -2,6 +2,8 @@
 #include "plugins.h"
 #include "ipc.h"
 
+#include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,6 +12,10 @@
 #include <poll.h>
 #include <sys/socket.h>
 
+/*
+ * TODO:
+ *  - Write to something slightly more elaborate than stdout.
+ */
 struct logd_priv_t {
 	FILE *out;
 	struct ipc_t *ipc;
@@ -19,7 +25,7 @@ void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct logd_priv_t *log = (struct logd_priv_t *) private;
 
-	fprintf(log->out,"logger: %s\n",msg);
+	fprintf(log->out,"LOGGER: %s\n",msg);
 	
 	ret->status = 200;
 	ret->answer = "OK";
@@ -38,8 +44,22 @@ void logd_init(struct agent_core_t *core)
 	plug->start = ipc_start;
 }
 
-pthread_t *logd_start(struct agent_core_t *core, char *name)
+/*
+ * Underlying log writer.
+ *
+ * This is used by the logger() macro to send the log entry.
+ */
+void logger_real(int handle, const char *file, const char *func, const unsigned int line, const char *fmt, ...)
 {
-	printf("NOT RUN\n");
-	return ipc_start(core, name);
+	va_list ap;
+	struct ipc_ret_t ret;
+	char buffer[2048];
+	char buffer2[1024];
+
+	va_start(ap, fmt);
+	vsnprintf(buffer2, 1024, fmt, ap);
+	va_end(ap);
+	snprintf(buffer,2048,"%s (%s:%d): ", func, file, line);
+	strncat(buffer,buffer2,2047);
+	ipc_run(handle,buffer, &ret);	
 }
