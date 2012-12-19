@@ -19,7 +19,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
 	core->config->T_arg = NULL;
-	core->config->c_arg = ":6085";
+	core->config->c_arg = "6085";
 	core->config->timeout = 5;
 	while ((opt = getopt(argc, argv, "n:S:T:t:c:")) != -1) {
 		switch (opt) {
@@ -50,6 +50,10 @@ static void core_alloc_plugins(struct agent_core_t *core)
 	plugin_alloc("pingd",core);
 	plugin_alloc("logd",core);
 	plugin_alloc("vadmin",core);
+	plugin_alloc("httpd",core);
+	plugin_alloc("echo",core);
+	plugin_alloc("status",core);
+	plugin_alloc("vcl",core);
 }
 
 static int
@@ -58,6 +62,10 @@ core_plugins(struct agent_core_t *core)
 	pingd_init(core);
 	logd_init(core);
 	vadmin_init(core);
+	httpd_init(core);
+	echo_init(core);
+	status_init(core);
+	vcl_init(core);
 	return 1;
 }
 
@@ -72,7 +80,8 @@ int main(int argc, char **argv)
 	core_plugins(&core);
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		printf("Starting %s\n", plug->name);
-		plug->start(&core, plug->name);
+		if (plug->start != NULL)
+			plug->start(&core, plug->name);
 	}
 
 	for (plug = core.plugins; plug; plug = plug->next) {

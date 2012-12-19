@@ -17,3 +17,6 @@ src/Makefile
 stamp-h1
 src/*.o
 src/vagent2
+tags
+src/.*.swp
+include/.*.swp

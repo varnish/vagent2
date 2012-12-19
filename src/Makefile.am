@@ -11,6 +11,10 @@ vagent2_SOURCES = \
 	pingd.c \
 	plugins.c \
 	logd.c \
+	httpd.c \
+	echo.c \
+	status.c \
+	vcl.c \
 	ipc.c \
 	$(varnish_dir)/lib/libvarnish/vas.c \
 	$(varnish_dir)/lib/libvarnish/vtcp.c \
@@ -19,4 +23,5 @@ vagent2_SOURCES = \
 vagent2_LDADD = \
 	-lvarnishapi \
 	-lvarnishcompat \
+	-lmicrohttpd \
 	${PTHREAD_LIBS} ${NET_LIBS} ${LIBM}
