@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+#include <time.h>
 
 struct vcl_priv_t {
 	int logger;
@@ -25,10 +26,10 @@ unsigned int vcl_reply(struct httpd_request *request, void *data)
 	struct ipc_ret_t vret;
 	char *cmd;
 	int ret;
+	int id;
 
 	plug = plugin_find(core,"vcl");
 	vcl = plug->data;
-	logger(vcl->logger, "Responding to request");
 
 	response.status = 200;
 	vret.answer = "Invalid VCL-request";
@@ -41,6 +42,13 @@ unsigned int vcl_reply(struct httpd_request *request, void *data)
 			ipc_run(vcl->vadmin, cmd, &vret);
 			free(cmd);
 		}
+	} else if (request->method == M_POST) {
+		id = time(NULL);
+		logger(vcl->logger, "Storing VCL");
+		ret = asprintf(&cmd, "vcl.inline %d << __EOF_%d__\n%s\n__EOF_%d__",id,id,(char *)request->data,id);
+		assert(ret>0);
+		ipc_run(vcl->vadmin, cmd, &vret);
+		free(cmd);
 	} else {
 		vret.answer = "Not a GET request";
 	}

@@ -91,12 +91,13 @@ int ipc_register(struct agent_core_t *core, char *name)
 /*
  * Server
  */
-static int ipc_cmd(int fd, struct ipc_t *ipc)
+
+static int ipc_read_line(int fd, char **line)
 {
-	char buf[1024];
+	char *buf = *line;
+	int i;
+	int iret;
 	char c;
-	int i, iret;
-	struct ipc_ret_t ret;
 
 	for (i=0; i<1024; i++) {
 		iret = read(fd, &c, 1);
@@ -105,10 +106,39 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 		if (c == '\n')
 			break;
 	}
-	assert(i < 1024);
+	assert (i < 1024);
 	buf[i] = '\0';
-	ipc->cb(ipc->priv, buf, &ret);
+	return i;
+}
+
+static int ipc_cmd(int fd, struct ipc_t *ipc)
+{
+	char *buffer = malloc(1024);
+	struct ipc_ret_t ret;
+	assert(buffer);
+	int length = 0;
+
+	length = ipc_read_line(fd, &buffer);	
+	if (strstr(buffer,"<< ")) {
+		char *here;
+		char *line;
+		here = strdup(strstr(buffer, "<< ") + 3);
+		buffer[length] = '\n';
+		while (1) {
+			buffer = realloc(buffer,length + 1024);
+			assert(buffer);
+			line = buffer+length+1;
+			length += ipc_read_line(fd, &line);
+			length++;
+			if (!strcmp(line,here))
+				break;
+			buffer[length] = '\n';
+		}
+		buffer[length] = '\0';
+	}
+	ipc->cb(ipc->priv, buffer, &ret);
 	VCLI_WriteResult(fd, ret.status, ret.answer);
+	free(buffer);
 	return 1;
 }
 

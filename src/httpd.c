@@ -149,6 +149,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 			request.url = url;
 			request.ndata = con_info->progress;
 			request.data = con_info->answerstring;
+			/*
+			 * FIXME
+			 */
+			((char *)request.data)[con_info->progress] = '\0';
 			if (find_listener(&request, http))
 				return MHD_YES;
 		}
