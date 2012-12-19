@@ -44,13 +44,20 @@ unsigned int vcl_reply(struct httpd_request *request, void *data)
 		}
 	} else if (request->method == M_POST) {
 		id = time(NULL);
-		logger(vcl->logger, "Storing VCL");
 		ret = asprintf(&cmd, "vcl.inline %d << __EOF_%d__\n%s\n__EOF_%d__",id,id,(char *)request->data,id);
 		assert(ret>0);
 		ipc_run(vcl->vadmin, cmd, &vret);
 		free(cmd);
+		if (vret.status == 200) {
+			response.status = 201;
+			logger(vcl->logger, "VCL stored OK");
+		} else {
+			response.status = 500;
+			logger(vcl->logger, "vcl.inline failed");
+		}
 	} else {
-		vret.answer = "Not a GET request";
+		response.status = 400;
+		vret.answer = "What now...\n";
 	}
 	response.body = vret.answer;
 	response.nbody = strlen(vret.answer);

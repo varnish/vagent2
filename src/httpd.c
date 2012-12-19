@@ -98,6 +98,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_core_t *core = (struct agent_core_t *)cls;
 	struct httpd_priv_t *http;
 	struct agent_plugin_t *plug;
+	char body[4097];
 	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
@@ -115,8 +116,8 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		return MHD_YES;
 	}
 	struct httpd_response bad_response;
-	bad_response.status = 500;
-	bad_response.body = "Bad response\n";
+	bad_response.status = 400;
+	bad_response.body = "Unknown request\n";
 	bad_response.nbody = strlen(bad_response.body);
 	if (0 == strcmp (method, "GET")) {
 		struct httpd_request request;
@@ -157,6 +158,20 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 				return MHD_YES;
 		}
 	}
+	if (!strcmp(method, "GET") && !strcmp(url, "/")) {
+		struct httpd_listener *listener;
+		body[0] = '\0';
+		strncat(body,"The following URLs have actions: \n", 4096);
+		for (listener = http->listener; listener != NULL; listener = listener->next) {
+			strncat(body," - ", 4096);
+			strncat(body,listener->url, 4096);
+			strncat(body,"\n",4096);
+		}
+		bad_response.body = body;
+		bad_response.nbody = strlen(bad_response.body);
+		assert(bad_response.nbody < 4095);
+	}
+
 
 	return send_response (connection, &bad_response);
 }
