@@ -15,7 +15,7 @@ struct ipc_t {
 };
 
 int ipc_register(struct agent_core_t *core, char *name) ;
-void ipc_run(int handle, char *cmd, struct ipc_ret_t *ret);
+void ipc_run(int handle, struct ipc_ret_t *ret, char *fmt, ...);
 
 void ipc_init(struct ipc_t *ipc);
 pthread_t *ipc_start(struct agent_core_t *core, const char *name);

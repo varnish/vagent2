@@ -29,7 +29,7 @@ unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd)
 	logger(status->logger, "Responding to request");
 
 	response.status = 200;
-	ipc_run(status->vadmin, cmd, &vret);
+	ipc_run(status->vadmin, &vret, cmd);
 	response.body = vret.answer;
 	response.nbody = strlen(vret.answer);
 	send_response(request->connection, &response);

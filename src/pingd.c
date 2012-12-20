@@ -26,11 +26,11 @@ void *pingd_run(void *data)
 	logger(ping->logger, "Health check starting at 1 second intervals");
 	while (1) {
 		sleep(1);
-		ipc_run(ping->vadmin_sock, "ping", &vret);
+		ipc_run(ping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
 			logger(ping->logger, "Ping failed. %d %s", vret.status, vret.answer);
 
-		ipc_run(ping->vadmin_sock, "status", &vret);
+		ipc_run(ping->vadmin_sock, &vret, "status");
 		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
 			logger(ping->logger, "%d %s", vret.status, vret.answer);
 	}

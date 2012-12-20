@@ -53,13 +53,10 @@ void logger_real(int handle, const char *file, const char *func, const unsigned 
 {
 	va_list ap;
 	struct ipc_ret_t ret;
-	char buffer[2048];
 	char buffer2[1024];
 
 	va_start(ap, fmt);
 	vsnprintf(buffer2, 1024, fmt, ap);
 	va_end(ap);
-	snprintf(buffer,2048,"%s (%s:%d): ", func, file, line);
-	strncat(buffer,buffer2,2047);
-	ipc_run(handle,buffer, &ret);	
+	ipc_run(handle,&ret,"%s (%s:%d): %s", func, file, line, buffer2);
 }

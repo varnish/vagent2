@@ -20,6 +20,7 @@
  */
 
 
+#define _GNU_SOURCE
 #include "config.h"
 
 #include <sys/types.h>
@@ -27,6 +28,7 @@
 #include <pthread.h>
 
 
+#include <stdarg.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -65,7 +67,7 @@ static int ipc_write(int sock, const char *s)
 	return 0;
 }
 
-void ipc_run(int handle, char *cmd, struct ipc_ret_t *ret)
+static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 {
 	assert(cmd);
 	ipc_write(handle, cmd);
@@ -73,6 +75,21 @@ void ipc_run(int handle, char *cmd, struct ipc_ret_t *ret)
 
 	(void)VCLI_ReadResult(handle, &ret->status, &ret->answer, 2000);
 }
+
+void ipc_run(int handle, struct ipc_ret_t *ret, char *fmt, ...)
+{
+	va_list ap;
+	char *buffer;
+	int iret;
+
+	va_start(ap, fmt);
+	iret = vasprintf(&buffer, fmt, ap);
+	assert(iret>0);
+	va_end(ap);
+	ipc_run_real(handle, buffer, ret);
+	free(buffer);
+}
+
 
 int ipc_register(struct agent_core_t *core, char *name) 
 {
