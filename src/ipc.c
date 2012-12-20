@@ -165,7 +165,6 @@ static void *ipc_loop(void *data)
 	struct pollfd fds[MAX_LISTENERS+1];
 	int i;
 	int ret;
-	int n;
 
 	for (i=0; i < ipc->nlisteners; i ++) {
 		fds[i].fd = ipc->listeners[i];
@@ -176,7 +175,7 @@ static void *ipc_loop(void *data)
 		assert(ret > 0);
 		for (i=0; i < ipc->nlisteners; i++) {
 			if (fds[i].revents & POLLIN) {
-				n = ipc_cmd(fds[i].fd, ipc);
+				ipc_cmd(fds[i].fd, ipc);
 			}
 		}
 	}
