@@ -152,11 +152,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		request.ndata = 0;
 		if (find_listener(&request, http))
 			return MHD_YES;
-		else {
-			bad_response.status = 404;
-			send_response (connection, &bad_response);
-			return MHD_NO;
-		}
+		bad_response.status = 404;
 	}
 
 
