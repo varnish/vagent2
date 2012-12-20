@@ -54,6 +54,7 @@ static void core_alloc_plugins(struct agent_core_t *core)
 	plugin_alloc("echo",core);
 	plugin_alloc("status",core);
 	plugin_alloc("vcl",core);
+	plugin_alloc("html",core);
 }
 
 static int
@@ -66,6 +67,7 @@ core_plugins(struct agent_core_t *core)
 	echo_init(core);
 	status_init(core);
 	vcl_init(core);
+	html_init(core);
 	return 1;
 }
 

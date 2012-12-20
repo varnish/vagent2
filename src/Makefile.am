@@ -15,6 +15,7 @@ vagent2_SOURCES = \
 	echo.c \
 	status.c \
 	vcl.c \
+	html.c \
 	ipc.c \
 	$(varnish_dir)/lib/libvarnish/vas.c \
 	$(varnish_dir)/lib/libvarnish/vtcp.c \

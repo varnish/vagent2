@@ -12,5 +12,6 @@ void httpd_init(struct agent_core_t *core);
 void echo_init(struct agent_core_t *core);
 void status_init(struct agent_core_t *core);
 void vcl_init(struct agent_core_t *core);
+void html_init(struct agent_core_t *core);
 #endif
 
