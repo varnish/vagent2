@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- saved from url=(0061)http://twitter.github.com/bootstrap/examples/fluid.html#about -->
 <html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta charset="utf-8">
     <title>Varnish Agent</title>
@@ -8,7 +7,7 @@
     <meta name="author" content="">
 
     <!-- Le styles -->
-    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+    <link href="/html/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -18,19 +17,13 @@
         padding: 9px 0;
       }
     </style>
-    <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="/html/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-    <!-- Fav and touch icons -->
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-114-precomposed.png">
-      <link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-72-precomposed.png">
-                    <link rel="apple-touch-icon-precomposed" href="http://twitter.github.com/bootstrap/assets/ico/apple-touch-icon-57-precomposed.png">
-                                   <link rel="shortcut icon" href="http://twitter.github.com/bootstrap/assets/ico/favicon.png">
   <style type="text/css"></style></head>
 
   <body>
@@ -43,7 +36,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="http://twitter.github.com/bootstrap/examples/fluid.html#">Project name</a>
+          <a class="brand" href="http://varnish-software.com/">Varnish Software</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li class="active"><a href="/html/">Home</a></li>
@@ -105,7 +98,7 @@
     <script src="./index2_files/bootstrap-carousel.js"></script>
     <script src="./index2_files/bootstrap-typeahead.js"></script>
 
-	<script type="text/javascript">
+    <script type="text/javascript">
 	function uploadVCL() {
 		document.getElementById("out").innerHTML = "";
 		var client = new XMLHttpRequest();
@@ -115,72 +108,71 @@
 		document.getElementById("out").innerHTML = doc;
 		status();
 	}
-function loadVCL() {
-	var client = new XMLHttpRequest();
-	document.getElementById("out").innerHTML = "";
-	client.open("GET", "/vcl/" + document.getElementById("vclID").value, false);
-	client.send(document.getElementById("vcl").value);
-	doc = client.responseText;
-	document.getElementById("vcl").innerHTML = doc;
+	function loadVCL() {
+		var client = new XMLHttpRequest();
+		document.getElementById("out").innerHTML = "";
+		client.open("GET", "/vcl/" + document.getElementById("vclID").value, false);
+		client.send(document.getElementById("vcl").value);
+		doc = client.responseText;
+		document.getElementById("vcl").innerHTML = doc;
+		status();
+	}
+	function listVCL() {
+		var client = new XMLHttpRequest();
+		document.getElementById("out").innerHTML = "";
+		client.open("GET", "/vcl/", false);
+		client.send(document.getElementById("vcl").value);
+		doc = client.responseText;
+		document.getElementById("out").innerHTML = doc;
+	}
+	function deployVCL() {
+		document.getElementById("out").innerHTML = "";
+		var client = new XMLHttpRequest();
+		client.open("PUT", "/vcldeploy/" + document.getElementById("vclID").value, false);
+		client.send(document.getElementById("vcl").value);
+		doc = client.responseText;
+		document.getElementById("out").innerHTML = doc;
+		status();
+	}
+	function clearID() {
+		document.getElementById("vclID").value = "";
+	}
+	function discardVCL() {
+		document.getElementById("out").innerHTML = "";
+		var client = new XMLHttpRequest();
+		client.open("PUT", "/vcldiscard/" + document.getElementById("vclID").value, false);
+		client.send(document.getElementById("vcl").value);
+		doc = client.responseText;
+		document.getElementById("out").innerHTML = doc;
+		status();
+	}
+	function stop() {
+		var client = new XMLHttpRequest();
+		client.open("PUT", "/stop", false);
+		client.send();
+		doc = client.responseText;
+		status();
+	}
+	function start() {
+		var client = new XMLHttpRequest();
+		client.open("PUT", "/start", false);
+		client.send();
+		doc = client.responseText;
+		status();
+	}
+	function status() {
+		document.getElementById("status-field").innerHTML = "";
+		var client = new XMLHttpRequest();
+		client.open("GET", "/status", false);
+		client.send();
+		stat = client.responseText;
+		client = new XMLHttpRequest();
+		client.open("GET", "/vcl/", false);
+		client.send();
+		vcl = client.responseText;
+		document.getElementById("status-field").innerHTML = stat + "\n" + vcl;
+	}
 	status();
-}
-function listVCL() {
-	var client = new XMLHttpRequest();
-	document.getElementById("out").innerHTML = "";
-	client.open("GET", "/vcl/", false);
-	client.send(document.getElementById("vcl").value);
-	doc = client.responseText;
-	document.getElementById("out").innerHTML = doc;
-}
-function deployVCL() {
-	document.getElementById("out").innerHTML = "";
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/vcldeploy/" + document.getElementById("vclID").value, false);
-	client.send(document.getElementById("vcl").value);
-	doc = client.responseText;
-	document.getElementById("out").innerHTML = doc;
-	status();
-}
-function clearID() {
-	document.getElementById("vclID").value = "";
-}
-function discardVCL() {
-	document.getElementById("out").innerHTML = "";
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/vcldiscard/" + document.getElementById("vclID").value, false);
-	client.send(document.getElementById("vcl").value);
-	doc = client.responseText;
-	document.getElementById("out").innerHTML = doc;
-	status();
-}
-function stop() {
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/stop", false);
-	client.send();
-	doc = client.responseText;
-	status();
-}
-function start() {
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/start", false);
-	client.send();
-	doc = client.responseText;
-	status();
-}
-function status() {
-	document.getElementById("status-field").innerHTML = "";
-	var client = new XMLHttpRequest();
-	client.open("GET", "/status", false);
-	client.send();
-	stat = client.responseText;
-	client = new XMLHttpRequest();
-	client.open("GET", "/vcl/", false);
-	client.send();
-	vcl = client.responseText;
-	document.getElementById("status-field").innerHTML = stat + "\n" + vcl;
-}
-status();
-</script>
-  
-
-</body></html>
+    </script>
+  </body>
+</html>
