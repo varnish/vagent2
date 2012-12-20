@@ -27,29 +27,37 @@ unsigned int html_reply(struct httpd_request *request, void *data)
 	struct agent_plugin_t *plug;
 	int fd, ret;
 	char *path;
-	char buffer[102400];
+	char *buffer;
+	struct stat sbuf;
 	plug = plugin_find(core,"html");
 	html = plug->data;
-	response.status = 200;
+	response.status = 404;
 	response.body = "meh";
 	response.nbody = strlen(response.body);
 	
 	fd = asprintf(&path, "html/%s", (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html");
 	assert(fd>0);
+	ret = stat(path, &sbuf);
+	if (ret < 0) {
+		send_response(request->connection, &response);
+		return 0;
+	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		send_response(request->connection, &response);
 		return 0;
 	}
-		
-	ret = read(fd, buffer, 102399);
+	buffer = malloc(sbuf.st_size);
+	assert(buffer);	
+	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret>0);
+	assert(ret==sbuf.st_size);
 	close(fd);
 	response.body = buffer;
 	response.nbody = ret;
 	response.status = 200;
-
 	send_response(request->connection, &response);
+	free(buffer);
 	return 0;
 }
 

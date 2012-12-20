@@ -75,11 +75,13 @@ int send_response(struct MHD_Connection *connection, struct httpd_response *resp
 	int ret;
 	struct MHD_Response *MHDresponse;
 	MHDresponse = MHD_create_response_from_data(response->nbody,
-			response->body, MHD_NO, MHD_NO);
+			response->body, MHD_NO, MHD_YES);
+	assert(MHDresponse);
 	if (!MHDresponse)
 		return MHD_NO;
 
 	ret = MHD_queue_response (connection, response->status, MHDresponse);
+	assert(ret == 1);
 	MHD_destroy_response (MHDresponse);
 
 	return ret;
@@ -102,6 +104,7 @@ static void request_completed (void *cls, struct MHD_Connection *connection,
 static int find_listener(struct httpd_request *request, struct httpd_priv_t *http)
 {
 	struct httpd_listener *listener;
+	assert(request);
 	for (listener = http->listener; listener != NULL; listener = listener->next) {
 		if (!strncmp(listener->url,request->url,strlen(listener->url))) {
 			if (!(listener->method & request->method))
@@ -122,11 +125,12 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_core_t *core = (struct agent_core_t *)cls;
 	struct httpd_priv_t *http;
 	struct agent_plugin_t *plug;
+	struct httpd_response bad_response;
 	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
 
-	logger(http->logger, "Got connection");
+	logger(http->logger, "Got connection on url %s",url );
 
 	if (NULL == *con_cls) {
 		struct connection_info_struct *con_info;
@@ -137,7 +141,6 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
-	struct httpd_response bad_response;
 	bad_response.status = 400;
 	bad_response.body = "Unknown request\n";
 	bad_response.nbody = strlen(bad_response.body);
@@ -149,6 +152,11 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		request.ndata = 0;
 		if (find_listener(&request, http))
 			return MHD_YES;
+		else {
+			bad_response.status = 404;
+			send_response (connection, &bad_response);
+			return MHD_NO;
+		}
 	}
 
 
