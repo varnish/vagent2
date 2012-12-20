@@ -49,34 +49,29 @@
 
     <div class="container-fluid">
       <div class="row-fluid">
-        <div class="span2">
+        <div class="span3">
           <div class="well sidebar-nav">
             <ul class="nav nav-list">
-              <li class="nav-header">VCL</li>
-	      <li><a onclick="listVCL()">List VCL</a></li>
               <li class="nav-header">Status</li>
 		<li><a onclick="stop()">Stop Varnish</a></li>
 		<li><a onclick="start()">Start Varnish</a></li>
-		<li><a onclick="status()">Get Status</a></li>
             </ul>
           </div><!--/.well -->
 	  <pre id="status-field"></pre>
+	  <pre id="out"></pre>
         </div><!--/span-->
-	<div class="span8">
-	  <textarea id="vcl" class="input-xxlarge" width="100%" rows=25></textarea>
+	<div class="span9">
+	  <textarea id="vcl" class="input-xxlarge" rows=25></textarea>
 	  <br>
           <div class="input-append">
 	    <input class="span2" type=text placeholder="VCL id" id="vclID"></input>
-	    <button class="btn" onclick="clearID()">Clear</button>
-		<button class="btn" onclick="loadVCL()">Load VCL</button>
-		<button class="btn" onclick="deployVCL()">Deploy VCL</button>
-		<button class="btn" onclick="discardVCL()">Discard VCL</button>
-		<button class="btn" onclick="uploadVCL()">Save VCL</button>
+	    <button class="btn" onclick="clearID()">&times;</button>
+		<button id="viewbut" type="button" class="btn btn-primary" data-loading-text="Loading..." onclick="loadVCL()">View VCL</button>
+		<button class="btn" onclick="deployVCL()">Use VCL</button>
+		<button id="upbut" class="btn" data-loading-text="Saving..." onclick="uploadVCL()">Save VCL</button>
+		<button class="btn btn-warning" onclick="discardVCL()">Discard VCL</button>
 	  </div>
         </div>
-	<div class="span2">
-	  <pre id="out"></pre>
-	</div>
       </div><!--/row-->
       <hr>
     </div><!--/.fluid-container-->
@@ -84,28 +79,27 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="./index2_files/jquery.js"></script>
-    <script src="./index2_files/bootstrap-transition.js"></script>
-    <script src="./index2_files/bootstrap-alert.js"></script>
-    <script src="./index2_files/bootstrap-modal.js"></script>
-    <script src="./index2_files/bootstrap-dropdown.js"></script>
-    <script src="./index2_files/bootstrap-scrollspy.js"></script>
-    <script src="./index2_files/bootstrap-tab.js"></script>
-    <script src="./index2_files/bootstrap-tooltip.js"></script>
-    <script src="./index2_files/bootstrap-popover.js"></script>
-    <script src="./index2_files/bootstrap-button.js"></script>
-    <script src="./index2_files/bootstrap-collapse.js"></script>
-    <script src="./index2_files/bootstrap-carousel.js"></script>
-    <script src="./index2_files/bootstrap-typeahead.js"></script>
+    <script src="/html/index2_files/jquery.js"></script>
+    <script src="/html/bootstrap/js/bootstrap.js"></script>
 
     <script type="text/javascript">
 	function uploadVCL() {
 		document.getElementById("out").innerHTML = "";
+		$('#upbut').button('loading')
 		var client = new XMLHttpRequest();
 		client.open("PUT", "/vcl/" + document.getElementById("vclID").value, false);
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
+		setTimeout(function() { $('#upbut').button('reset'); but = document.getElementById("upbut"); but.className = "btn"; } ,2000);
+		if (client.status == 201) {
+			but = document.getElementById("upbut");
+			but.className = "btn btn-success";
+		} else {
+			but = document.getElementById("upbut");
+			but.className = "btn btn-danger";
+		}
+		
 		status();
 	}
 	function loadVCL() {
@@ -114,7 +108,7 @@
 		client.open("GET", "/vcl/" + document.getElementById("vclID").value, false);
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
-		document.getElementById("vcl").innerHTML = doc;
+		document.getElementById("vcl").value = doc;
 		status();
 	}
 	function listVCL() {
@@ -172,6 +166,7 @@
 		vcl = client.responseText;
 		document.getElementById("status-field").innerHTML = stat + "\n" + vcl;
 	}
+	$('.btn').button();
 	status();
     </script>
   </body>
