@@ -55,10 +55,12 @@
               <li class="nav-header">Status</li>
 		<li><a onclick="stop()">Stop Varnish</a></li>
 		<li><a onclick="start()">Start Varnish</a></li>
+		<li><a onclick="listVCL()">List vcl</a></li>
             </ul>
           </div><!--/.well -->
 	  <pre id="status-field"></pre>
 	  <pre id="out"></pre>
+	  <p id="test-out"></p>
         </div><!--/span-->
 	<div class="span9">
 	  <textarea id="vcl" class="input-xxlarge" rows=25></textarea>
@@ -118,6 +120,24 @@
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
+		client.open("GET", "/vcljson/", false);
+		client.send();
+		var vcllist = JSON.parse(client.responseText);
+		var txt = "";
+		for (x in vcllist["vcls"]) {
+			v = vcllist["vcls"][x];
+			if (v.status == "active") {
+				txt = txt + "ACTIVE " + v.name;
+				if (document.getElementById("vcl").value == "") {
+					txt = "...";
+					document.getElementById("vclID").value = v.name;
+					loadVCL();
+				}
+			}
+			txt = txt + vcllist["vcls"][x].name;
+		}
+		document.getElementById("test-out").innerHTML = txt;
+
 	}
 	function deployVCL() {
 		document.getElementById("out").innerHTML = "";

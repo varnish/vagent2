@@ -60,7 +60,7 @@ static char *vcl_list_json(char *raw)
 	char *b;
 	pos = raw;
 	tmp = malloc(sizeof (struct vcl_list));
-
+	strcat(buffer,"{\n\"vcls\": [\n");
 	do {
 		ret = sscanf(pos, "%10s %6s %s\n", tmp->available, tmp->ref, tmp->name);
 		assert(ret>0);
@@ -80,7 +80,7 @@ static char *vcl_list_json(char *raw)
 		if (pos[0] == '\0' || pos[0] == '\n')
 			break;
 	} while (1);
-	strncat(buffer,"\n",10240);
+	strncat(buffer,"]\n}\n",10240);
 	return buffer;
 }
 
