@@ -13,38 +13,92 @@ is not really vac-specific.
 Design
 ======
 
-The varnish agent is designed to be split up in modules. Each module may
-spawn a background thread but should then offer convenience function to
-communicate with said thread. Some modules are special and built in. They
-are:
+Keep it simple.
 
-1. varnishadm is the primary module that will be talking to Varnish. Upon
-   module initialization other modules can issue ``vadmin_register()`` to
-   register a connection to this module. This gives the caller a handle
-   which will later be passed to ``vadmin_run()`` to issue commands. Behind
-   the scene, this handle maps to a set of pipes to communicate with the
-   background thread. The background thread issues all commands and parses
-   the response, it also takes care of reconnection if needed.
-   It is an error to issue ``vadmin_register()`` after module
-   initialization.
-2. ctl is the thread which listens for communication from the VAC. It's
-   meant to be synchronous - any command issued over this channel should
-   get a response immediately. If the operation takes time, the response
-   should come in the form of an asynchronous callback instead. The ctl
-   module is single threaded, but supports multiple connections.
-   ctl offers a simple api for registering commands:
-   ``ctl_register("command",func,data)``, where func is the callback and
-   data is the private data.
-3. responder is the module sending asynchronous responses back to the VAC.
-   E.g.: periodical health checks, statistics, etc.
+Everything is written as a module, and the goal is:
 
-Other modules are loaded after both of these are initialized, but before
-they start.
-
-Examples of other modules are:
-
-- pingd - pings varnish over varnishadm frequently.
-- call-home - sends a request back to the vac with info
-- 
+- Close to 0 configuration
+- "Just works"
+- Maintainable
+- Generic
 
 
+IPC
+===
+
+The agent is multi-threaded and provides a simple IPC for all plugins.
+
+The IPC uses a socket to communicate, and a plugin has to register itself
+with any other plugin during initialization (which is done in a single
+thread). Please read and understand include/ipc.h for details.
+
+Modules
+=======
+
+"Everything" is a module.
+
+vadmin
+------
+
+This module executes commands on the varnishadm interface. It also
+auto-configures itself based on the shm-log.
+
+logd
+----
+
+Used for logging. Use the logger(...) macro instead of ipc_run directly
+(this provides function names, line numbers etc).
+
+httpd
+-----
+
+Provides the HTTP listener, using libmicrohttpd.
+
+Provides a register-function for other modules to register callbacks that
+will be executed to handle given requests. The only actual resource
+provided by the httpd plugin itself is the /-resource with some basic help.
+
+echo
+----
+
+Test-plugin listening to /echo that reads POST and PUT-data and spits it
+back at the user.
+
+html
+----
+
+File-access for /html/. The /html/ build-directory (I know) is made
+available through /html/.
+
+vcl
+---
+
+Provides mechanisms for uploading, downloading, discarding and using VCL.
+
+GET /vcl/ gives a list.
+GET /vcl/foo gives the foo-named VCL.
+POST /vcl/ uploads a new VCL with a dynamic name (e.g: timestamp).
+PUT /vcl/name uploads a new VCL with a specified name.
+PUT /vcldeploy/name issues vcl.use on the named VCL.
+GET /vclhelp prints help.
+
+status
+------
+
+Provides PUT /start, PUT /stop and GET /status, which should be self
+explanatory.
+
+pingd
+-----
+
+Test-plugin (so far) that polls varnishadm, looks at the data and the
+discards it. Might be responsible for pushing at a later date.
+
+
+HTML PoC
+========
+
+The /html/ directory (either relative to the source dir, or web service)
+contains a PoC client-implementation using bootstrap.
+
+It is intended to show-case and test most functionality if possible.
