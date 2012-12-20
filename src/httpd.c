@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include "main.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -16,14 +17,6 @@
 
 #include "httpd.h"
 
-#define PAGE "<html><head><title>libmicrohttpd demo</title>"\
-             "</head><body>libmicrohttpd demo</body></html>"
-#define POSTBUFFERSIZE  512
-#define MAXNAMESIZE     20
-#define MAXANSWERSIZE   512
-#define GET             0
-#define POST            1
-
 struct httpd_listener {
 	char *url;
 	unsigned int method;
@@ -34,16 +27,49 @@ struct httpd_listener {
 
 struct httpd_priv_t {
 	int logger;
-	int context;
+	char *help_page;
 	struct httpd_listener *listener;
 };
 
 struct connection_info_struct {
-	int connectiontype;
 	char answerstring[2048];
 	int progress;
 };
 
+static char *make_help(struct httpd_priv_t *http)
+{
+	char *body;
+	char buffer[512];
+	struct httpd_listener *listener;
+	int ret;
+	ret = asprintf(&body,"This is the varnish agent.\n\n"
+		"GET requests never modify state\n"
+		"POST requests are not idempotent, and can modify state\n"
+		"PUT requests are idempotent, and can modify state\n"
+		"\n"
+		"The following URLs are bound:\n\n"
+		);
+	assert(ret>0);
+
+	for (listener = http->listener; listener != NULL; listener = listener->next) {
+		snprintf(buffer, 512, " - %s ",listener->url);
+		if (listener->method & M_GET)
+			strncat(buffer, "GET ", 511);
+		if (listener->method & M_PUT)
+			strncat(buffer, "PUT ", 511);
+		if (listener->method & M_POST)
+			strncat(buffer, "POST ", 511);
+		strncat(buffer,"\n",511);
+		/*
+		 * \0 and newline at the end
+		 */
+		body = realloc(body, strlen(body) + strlen(buffer) + 2);
+		assert(body);
+		strcat(body,buffer);
+	}
+	strcat(body,"\n");
+	return body;
+}
 int send_response(struct MHD_Connection *connection, struct httpd_response *response)
 {
 	int ret;
@@ -66,15 +92,10 @@ static void request_completed (void *cls, struct MHD_Connection *connection,
 		(struct connection_info_struct *) *con_cls;
 
 
-	if (NULL == con_info)
+	if (!con_info)
 		return;
 
-	if (con_info->connectiontype == POST) {
-		if (con_info->answerstring)
-			free (con_info->answerstring);
-	}
-
-	free (con_info);
+	free(con_info);
 	*con_cls = NULL;
 }
 
@@ -83,12 +104,15 @@ static int find_listener(struct httpd_request *request, struct httpd_priv_t *htt
 	struct httpd_listener *listener;
 	for (listener = http->listener; listener != NULL; listener = listener->next) {
 		if (!strncmp(listener->url,request->url,strlen(listener->url))) {
+			if (!(listener->method & request->method))
+				return 0;
 			listener->cb(request, listener->data);
 			return 1;
 		}
 	}
 	return 0;
 }
+
 static int
 answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
@@ -98,7 +122,6 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_core_t *core = (struct agent_core_t *)cls;
 	struct httpd_priv_t *http;
 	struct agent_plugin_t *plug;
-	char body[4097];
 	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
@@ -108,8 +131,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	if (NULL == *con_cls) {
 		struct connection_info_struct *con_info;
 		con_info = malloc (sizeof (struct connection_info_struct));
-		if (NULL == con_info)
-			return MHD_NO;
+		assert(con_info);
 		con_info->answerstring[0] = '\0';
 		con_info->progress = 0;
 		*con_cls = con_info;
@@ -130,13 +152,12 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	}
 
 
-	if (0 == strcmp (method, "POST")) {
+	if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
 		struct connection_info_struct *con_info = *con_cls;
 
 		if (*upload_data_size != 0) {
 			if (*upload_data_size + con_info->progress >= 2048)
 				return send_response (connection, &bad_response);
-			printf("POST upload-data ikke 0\n");
 			memcpy(con_info->answerstring + con_info->progress,
 				upload_data, *upload_data_size);
 			con_info->progress += *upload_data_size;
@@ -145,7 +166,11 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 			return MHD_YES;
 		} else if (NULL != con_info->answerstring){
 			struct httpd_request request;
-			request.method = M_POST;
+			if (!strcmp(method,"POST")) {
+				request.method = M_POST;
+			} else {
+				request.method = M_PUT;
+			}
 			request.connection = connection;
 			request.url = url;
 			request.ndata = con_info->progress;
@@ -159,17 +184,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		}
 	}
 	if (!strcmp(method, "GET") && !strcmp(url, "/")) {
-		struct httpd_listener *listener;
-		body[0] = '\0';
-		strncat(body,"The following URLs have actions: \n", 4096);
-		for (listener = http->listener; listener != NULL; listener = listener->next) {
-			strncat(body," - ", 4096);
-			strncat(body,listener->url, 4096);
-			strncat(body,"\n",4096);
-		}
-		bad_response.body = body;
+		if (http->help_page == NULL)
+			http->help_page = make_help(http);
+		bad_response.body = http->help_page;
 		bad_response.nbody = strlen(bad_response.body);
-		assert(bad_response.nbody < 4095);
 	}
 
 
@@ -254,6 +272,7 @@ httpd_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = httpd_start;
 	priv->listener = NULL;
+	priv->help_page = NULL;
 }
 
 

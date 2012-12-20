@@ -76,7 +76,7 @@ vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/vcl", M_GET, vcl_reply, core);
+        httpd_register_url(core, "/vcl", M_GET | M_POST, vcl_reply, core);
 }
 
 
