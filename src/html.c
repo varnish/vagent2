@@ -21,16 +21,11 @@ struct html_priv_t {
 
 unsigned int html_reply(struct httpd_request *request, void *data)
 {
-	struct agent_core_t *core = data;
 	struct httpd_response response;
-	struct html_priv_t *html;
-	struct agent_plugin_t *plug;
 	int fd, ret;
 	char *path;
 	char *buffer;
 	struct stat sbuf;
-	plug = plugin_find(core,"html");
-	html = plug->data;
 	response.status = 404;
 	response.body = "meh";
 	response.nbody = strlen(response.body);

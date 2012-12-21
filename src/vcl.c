@@ -44,6 +44,46 @@ static void vcl_store(struct httpd_request *request,
 	}
 }
 
+
+struct vcl_list {
+	char name[1024];
+	char available[7];
+	char ref[11];
+};
+
+static char *vcl_list_json(char *raw)
+{
+	struct vcl_list *tmp;
+	int ret, ret2;
+	char *pos;
+	char *buffer = calloc(1,10241);
+	char *b;
+	pos = raw;
+	tmp = malloc(sizeof (struct vcl_list));
+	strcat(buffer,"{\n\"vcls\": [\n");
+	do {
+		ret = sscanf(pos, "%10s %6s %s\n", tmp->available, tmp->ref, tmp->name);
+		assert(ret>0);
+		ret2 = asprintf(&b, "%s{\n"
+			"\t\"name\": \"%s\",\n"
+			"\t\"status\": \"%s\",\n"
+			"\t\"refs\": \"%s\"\n"
+			"}",pos != raw ? ",\n" : "",
+			tmp->name, tmp->available, tmp->ref);
+		assert(ret2>0);
+		strncat(buffer,b,10240);
+		free(b);
+		pos = strstr(pos,"\n");
+		if (pos == NULL)
+			break;
+		pos+=1;
+		if (pos[0] == '\0' || pos[0] == '\n')
+			break;
+	} while (1);
+	strncat(buffer,"]\n}\n",10240);
+	return buffer;
+}
+
 static unsigned int vcl_reply(struct httpd_request *request, void *data)
 {
 	struct agent_core_t *core = data;
@@ -68,12 +108,18 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			response.status = 200;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
+			vcl_list_json(vret.answer);
 		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) { 
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
 			response.status = 200;
 		} else if(!strncmp(request->url, "/vclhelp", strlen("/vclhelp"))) {
 			vret.answer = vcl->help;
+		} else if(!strcmp(request->url, "/vcljson/")) {
+			response.status = 200;
+			ipc_run(vcl->vadmin, &vret, "vcl.list");
+			vret.answer = vcl_list_json(vret.answer);
 		}
+
 	} else if (request->method == M_POST) {
 		response.status = 200;
 		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));
@@ -114,6 +160,7 @@ vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
+	httpd_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
         httpd_register_url(core, "/vcl/", M_PUT | M_GET | M_POST, vcl_reply, core);
         httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
         httpd_register_url(core, "/vcldiscard/", M_PUT , vcl_reply, core);

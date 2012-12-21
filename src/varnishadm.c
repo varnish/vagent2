@@ -124,7 +124,6 @@ read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 static int
 n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 {
-	char *T_start;
 	struct VSM_data *vsd;
 	char *p;
 	struct VSM_fantom vt;
@@ -141,7 +140,7 @@ n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		return (-1);
 	}
 	AN(vt.b);
-	T_start = core->config->T_arg = strdup(vt.b);
+	core->config->T_arg = strdup(vt.b);
 
 	if (VSM_Get(vsd, &vt, "Arg", "-S", "")) {
 		AN(vt.b);
