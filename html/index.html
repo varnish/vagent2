@@ -55,7 +55,6 @@
               <li class="nav-header">Status</li>
 		<li><a onclick="stop()">Stop Varnish</a></li>
 		<li><a onclick="start()">Start Varnish</a></li>
-		<li><a onclick="listVCL()">List vcl</a></li>
             </ul>
           </div><!--/.well -->
 	  <pre id="status-field"></pre>
@@ -66,12 +65,14 @@
 	  <textarea id="vcl" class="input-block-level" rows=25></textarea>
 	  <br>
           <div class="input-append">
-	    <input class="span2" type=text placeholder="VCL id" id="vclID"></input>
-	    <button class="btn" onclick="clearID()">&times;</button>
+	    <input class="span3" type=text placeholder="VCL id" id="vclID"></input>
+		<button id="upbut" class="btn btn-primary" data-loading-text="Saving..." onclick="uploadVCL()">Save VCL</button>
+	  </div>
+	  <div class="input-append">
+		<select id="loader" class="span3"></select>
 		<button id="viewbut" type="button" class="btn btn-primary" data-loading-text="Loading..." onclick="loadVCL()">View VCL</button>
 		<button class="btn" onclick="deployVCL()">Use VCL</button>
-		<button id="upbut" class="btn" data-loading-text="Saving..." onclick="uploadVCL()">Save VCL</button>
-		<button class="btn btn-warning" onclick="discardVCL()">Discard VCL</button>
+		<button class="btn" onclick="discardVCL()">Discard VCL</button>
 	  </div>
         </div>
       </div><!--/row-->
@@ -93,13 +94,15 @@
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
-		setTimeout(function() { $('#upbut').button('reset'); but = document.getElementById("upbut"); but.className = "btn"; } ,2000);
+		setTimeout(function() { $('#upbut').button('reset'); but = document.getElementById("upbut"); but.className = "btn"; } ,1000);
 		if (client.status == 201) {
 			but = document.getElementById("upbut");
 			but.className = "btn btn-success";
+			but.textContent = "Saved";
 		} else {
 			but = document.getElementById("upbut");
 			but.className = "btn btn-danger";
+			but.textContent = "Failed";
 		}
 		
 		status();
@@ -107,42 +110,43 @@
 	function loadVCL() {
 		var client = new XMLHttpRequest();
 		document.getElementById("out").innerHTML = "";
-		client.open("GET", "/vcl/" + document.getElementById("vclID").value, false);
+		client.open("GET", "/vcl/" + document.getElementById("loader").value, false);
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("vcl").value = doc;
+		document.getElementById("vclID").value = document.getElementById("loader").value;
 		status();
 	}
 	function listVCL() {
 		var client = new XMLHttpRequest();
-		document.getElementById("out").innerHTML = "";
-		client.open("GET", "/vcl/", false);
-		client.send(document.getElementById("vcl").value);
-		doc = client.responseText;
-		document.getElementById("out").innerHTML = doc;
 		client.open("GET", "/vcljson/", false);
 		client.send();
 		var vcllist = JSON.parse(client.responseText);
 		var txt = "";
+		var d = document.getElementById("loader");
+		var active = "";
 		for (x in vcllist["vcls"]) {
 			v = vcllist["vcls"][x];
-			if (v.status == "active") {
-				txt = txt + "ACTIVE " + v.name;
-				if (document.getElementById("vcl").value == "") {
-					txt = "...";
-					document.getElementById("vclID").value = v.name;
-					loadVCL();
-				}
+			if (v.status == "discarded") {
+				continue;
 			}
-			txt = txt + vcllist["vcls"][x].name;
+			if (v.status == "active") {
+				active = v.name;
+			}
+			txt = txt + "\n" + "<option>" + v.name + "</option>";
 		}
-		document.getElementById("test-out").innerHTML = txt;
-
+		var d = document.getElementById("loader");
+		d.innerHTML = txt;
+		if (document.getElementById("vcl").value == "") {
+			d.value = active;
+			document.getElementById("vclID").value = active;
+			loadVCL();
+		}
 	}
 	function deployVCL() {
 		document.getElementById("out").innerHTML = "";
 		var client = new XMLHttpRequest();
-		client.open("PUT", "/vcldeploy/" + document.getElementById("vclID").value, false);
+		client.open("PUT", "/vcldeploy/" + document.getElementById("loader").value, false);
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
@@ -154,7 +158,7 @@
 	function discardVCL() {
 		document.getElementById("out").innerHTML = "";
 		var client = new XMLHttpRequest();
-		client.open("PUT", "/vcldiscard/" + document.getElementById("vclID").value, false);
+		client.open("PUT", "/vcldiscard/" + document.getElementById("loader").value, false);
 		client.send(document.getElementById("vcl").value);
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
@@ -185,6 +189,7 @@
 		client.send();
 		vcl = client.responseText;
 		document.getElementById("status-field").innerHTML = stat + "\n" + vcl;
+		listVCL();
 	}
 	$('.btn').button();
 	status();
