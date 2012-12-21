@@ -37,9 +37,7 @@
 #include "common.h"
 #include "plugins.h"
 
-
-static void
-core_opt(struct agent_core_t *core, int argc, char **argv)
+static void core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
 	assert(core->config != NULL);
@@ -84,8 +82,7 @@ static void core_alloc_plugins(struct agent_core_t *core)
 	plugin_alloc("html",core);
 }
 
-static int
-core_plugins(struct agent_core_t *core)
+static int core_plugins(struct agent_core_t *core)
 {
 	pingd_init(core);
 	logd_init(core);
