@@ -1,0 +1,16 @@
+Chores:
+
+- Fix build system (e.g: messed up linking to libvarnishcompat, no
+  microhttpd-logic etc)
+- Fix numerous memory leaks associated with ipc_run() and return, and
+  others.
+- Clean up /html/ with regards to old files.
+- Fix dynamic building and linking of plugins
+- Add HTTP authentication
+- Fix http binding on other IPs.
+- Far far far more error handling
+- Fix vadmin so it doesn't break upon varnish restart
+
+
+In addition there are a number of big items on the todo that are not
+covered here (e.g: new plugins).
