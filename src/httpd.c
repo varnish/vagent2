@@ -46,6 +46,7 @@ static char *make_help(struct httpd_priv_t *http)
 		"GET requests never modify state\n"
 		"POST requests are not idempotent, and can modify state\n"
 		"PUT requests are idempotent, and can modify state\n"
+		"HEAD requests can be performed on all resources that support GET\n"
 		"\n"
 		"The following URLs are bound:\n\n"
 		);
@@ -126,6 +127,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct httpd_priv_t *http;
 	struct agent_plugin_t *plug;
 	struct httpd_response bad_response;
+	struct httpd_request request;
 	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
@@ -144,8 +146,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	bad_response.status = 400;
 	bad_response.body = "Unknown request\n";
 	bad_response.nbody = strlen(bad_response.body);
-	if (0 == strcmp (method, "GET")) {
-		struct httpd_request request;
+	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD")) {
 		request.method = M_GET;
 		request.connection = connection;
 		request.url = url;
@@ -169,7 +170,6 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 			return MHD_YES;
 		} else if (NULL != con_info->answerstring){
-			struct httpd_request request;
 			if (!strcmp(method,"POST")) {
 				request.method = M_POST;
 			} else {
@@ -187,9 +187,10 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 				return MHD_YES;
 		}
 	}
-	if (!strcmp(method, "GET") && !strcmp(url, "/")) {
+	if (request.method == M_GET && !strcmp(url, "/")) {
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
+		bad_response.status = 200;
 		bad_response.body = http->help_page;
 		bad_response.nbody = strlen(bad_response.body);
 	}
