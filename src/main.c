@@ -7,7 +7,6 @@
 #include <pthread.h>
 
 #include "common.h"
-#include "varnishadm.h"
 #include "plugins.h"
 
 

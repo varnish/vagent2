@@ -48,7 +48,6 @@
 #include "vcli.h"
 #include "vss.h"
 
-#include "varnishadm.h"
 
 
 /*

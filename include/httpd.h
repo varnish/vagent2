@@ -2,14 +2,43 @@
 #define HTTPD_H
 
 
+/*
+ * Methods (duh).
+ *
+ * Keep in mind:
+ * GET should never affect state.
+ * POST can affect state and does not require idempotence.
+ * PUT can affect state but has to be idempotent.
+ *
+ * HEAD is the same as GET, the httpd-module handles it transparently for
+ * us.
+ *
+ * Examples:
+ *
+ * GET /vcl/ - fetches list of VCL
+ * POST /vcl/ - uploads a VCL to a dynamic url, multiple uploads leads to
+ *              multiple copies.
+ * PUT /vcl/ - Error
+ * PUT /vcl/name - uploads a VCL to the name specified. Multiple uploads
+ *                 will try to overwrite the VCL (which fails, since
+ *                 Varnish disallows this)
+ * PUT /stop - stops varnish (Can't stop it multiple times now, can we?)
+ *
+ * etc.
+ */
 enum http_method {
 	M_GET = 1,
 	M_POST = 2,
 	M_PUT = 4
 };
 
-#define METHOD_BITS(s) (1<<s)
-
+/*
+ * HTTP rquest passed to the cb.
+ *
+ * connection is the connection handle used by MHD.
+ * data is the actual data, not guaranteed to be nul-terminated.
+ * ndata is the length of data. can be 0.
+ */
 struct httpd_request {
 	struct MHD_Connection *connection;
 	enum http_method method;
@@ -20,12 +49,25 @@ struct httpd_request {
 	unsigned int ndata;
 };
 
+/*
+ * Response.
+ * status is the status code used (e.g: 200 for OK).
+ * body is the content. mhd will copy this, callbacks need to do memory
+ * management on the body itself.
+ * nbody is the length of data
+ */
 struct httpd_response {
 	unsigned int status;
 	void *body;
 	unsigned int nbody;
 };
 
+/*
+ * Use send_response during a callback to .... send a response.
+ *
+ * Note that this technically /queues/ the response, which means that the
+ * client might not receive the data right away.
+ */
 int send_response(struct MHD_Connection *connection, struct httpd_response *response);
 
 /*

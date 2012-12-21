@@ -22,11 +22,14 @@
 
 #include "common.h"
 #include "plugins.h"
-#include "varnishadm.h"
 #include "ipc.h"
 
 #define RL_EXIT(s) exit(s)
 
+struct vadmin_config_t {
+	int sock;
+	int logger;
+};
 
 static int
 cli_write(int sock, const char *s)
