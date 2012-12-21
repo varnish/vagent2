@@ -1,5 +1,4 @@
-
-#include "main.h"
+#include "common.h"
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"

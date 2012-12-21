@@ -20,9 +20,9 @@
 #include "vcli.h"
 #include "vss.h"
 
+#include "common.h"
 #include "plugins.h"
 #include "varnishadm.h"
-#include "main.h"
 #include "ipc.h"
 
 #define RL_EXIT(s) exit(s)
@@ -154,7 +154,7 @@ n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	return (1);
 }
 
-int
+void
 vadmin_init(struct agent_core_t *core)
 {
 	struct vadmin_config_t *vadmin;
@@ -170,7 +170,7 @@ vadmin_init(struct agent_core_t *core)
 
 	if (core->config->n_arg != NULL) {
 		if (core->config->T_arg != NULL || core->config->S_arg != NULL) {
-			return -1;
+			return ;
 		}
 		n_arg_sock(vadmin,core);
 	} else if (core->config->T_arg == NULL) {
@@ -183,5 +183,5 @@ vadmin_init(struct agent_core_t *core)
 	if (vadmin->sock < 0)
 		exit(2);
 		
-	return (1);
+	return ;
 }

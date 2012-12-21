@@ -6,8 +6,8 @@
 #include <assert.h>
 #include <pthread.h>
 
+#include "common.h"
 #include "varnishadm.h"
-#include "main.h"
 #include "plugins.h"
 
 

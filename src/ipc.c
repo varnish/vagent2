@@ -38,6 +38,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "common.h"
 #include "ipc.h"
 #include "plugins.h"
 
@@ -48,7 +49,6 @@
 #include "vss.h"
 
 #include "varnishadm.h"
-#include "main.h"
 
 
 /*
