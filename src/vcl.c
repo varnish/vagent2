@@ -47,7 +47,7 @@ static void vcl_store(struct httpd_request *request,
 
 struct vcl_list {
 	char name[1024];
-	char available[7];
+	char available[11];
 	char ref[11];
 };
 
