@@ -46,6 +46,7 @@
 #include "httpd.h"
 
 #define RCV_BUFFER 2048000
+
 struct httpd_listener {
 	char *url;
 	unsigned int method;
@@ -100,6 +101,7 @@ static char *make_help(struct httpd_priv_t *http)
 	strcat(body,"\n");
 	return body;
 }
+
 int send_response(struct MHD_Connection *connection, struct httpd_response *response)
 {
 	int ret;
@@ -107,8 +109,6 @@ int send_response(struct MHD_Connection *connection, struct httpd_response *resp
 	MHDresponse = MHD_create_response_from_data(response->nbody,
 			response->body, MHD_NO, MHD_YES);
 	assert(MHDresponse);
-	if (!MHDresponse)
-		return MHD_NO;
 
 	ret = MHD_queue_response (connection, response->status, MHDresponse);
 	assert(ret == 1);
@@ -146,8 +146,7 @@ static int find_listener(struct httpd_request *request, struct httpd_priv_t *htt
 	return 0;
 }
 
-static int
-answer_to_connection (void *cls, struct MHD_Connection *connection,
+static int answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
                       const char *version, const char *upload_data,
                       size_t *upload_data_size, void **con_cls)
@@ -157,14 +156,16 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_plugin_t *plug;
 	struct httpd_response bad_response;
 	struct httpd_request request;
+	struct connection_info_struct *con_info = NULL;
 	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
+	assert(plug);
+	assert(http);
 
 	logger(http->logger, "Got connection on url %s",url );
 
 	if (NULL == *con_cls) {
-		struct connection_info_struct *con_info;
 		con_info = malloc (sizeof (struct connection_info_struct));
 		assert(con_info);
 		con_info->answerstring[0] = '\0';
@@ -187,7 +188,8 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 
 	if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
-		struct connection_info_struct *con_info = *con_cls;
+		assert(con_info == NULL);
+		con_info = *con_cls;
 
 		if (*upload_data_size != 0) {
 			if (*upload_data_size + con_info->progress >= RCV_BUFFER)
@@ -219,6 +221,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 	if (request.method == M_GET && !strcmp(url, "/")) {
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
+		assert (http->help_page);
 		bad_response.status = 200;
 		bad_response.body = http->help_page;
 		bad_response.nbody = strlen(bad_response.body);
@@ -283,8 +286,8 @@ int httpd_register_url(struct agent_core_t *core, char *url,
 	httpd->listener = listener;
 	return 1;
 }
-pthread_t *
-httpd_start(struct agent_core_t *core, const char *name)
+
+pthread_t *httpd_start(struct agent_core_t *core, const char *name)
 {
 	int ret;
 	pthread_t *thread = malloc(sizeof (pthread_t));
@@ -294,8 +297,7 @@ httpd_start(struct agent_core_t *core, const char *name)
 	return thread;
 }
 
-void
-httpd_init(struct agent_core_t *core)
+void httpd_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct httpd_priv_t *priv = malloc(sizeof(struct httpd_priv_t));
@@ -308,5 +310,3 @@ httpd_init(struct agent_core_t *core)
 	priv->listener = NULL;
 	priv->help_page = NULL;
 }
-
-
