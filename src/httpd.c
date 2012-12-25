@@ -45,6 +45,7 @@
 
 #include "httpd.h"
 
+#define RCV_BUFFER 2048000
 struct httpd_listener {
 	char *url;
 	unsigned int method;
@@ -60,7 +61,7 @@ struct httpd_priv_t {
 };
 
 struct connection_info_struct {
-	char answerstring[2048];
+	char answerstring[RCV_BUFFER];
 	int progress;
 };
 
@@ -189,7 +190,7 @@ answer_to_connection (void *cls, struct MHD_Connection *connection,
 		struct connection_info_struct *con_info = *con_cls;
 
 		if (*upload_data_size != 0) {
-			if (*upload_data_size + con_info->progress >= 2048)
+			if (*upload_data_size + con_info->progress >= RCV_BUFFER)
 				return send_response (connection, &bad_response);
 			memcpy(con_info->answerstring + con_info->progress,
 				upload_data, *upload_data_size);
