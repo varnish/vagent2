@@ -46,6 +46,12 @@ struct vcl_priv_t {
 	char *help;
 };
 
+struct vcl_list {
+	char name[1024];
+	char available[11];
+	char ref[11];
+};
+
 static void mk_help(struct vcl_priv_t *vcl) {
 	vcl->help = "The following logic can be used:\n"
 		"GET /vcl/ - Fetch a list of VCLs (e.g: vcl.list)\n"
@@ -62,7 +68,8 @@ static void vcl_store(struct httpd_request *request,
 		      struct httpd_response *response,
 		      const char *id)
 {
-	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s\n__EOF_%s__",id,id,(char *)request->data,id);
+	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s\n__EOF_%s__",
+		id,id,(char *)request->data,id);
 	if (vret->status == 200) {
 		response->status = 201;
 		logger(vcl->logger, "VCL stored OK");
@@ -71,13 +78,6 @@ static void vcl_store(struct httpd_request *request,
 		logger(vcl->logger, "vcl.inline failed");
 	}
 }
-
-
-struct vcl_list {
-	char name[1024];
-	char available[11];
-	char ref[11];
-};
 
 static char *vcl_list_json(char *raw)
 {
@@ -91,6 +91,9 @@ static char *vcl_list_json(char *raw)
 	strcat(buffer,"{\n\"vcls\": [\n");
 	do {
 		ret = sscanf(pos, "%10s %6s %s\n", tmp->available, tmp->ref, tmp->name);
+		if (ret == 0) {
+			printf("Confused! line: %s\n", pos);
+		}
 		assert(ret>0);
 		ret2 = asprintf(&b, "%s{\n"
 			"\t\"name\": \"%s\",\n"
@@ -158,13 +161,16 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			if (strlen(request->url) >= 6) {
 				response.status = 200;
-				vcl_store(request, vcl, &vret, &response, request->url + strlen("/vcl/"));
+				vcl_store(request, vcl, &vret, &response, 
+					request->url + strlen("/vcl/"));
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
-			ipc_run(vcl->vadmin, &vret, "vcl.use %s", request->url + strlen("/vcldeploy/"));
+			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
+				request->url + strlen("/vcldeploy/"));
 			response.status = 200;
 		} else if (!strncmp(request->url, "/vcldiscard/", strlen("/vcldiscard/"))) {
-			ipc_run(vcl->vadmin, &vret, "vcl.discard %s", request->url + strlen("/vcldiscard/"));
+			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
+				request->url + strlen("/vcldiscard/"));
 			response.status = 200;
 		}
 	} else {
@@ -177,8 +183,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
-void
-vcl_init(struct agent_core_t *core)
+void vcl_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct vcl_priv_t *priv = malloc(sizeof(struct vcl_priv_t));
