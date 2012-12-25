@@ -58,7 +58,7 @@ static void mk_help(struct vcl_priv_t *vcl) {
 		"GET /vcl/vclname - Fetch the vcl named vclname (vcl.show)\n"
 		"POST /vcl/ - Upload a new VCL, named dynamically. (vcl.inline).\n"
 		"PUT /vcl/vclname - Upload a new VCL with the specified name.\n"
-		"PUT /vcldiscard/vclname - Discard a named VCL (vcl.discard)\n"
+		"DELETE /vcl/vclname - Discard a named VCL (vcl.discard)\n"
 		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n";
 }
 
@@ -168,9 +168,11 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
 				request->url + strlen("/vcldeploy/"));
 			response.status = 200;
-		} else if (!strncmp(request->url, "/vcldiscard/", strlen("/vcldiscard/"))) {
+		}
+	} else if (request->method == M_DELETE) {
+		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
-				request->url + strlen("/vcldiscard/"));
+				request->url + strlen("/vcl/"));
 			response.status = 200;
 		}
 	} else {
@@ -194,9 +196,8 @@ void vcl_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
-        httpd_register_url(core, "/vcl/", M_PUT | M_GET | M_POST, vcl_reply, core);
+        httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
         httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
-        httpd_register_url(core, "/vcldiscard/", M_PUT , vcl_reply, core);
         httpd_register_url(core, "/vclhelp",  M_GET , vcl_reply, core);
 	mk_help(priv);
 }

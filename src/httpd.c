@@ -90,6 +90,8 @@ static char *make_help(struct httpd_priv_t *http)
 			strncat(buffer, "PUT ", 511);
 		if (listener->method & M_POST)
 			strncat(buffer, "POST ", 511);
+		if (listener->method & M_DELETE)
+			strncat(buffer, "DELETE ", 511);
 		strncat(buffer,"\n",511);
 		/*
 		 * \0 and newline at the end
@@ -176,8 +178,12 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	bad_response.status = 400;
 	bad_response.body = "Unknown request\n";
 	bad_response.nbody = strlen(bad_response.body);
-	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD")) {
-		request.method = M_GET;
+	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
+		if (!strcmp(method,"DELETE")) {
+			request.method = M_DELETE;
+		} else {
+			request.method = M_GET;
+		}
 		request.connection = connection;
 		request.url = url;
 		request.ndata = 0;

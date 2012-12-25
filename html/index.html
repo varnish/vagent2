@@ -229,7 +229,7 @@
 	}
 	function vcl_discard(id) {
 		var client = new XMLHttpRequest();
-		client.open("PUT", "/vcldiscard/" + id, false);
+		client.open("DELETE", "/vcl/" + id, false);
 		client.send();
 		out = client.responseText;
 		if (client.status = "200" && client.responseText == "") {

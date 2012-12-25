@@ -57,7 +57,8 @@
 enum http_method {
 	M_GET = 1,
 	M_POST = 2,
-	M_PUT = 4
+	M_PUT = 4,
+	M_DELETE = 8
 };
 
 /*
