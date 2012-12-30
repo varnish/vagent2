@@ -103,7 +103,7 @@ static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 	(void)VCLI_ReadResult(handle, &ret->status, &ret->answer, 2000);
 }
 
-void ipc_run(int handle, struct ipc_ret_t *ret, char *fmt, ...)
+void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 {
 	va_list ap;
 	char *buffer;

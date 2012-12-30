@@ -14,6 +14,7 @@ vagent2_SOURCES = \
 	httpd.c \
 	echo.c \
 	status.c \
+	params.c \
 	vcl.c \
 	html.c \
 	ipc.c \

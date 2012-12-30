@@ -32,68 +32,66 @@
 #include "ipc.h"
 #include "httpd.h"
 
+#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 
-struct status_priv_t {
+struct params_priv_t {
 	int logger;
 	int vadmin;
 };
 
-static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd)
+static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd, const char *arg)
 {
 	struct agent_core_t *core = data;
 	struct httpd_response response;
-	struct status_priv_t *status;
+	struct params_priv_t *params;
 	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
 
-	plug = plugin_find(core,"status");
-	status = plug->data;
-	logger(status->logger, "Responding to request");
-
+	plug = plugin_find(core,"params");
+	params = plug->data;
+	logger(params->logger, "Responding to request");
+	assert(cmd);
+	assert(params);
 	response.status = 200;
-	ipc_run(status->vadmin, &vret, cmd);
+	if (arg == NULL)
+		ipc_run(params->vadmin, &vret, cmd);
+	else
+		ipc_run(params->vadmin, &vret, "%s %s", cmd, arg);
 	response.body = vret.answer;
 	response.nbody = strlen(vret.answer);
 	send_response(request->connection, &response);
 	return 0;
 }
-unsigned int status_reply(struct httpd_request *request, void *data)
+unsigned int params_reply(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"status");
-	return 0;
-}
-
-unsigned int status_stop(struct httpd_request *request, void *data)
-{
-	run_cmd(request,data,"stop");
-	return 0;
-}
-
-unsigned int status_start(struct httpd_request *request, void *data)
-{
-	run_cmd(request,data,"start");
+	const char *arg;
+	if (request->method == M_GET) {
+		if (!strcmp(request->url,"/param/")) {
+			run_cmd(request,data,"param.show", NULL);
+		} else {
+			arg = request->url + strlen("/param/");
+			assert(arg && *arg);
+			run_cmd(request,data, "param.show",arg);
+		}
+	}
 	return 0;
 }
 
 void
-status_init(struct agent_core_t *core)
+params_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct status_priv_t *priv = malloc(sizeof(struct status_priv_t));
-	plug = plugin_find(core,"status");
+	struct params_priv_t *priv = malloc(sizeof(struct params_priv_t));
+	plug = plugin_find(core,"params");
 	
 	priv->logger = ipc_register(core,"logd");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/status", M_GET, status_reply, core);
-        httpd_register_url(core, "/stop", M_PUT | M_POST, status_stop, core);
-        httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
+        httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
 }
-
-

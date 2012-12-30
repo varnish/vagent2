@@ -73,7 +73,7 @@ int ipc_register(struct agent_core_t *core, char *name) ;
  *
  * *ret will contain the reply. The ret->answer needs to be freed.
  */
-void ipc_run(int handle, struct ipc_ret_t *ret, char *fmt, ...);
+void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...);
 
 /*
  * Inits the ipc structure. E.g: making sure everything is 0.
