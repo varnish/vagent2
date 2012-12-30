@@ -40,6 +40,12 @@
 #include <pthread.h>
 #include <string.h>
 
+#define PARAM_HELP \
+"GET /param/ - fetches a list of parameters and values\n" \
+"GET /param/foo - fetches details for the parameter named foo\n" \
+"PUT /param/ - takes a single key=value input (e.g: session_max=1000)\n" \
+"PUT /param/foo - Takes a single value as input (e.g: 1000)\n"
+
 struct params_priv_t {
 	int logger;
 	int vadmin;
@@ -79,6 +85,10 @@ unsigned int params_reply(struct httpd_request *request, void *data)
 	params = plug->data;
 	
 
+	if (!strcmp(request->url,"/help/param")) {
+		send_response_ok(request->connection, PARAM_HELP);
+		return 1;
+	}
 	if (request->method == M_GET) {
 		if (!strcmp(request->url,"/param/")) {
 			run_and_respond(params->vadmin,
@@ -133,4 +143,5 @@ params_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
         httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
+        httpd_register_url(core, "/help/param", M_GET, params_reply, core);
 }
