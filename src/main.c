@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;
 	core.config = calloc(1,sizeof(struct agent_config_t));
+	assert(core.config);
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
 	core_opt(&core, argc, argv);

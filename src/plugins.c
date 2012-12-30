@@ -55,9 +55,12 @@ struct agent_plugin_t *plugin_find_last(struct agent_core_t *core)
 void plugin_alloc(char *name, struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug = calloc(1, sizeof(struct agent_plugin_t));
+	assert(plug);
 	plug->ipc = calloc(1, sizeof(struct ipc_t ));
+	assert(plug->ipc);
 	ipc_init(plug->ipc);
 	plug->name = strdup(name);
+	assert(plug->name);
 	plug->next = core->plugins;
 	core->plugins = plug;
 }
