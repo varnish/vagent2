@@ -97,6 +97,7 @@ static int ipc_write(int sock, const char *s)
 static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 {
 	assert(cmd);
+	assert (*cmd);
 	ipc_write(handle, cmd);
 	ipc_write(handle, "\n");
 
@@ -180,6 +181,13 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 		}
 		buffer[length] = '\0';
 	}
+	/*
+	 * XXX: Typically hit if you throw in an empty newline at ipc_run,
+	 * e.g: ipc_run(...,"param.set foo bar\n");
+	 * Tends to cause havoc since varnish doesn't resond at all and we
+	 * block.
+	 */
+	assert(*buffer);
 	ipc->cb(ipc->priv, buffer, &ret);
 	VCLI_WriteResult(fd, ret.status, ret.answer);
 	free(buffer);

@@ -26,13 +26,14 @@
  * SUCH DAMAGE.
  */
 
-
+#define _GNU_SOURCE
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"
 
 #include <assert.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,38 +45,80 @@ struct params_priv_t {
 	int vadmin;
 };
 
-static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd, const char *arg)
+static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 {
-	struct agent_core_t *core = data;
-	struct params_priv_t *params;
-	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
+	va_list ap;
+	char *buffer;
+	int iret;
+	char *ans;
 
-	plug = plugin_find(core,"params");
-	params = plug->data;
-	logger(params->logger, "Responding to request");
-	assert(cmd);
-	assert(params);
-	if (arg == NULL)
-		ipc_run(params->vadmin, &vret, cmd);
+
+	va_start(ap, fmt);
+	iret = vasprintf(&buffer, fmt, ap);
+	assert(iret>0);
+	va_end(ap);
+	ipc_run(vadmin, &vret, buffer);
+	free(buffer);
+	ans = vret.answer;
+
+	if (vret.status == 200)
+		send_response_ok(conn, ans);
 	else
-		ipc_run(params->vadmin, &vret, "%s %s", cmd, arg);
-	send_response_ok(request->connection, vret.answer);
-	return 0;
+		send_response_fail(conn, ans);
 }
+
 unsigned int params_reply(struct httpd_request *request, void *data)
 {
 	const char *arg;
+	struct agent_core_t *core = data;
+	struct agent_plugin_t *plug;
+	struct params_priv_t *params;
+	char *body;
+	plug = plugin_find(core,"params");
+	params = plug->data;
+	
+
 	if (request->method == M_GET) {
 		if (!strcmp(request->url,"/param/")) {
-			run_cmd(request,data,"param.show", NULL);
+			run_and_respond(params->vadmin,
+				request->connection,
+				"param.show");
+			return 1;
 		} else {
 			arg = request->url + strlen("/param/");
 			assert(arg && *arg);
-			run_cmd(request,data, "param.show",arg);
+			run_and_respond(params->vadmin,
+				request->connection,
+				"param.show %s", arg);
+			return 1;
 		}
+	} else if (request->method == M_PUT) {
+		char *mark;
+	 	assert(((char *)request->data)[request->ndata] == '\0');
+	 	body = strdup(request->data);
+		mark = index(body,'\n');
+		if (mark)
+			*mark = '\0';
+		if (!strcmp(request->url, "/param/")) {
+			run_and_respond(params->vadmin,
+				request->connection,
+				"param.set %s",body);
+			free(body);
+			return 1;
+		} else {
+			arg = request->url + strlen("/param/");
+			assert(arg && *arg);
+			run_and_respond(params->vadmin,
+				request->connection,
+				"param.set %s %s",arg, body);
+			free(body);
+			return 1;
+		}
+
 	}
-	return 0;
+	send_response_fail(request->connection, "Failed");
+	return 1;
 }
 
 void
