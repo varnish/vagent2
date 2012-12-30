@@ -104,19 +104,30 @@ static char *make_help(struct httpd_priv_t *http)
 	return body;
 }
 
-int send_response(struct MHD_Connection *connection, struct httpd_response *response)
+int send_response(struct MHD_Connection *connection, int status, void *data, unsigned int ndata)
 {
 	int ret;
 	struct MHD_Response *MHDresponse;
-	MHDresponse = MHD_create_response_from_data(response->nbody,
-			response->body, MHD_NO, MHD_YES);
+	MHDresponse = MHD_create_response_from_data(ndata,
+			data, MHD_NO, MHD_YES);
 	assert(MHDresponse);
 
-	ret = MHD_queue_response (connection, response->status, MHDresponse);
+	ret = MHD_queue_response (connection, status, MHDresponse);
 	assert(ret == 1);
 	MHD_destroy_response (MHDresponse);
-
 	return ret;
+}
+
+int send_response_ok(struct MHD_Connection *connection, char *data)
+{
+	assert(data);
+	return send_response(connection, 200, (void *) data, strlen(data));
+}
+
+int send_response_fail(struct MHD_Connection *connection, char *data)
+{
+	assert(data);
+	return send_response(connection, 500, (void *) data, strlen(data));
 }
 
 static void request_completed (void *cls, struct MHD_Connection *connection,
@@ -156,7 +167,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_core_t *core = (struct agent_core_t *)cls;
 	struct httpd_priv_t *http;
 	struct agent_plugin_t *plug;
-	struct httpd_response bad_response;
 	struct httpd_request request;
 	struct connection_info_struct *con_info = NULL;
 	
@@ -175,9 +185,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
-	bad_response.status = 400;
-	bad_response.body = "Unknown request\n";
-	bad_response.nbody = strlen(bad_response.body);
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
 		if (!strcmp(method,"DELETE")) {
 			request.method = M_DELETE;
@@ -189,7 +196,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		request.ndata = 0;
 		if (find_listener(&request, http))
 			return MHD_YES;
-		bad_response.status = 404;
 	}
 
 
@@ -199,7 +205,7 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 		if (*upload_data_size != 0) {
 			if (*upload_data_size + con_info->progress >= RCV_BUFFER)
-				return send_response (connection, &bad_response);
+				return send_response_fail (connection,"Buffer exceeded");
 			memcpy(con_info->answerstring + con_info->progress,
 				upload_data, *upload_data_size);
 			con_info->progress += *upload_data_size;
@@ -228,13 +234,11 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
 		assert (http->help_page);
-		bad_response.status = 200;
-		bad_response.body = http->help_page;
-		bad_response.nbody = strlen(bad_response.body);
+		return send_response_ok(connection, http->help_page);
 	}
 
 
-	return send_response (connection, &bad_response);
+	return send_response_fail (connection, "Failed\n");
 }
 
 void *httpd_run(void *data)

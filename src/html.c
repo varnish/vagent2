@@ -49,25 +49,21 @@ struct html_priv_t {
 
 unsigned int html_reply(struct httpd_request *request, void *data)
 {
-	struct httpd_response response;
 	int fd, ret;
 	char *path;
 	char *buffer;
 	struct stat sbuf;
-	response.status = 404;
-	response.body = "meh";
-	response.nbody = strlen(response.body);
 	
 	fd = asprintf(&path, "html/%s", (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html");
 	assert(fd>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
-		send_response(request->connection, &response);
+		send_response_fail(request->connection, "stat() was not happy");
 		return 0;
 	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		send_response(request->connection, &response);
+		send_response_fail(request->connection, "open() was not happy");
 		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
@@ -76,10 +72,7 @@ unsigned int html_reply(struct httpd_request *request, void *data)
 	assert(ret>0);
 	assert(ret==sbuf.st_size);
 	close(fd);
-	response.body = buffer;
-	response.nbody = ret;
-	response.status = 200;
-	send_response(request->connection, &response);
+	send_response(request->connection, 200, buffer, ret);
 	free(buffer);
 	return 0;
 }

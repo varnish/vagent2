@@ -62,20 +62,19 @@ static void mk_help(struct vcl_priv_t *vcl) {
 		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n";
 }
 
-static void vcl_store(struct httpd_request *request,
+static int vcl_store(struct httpd_request *request,
 		      struct vcl_priv_t *vcl,
 		      struct ipc_ret_t *vret,
-		      struct httpd_response *response,
 		      const char *id)
 {
 	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s\n__EOF_%s__",
 		id,id,(char *)request->data,id);
 	if (vret->status == 200) {
-		response->status = 201;
 		logger(vcl->logger, "VCL stored OK");
+		return 201;
 	} else {
-		response->status = 500;
 		logger(vcl->logger, "vcl.inline failed");
+		return 500;
 	}
 }
 
@@ -118,12 +117,12 @@ static char *vcl_list_json(char *raw)
 static unsigned int vcl_reply(struct httpd_request *request, void *data)
 {
 	struct agent_core_t *core = data;
-	struct httpd_response response;
 	struct vcl_priv_t *vcl;
 	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
 	char *cmd;
 	int ret;
+	int status;
 
 	assert(core);
 
@@ -133,55 +132,49 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	vcl = plug->data;
 	assert(vcl);
 
-	response.status = 500;
-	vret.answer = "Invalid VCL-request";
 	if (request->method == M_GET) {
 		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
-			response.status = 200;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
-			vcl_list_json(vret.answer);
+			return send_response_ok(request->connection, vret.answer);
 		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) { 
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
-			response.status = 200;
+			return send_response_ok(request->connection, vret.answer);
 		} else if(!strncmp(request->url, "/vclhelp", strlen("/vclhelp"))) {
-			vret.answer = vcl->help;
+			return send_response_ok(request->connection, vcl->help);
 		} else if(!strcmp(request->url, "/vcljson/")) {
-			response.status = 200;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			vret.answer = vcl_list_json(vret.answer);
+			return send_response_ok(request->connection, vret.answer);
 		}
-
 	} else if (request->method == M_POST) {
-		response.status = 200;
 		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));
 		assert(ret>0);
-		vcl_store(request, vcl, &vret, &response, cmd);
+		status = vcl_store(request, vcl, &vret, cmd);
 		free(cmd);
+		return send_response(request->connection,status, vret.answer, strlen(vret.answer));
 	} else if (request->method == M_PUT) {
 		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			if (strlen(request->url) >= 6) {
-				response.status = 200;
-				vcl_store(request, vcl, &vret, &response, 
-					request->url + strlen("/vcl/"));
+				status = vcl_store(request, vcl, &vret,
+					           request->url + strlen("/vcl/"));
+				return send_response(request->connection,status,
+						     vret.answer, strlen(vret.answer));
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
 				request->url + strlen("/vcldeploy/"));
-			response.status = 200;
+			return send_response_ok(request->connection, vret.answer);
 		}
 	} else if (request->method == M_DELETE) {
 		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
 				request->url + strlen("/vcl/"));
-			response.status = 200;
+			return send_response_ok(request->connection, vret.answer);
 		}
 	} else {
-		response.status = 400;
-		vret.answer = "What now...\n";
+		return send_response_fail(request->connection, "Unknown request?");
 	}
-	response.body = vret.answer;
-	response.nbody = strlen(vret.answer);
-	send_response(request->connection, &response);
+	assert("Shouldn't get here");
 	return 0;
 }
 

@@ -44,17 +44,13 @@ struct echo_priv_t {
 unsigned int echo_reply(struct httpd_request *request, void *data)
 {
 	struct agent_core_t *core = data;
-	struct httpd_response response;
 	struct echo_priv_t *echo;
 	struct agent_plugin_t *plug;
 	plug = plugin_find(core,"echo");
 	echo = plug->data;
 	logger(echo->logger, "Responding to request");
 
-	response.status = 200;
-	response.body = request->data;
-	response.nbody = request->ndata;
-	send_response(request->connection, &response);
+	send_response(request->connection, 200, request->data, request->ndata);
 	return 0;
 }
 

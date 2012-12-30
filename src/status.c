@@ -46,7 +46,6 @@ struct status_priv_t {
 static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd)
 {
 	struct agent_core_t *core = data;
-	struct httpd_response response;
 	struct status_priv_t *status;
 	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
@@ -55,11 +54,8 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd
 	status = plug->data;
 	logger(status->logger, "Responding to request");
 
-	response.status = 200;
 	ipc_run(status->vadmin, &vret, cmd);
-	response.body = vret.answer;
-	response.nbody = strlen(vret.answer);
-	send_response(request->connection, &response);
+	send_response_ok(request->connection, vret.answer);
 	return 0;
 }
 unsigned int status_reply(struct httpd_request *request, void *data)

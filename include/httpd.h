@@ -79,25 +79,19 @@ struct httpd_request {
 };
 
 /*
- * Response.
- * status is the status code used (e.g: 200 for OK).
- * body is the content. mhd will copy this, callbacks need to do memory
- * management on the body itself.
- * nbody is the length of data
- */
-struct httpd_response {
-	unsigned int status;
-	void *body;
-	unsigned int nbody;
-};
-
-/*
  * Use send_response during a callback to .... send a response.
  *
  * Note that this technically /queues/ the response, which means that the
  * client might not receive the data right away.
  */
-int send_response(struct MHD_Connection *connection, struct httpd_response *response);
+int send_response(struct MHD_Connection *connection, int status, void *data, unsigned int ndata);
+
+/*
+ * Various shortcuts for send_response().
+ */
+
+int send_response_ok(struct MHD_Connection *connection, char *data);
+int send_response_fail(struct MHD_Connection *connection, char *data);
 
 /*
  * URL    - the HTTP-protocol URL (e.g: req.url, not including host-header).

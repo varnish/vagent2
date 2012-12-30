@@ -47,7 +47,6 @@ struct params_priv_t {
 static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd, const char *arg)
 {
 	struct agent_core_t *core = data;
-	struct httpd_response response;
 	struct params_priv_t *params;
 	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
@@ -57,14 +56,11 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, const cha
 	logger(params->logger, "Responding to request");
 	assert(cmd);
 	assert(params);
-	response.status = 200;
 	if (arg == NULL)
 		ipc_run(params->vadmin, &vret, cmd);
 	else
 		ipc_run(params->vadmin, &vret, "%s %s", cmd, arg);
-	response.body = vret.answer;
-	response.nbody = strlen(vret.answer);
-	send_response(request->connection, &response);
+	send_response_ok(request->connection, vret.answer);
 	return 0;
 }
 unsigned int params_reply(struct httpd_request *request, void *data)
