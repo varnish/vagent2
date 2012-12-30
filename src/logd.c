@@ -46,7 +46,6 @@
  */
 struct logd_priv_t {
 	FILE *out;
-	struct ipc_t *ipc;
 };
 
 void read_log(void *private, char *msg, struct ipc_ret_t *ret)

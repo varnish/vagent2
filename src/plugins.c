@@ -39,16 +39,13 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 		if (!strcmp(name,plug->name))
 			return plug;
 	}
-	return NULL;
-}
-struct agent_plugin_t *plugin_find_last(struct agent_core_t *core)
-{
-	struct agent_plugin_t *plug;
-	for (plug = core->plugins; plug != NULL; plug = plug->next) {
-		if (plug->next == NULL)
-			return plug;
-	}
-	assert("Not reachable!");
+	/*
+	 * XXX: In the future, this could be an acceptable way of detecting
+	 * optional plugins, but for now, we know that all plugins ever
+	 * written are always loaded, so plugin_find() should always return
+	 * something
+	 */
+	assert("plugin_find() returning NULL");
 	return NULL;
 }
 

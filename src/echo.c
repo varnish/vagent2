@@ -31,6 +31,7 @@
 #include "ipc.h"
 #include "httpd.h"
 
+#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -41,30 +42,25 @@ struct echo_priv_t {
 	int logger;
 };
 
-unsigned int echo_reply(struct httpd_request *request, void *data)
+static unsigned int echo_reply(struct httpd_request *request, void *data)
 {
-	struct agent_core_t *core = data;
-	struct echo_priv_t *echo;
-	struct agent_plugin_t *plug;
-	plug = plugin_find(core,"echo");
-	echo = plug->data;
-	logger(echo->logger, "Responding to request");
+	struct echo_priv_t *echo = data;
 
+	logger(echo->logger, "Responding to request");
 	send_response(request->connection, 200, request->data, request->ndata);
 	return 0;
 }
 
-void
-echo_init(struct agent_core_t *core)
+void echo_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct echo_priv_t *priv = malloc(sizeof(struct echo_priv_t));
 	plug = plugin_find(core,"echo");
+	assert(plug);
 	
 	priv->logger = ipc_register(core,"logd");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/echo", M_POST | M_PUT | M_POST, echo_reply, core);
+        httpd_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
 }
-
 
