@@ -52,7 +52,6 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd
 
 	plug = plugin_find(core,"status");
 	status = plug->data;
-	logger(status->logger, "Responding to request");
 
 	ipc_run(status->vadmin, &vret, cmd);
 	send_response_ok(request->connection, vret.answer);

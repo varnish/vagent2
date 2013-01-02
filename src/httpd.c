@@ -83,16 +83,13 @@ static char *make_help(struct httpd_priv_t *http)
 	assert(ret>0);
 
 	for (listener = http->listener; listener != NULL; listener = listener->next) {
-		snprintf(buffer, 512, " - %s ",listener->url);
-		if (listener->method & M_GET)
-			strncat(buffer, "GET ", 511);
-		if (listener->method & M_PUT)
-			strncat(buffer, "PUT ", 511);
-		if (listener->method & M_POST)
-			strncat(buffer, "POST ", 511);
-		if (listener->method & M_DELETE)
-			strncat(buffer, "DELETE ", 511);
-		strncat(buffer,"\n",511);
+		snprintf(buffer, 512, " - %-20s %-3s %-3s %-4s %s\n",
+			listener->url, 
+			(listener->method & M_GET) ? "GET" : "",
+			(listener->method & M_PUT) ? "PUT" : "",
+			(listener->method & M_POST) ? "POST" : "",
+			(listener->method & M_DELETE) ? "DELETE" : ""
+			);
 		/*
 		 * \0 and newline at the end
 		 */
@@ -175,7 +172,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	assert(plug);
 	assert(http);
 
-	logger(http->logger, "Got connection on url %s",url );
 
 	if (NULL == *con_cls) {
 		con_info = malloc (sizeof (struct connection_info_struct));
@@ -185,6 +181,7 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
+	logger(http->logger, "%s %s",method, url );
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
 		if (!strcmp(method,"DELETE")) {
 			request.method = M_DELETE;
