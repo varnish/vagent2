@@ -139,7 +139,6 @@ static char *params_show_json(char *raw)
 				pos++;
 			word[0] = raw[pos];
 			state = 1;
-			printf("NAME: %s\n", tmp->name);
 			pos--;
 		} else if (state == 1 && (raw[pos] == '\n' || raw[pos] == '[')) {
 			assert(i<510);
@@ -162,7 +161,6 @@ static char *params_show_json(char *raw)
 
 				
 			tmp->value = strdup(word);
-			printf("Value: %s\n", tmp->value);
 			i = 0;
 			if (raw[pos] == '\n')
 				tmp->unit = strdup("");
@@ -188,24 +186,29 @@ static char *params_show_json(char *raw)
 				assert(i<2048);
 			}
 			assert(raw[pos] == '\n');
-			printf("i: %d\n", i);	
 			assert((isprint(word[0]) || i == 0));
 			word[i] = '\0';
 			tmp->def = strdup(word);
 			i = 0;
 			state = 0;
 			while (!(raw[pos-1] == '\n' && !isspace(raw[pos]))) {
-				if (state == 0 && isspace(raw[pos])) {
+				if (raw[pos] == '\n') {
 					pos++;
-				} else if (raw[pos] == '\n') {
-					pos++;
-					word[i++] = ' ';
+					word[i++] = '\\';
+					word[i++] = 'n';
 					state = 0;
+				} else if (state == 0 && isspace(raw[pos])) {
+					pos++;
 				} else {
+					state = 1;
 					if (raw[pos] == '"')
 						word[i++] = '\\';
-					word[i++] = raw[pos++];
-					state = 1;
+					if (raw[pos] == '\t') {
+						word[i++] = '\\';
+						word[i++] = 't';
+						pos++;
+					} else
+						word[i++] = raw[pos++];
 				}
 			}
 			word[i] = '\0';
@@ -221,17 +224,16 @@ static char *params_show_json(char *raw)
 		}
 		pos++;
 	}
-	state = asprintf(&out3, "{\n \t\"parameters\": [\n");
+	state = asprintf(&out3, "{\n");
 	assert(state);
 	for (tmp = top; tmp != NULL; ) {
 		param_assert(tmp);
-		state = asprintf(&out, "\t\t {\n"
-			"\t\t\t\"name\": \"%s\",\n"
-			"\t\t\t\"value\": \"%s\",\n"
-			"\t\t\t\"default\": \"%s\",\n"
-			"\t\t\t\"unit\": \"%s\",\n"
-			"\t\t\t\"description\": \"%s\"\n"
-			"\t\t}",
+		state = asprintf(&out, "\t\"%s\": {\n"
+			"\t\t\"value\": \"%s\",\n"
+			"\t\t\"default\": \"%s\",\n"
+			"\t\t\"unit\": \"%s\",\n"
+			"\t\t\"description\": \"%s\"\n"
+			"\t}",
 			tmp->name, tmp->value, tmp->def,
 			tmp->unit, tmp->description);
 		assert(state);
@@ -242,7 +244,7 @@ static char *params_show_json(char *raw)
 		out3 = out2;
 		tmp = param_free(tmp);
 	}
-	state = asprintf(&out2, "%s\n\t]\n}\n", out3);
+	state = asprintf(&out2, "%s\n}\n", out3);
 	free(out3);
 	return out2;
 }

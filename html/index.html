@@ -39,8 +39,10 @@
           <a class="brand" href="http://varnish-software.com/">Varnish Agent</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active"><a href="/html/">Home</a></li>
-              <li><a href="/html/#">About</a></li>
+              <li class="active" id="nav-home"><a href="/html/">Home</a></li>
+	      <li id="nav-vcl"><a onclick="showVCL()">VCL</a></li>
+	      <li id="nav-param"><a onclick="showParam()">Parameters</a></li>
+              <li id="nav-about"><a href="/html/#">About</a></li>
 	      <li><a href="/">Root</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -63,8 +65,8 @@
 	  <pre id="out"></pre>
 	  <p id="test-out"></p>
         </div><!--/span-->
-	<div class="span9">
-	  <textarea id="vcl" class="input-block-level" rows=25></textarea>
+	<div class="span9" id="vcl" style="DISPLAY: none">
+	  <textarea id="vcl-text" class="input-block-level" rows=25></textarea>
 	  <br>
           <div class="input-append">
 	    <input class="span3" type=text placeholder="VCL id" id="vclID"></input>
@@ -77,6 +79,13 @@
 		<button class="btn" onclick="discardVCL()"><i class="icon-trash"></i> Discard VCL</button>
 	  </div>
         </div>
+	<div class="span9" id="params" style="DISPLAY: none">
+	    <div class="input-append">
+	    <select onchange="paramChange()" id="param-sel"></select>
+	      <input type="text" id="param-val" placeholder="Parameter value"/>
+	      <button class="btn btn-primary" onclick="saveParam()">Save parameter</button>
+	    </div>
+	</div>
       </div><!--/row-->
       <hr>
       <footer>
@@ -122,6 +131,28 @@
 			return null;
 		}
 	}
+	function topActive(head) {
+		var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-about');
+
+		for (x in navs) {
+			document.getElementById(navs[x]).className = "";
+		}
+		document.getElementById("nav-" + head).className = "active";
+	}
+
+	function showVCL() {
+		document.getElementById("params").style.display = "NONE";
+		document.getElementById("vcl").style.display = "block";
+		topActive("vcl");
+	}
+	function showParam() {
+		document.getElementById("vcl").style.display = "NONE";
+		document.getElementById("params").style.display = "block";
+		list_params();
+		topActive("param");
+	}
+
+
 	var setstate = false;
 	function reset_status() {
 		but = document.getElementById("status-btn");
@@ -153,7 +184,7 @@
 	function uploadVCL() {
 		out_clear();
 		var client = new XMLHttpRequest();
-		ret = vcl_load(document.getElementById("vcl").value, document.getElementById("vclID").value);
+		ret = vcl_load(document.getElementById("vcl-text").value, document.getElementById("vclID").value);
 		out_up();
 		if (ret) {
 			show_status("ok","VCL stored");
@@ -169,7 +200,7 @@
 			show_status("warn","VCL load failed");
 		else
 			show_status("ok", "VCL loaded");
-		document.getElementById("vcl").value = ret;
+		document.getElementById("vcl-text").value = ret;
 		document.getElementById("vclID").value = document.getElementById("loader").value;
 	}
 	function listVCL() {
@@ -196,11 +227,60 @@
 		}
 		var d = document.getElementById("loader");
 		d.innerHTML = txt;
-		if (document.getElementById("vcl").value == "") {
+		if (document.getElementById("vcl-text").value == "") {
 			d.value = active;
 			document.getElementById("vclID").value = active;
 			loadVCL();
 		}
+	}
+
+	var paramlist;
+
+	function list_params() {
+		var client = new XMLHttpRequest();
+		client.open("GET", "/paramjson/", false);
+		client.send();
+		paramlist = JSON.parse(client.responseText);
+		var list = document.getElementById("param-sel");
+		for (x in paramlist) {
+			list.add(new Option(x));
+		}
+		paramChange();
+		return paramlist;
+	}
+	function paramChange() {
+		var pname = document.getElementById("param-sel").value;
+		document.getElementById("param-val").value = paramlist[pname].value;
+		out_clear();
+		out = "Default: " + paramlist[pname].default + "\n";
+		out = out + "Value:   " + paramlist[pname].value + "\n";
+		out = out + paramlist[pname].description;
+		out_up();
+	}
+	function paramListDiff() {
+		out_clear();
+		out = "These differ parameter values from defaults:\n\n"
+		for (x in paramlist) {
+			if (paramlist[x].value != paramlist[x].default) {
+				out = out + x + "(";
+				out = out + paramlist[x].value + " vs ";
+				out = out + paramlist[x].default + ")\n";
+			}
+		}
+		out_up();
+	}
+	function saveParam()
+	{
+		var pname = document.getElementById("param-sel").value;
+		var pval = document.getElementById("param-val").value;
+		var client = new XMLHttpRequest();
+		out_clear();
+		client.open("PUT", "/param/" + pname, false);
+		client.send(pval);
+		out = client.responseText;
+		out_up();
+		if (client.status == 200)
+			list_params();
 	}
 	function vcl_use(id) {
 		var client = new XMLHttpRequest();
@@ -270,7 +350,7 @@
 	}
 	$('.btn').button();
 	listVCL();
-	setInterval(function(){status()},2000);
+	setInterval(function(){status()},10000);
     </script>
   </body>
 </html>
