@@ -32,6 +32,7 @@
 #include "ipc.h"
 #include "httpd.h"
 
+#include <ctype.h>
 #include <assert.h>
 #include <stdarg.h>
 #include <unistd.h>
@@ -49,6 +50,15 @@
 struct params_priv_t {
 	int logger;
 	int vadmin;
+};
+
+struct param_opt {
+	char *name;
+	char *value;
+	char *unit;
+	char *def;
+	char *description;
+	struct param_opt *next;
 };
 
 static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
@@ -74,6 +84,180 @@ static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char 
 		send_response_fail(conn, ans);
 }
 
+static void param_assert(struct param_opt *p)
+{
+	assert(p);
+	assert(p->name);
+	assert(p->value);
+	assert(p->unit);
+	assert(p->def);
+	assert(p->description);
+}
+
+/*
+ * Frees the param and returns NEXT
+ */
+static struct param_opt *param_free(struct param_opt *p)
+{
+	struct param_opt *next;
+	param_assert(p);
+	free(p->value);
+	free(p->name);
+	free(p->unit);
+	free(p->def);
+	free(p->description);
+	next = p->next;
+	free(p);
+	return next;
+}
+
+/*
+ * I hate myself and I want to die.
+ *
+ * (Parses param.show -l and outputs json. Caller must issue free();
+ */
+static char *params_show_json(char *raw)
+{
+	char word[2048];
+	struct param_opt *tmp, *top;
+	int pos = 0, i = 0;
+	int state = 0;
+	char *term = NULL;
+	char *out = NULL, *out2 = NULL, *out3 = NULL;
+	tmp = malloc(sizeof (struct param_opt));
+	top = NULL;
+	tmp->next = NULL;
+
+	while(raw[pos]) {
+		word[i++] = raw[pos];
+		assert(i<510);
+		if (state == 0 && raw[pos] == ' ') {
+			word[i-1] = '\0';
+			tmp->name = strdup(word);
+			i = 0;
+			while (raw[pos] == ' ')
+				pos++;
+			word[0] = raw[pos];
+			state = 1;
+			printf("NAME: %s\n", tmp->name);
+			pos--;
+		} else if (state == 1 && (raw[pos] == '\n' || raw[pos] == '[')) {
+			assert(i<510);
+			i--;
+			word[i] = '\0';
+			term = rindex(word,'[');
+			if (term) {
+				assert(*(term-1) == ' ');
+				*(term-1) = '\0';
+			}
+			i = strlen(word);
+			while(word[--i] == ' ');
+			if (word[i] == '"') {
+				assert(word[0] == '"');
+				memmove(word, word+1, i-1);
+				i-=2;
+			}
+			word[i+1] = '\0';
+			assert(index(word,'"') == NULL);
+
+				
+			tmp->value = strdup(word);
+			printf("Value: %s\n", tmp->value);
+			i = 0;
+			if (raw[pos] == '\n')
+				tmp->unit = strdup("");
+			else {
+				pos++;
+				while (raw[pos] != ']')
+					word[i++] = raw[pos++];
+				word[i] = '\0';
+				tmp->unit = strdup(word);
+				i = 0;
+			}
+			if (raw[pos] == '\n')
+				pos++;
+			term = strstr(raw+pos, "Default is ");
+			assert(term);
+			pos = term-raw + strlen("Default is ");
+			if (raw[pos] == 0x01) {
+				assert(raw[pos+1] == '\n');
+				pos++;
+			}
+			while (raw[pos] != '\n')  {
+				word[i++] = raw[pos++];
+				assert(i<2048);
+			}
+			assert(raw[pos] == '\n');
+			printf("i: %d\n", i);	
+			assert((isprint(word[0]) || i == 0));
+			word[i] = '\0';
+			tmp->def = strdup(word);
+			i = 0;
+			state = 0;
+			while (!(raw[pos-1] == '\n' && !isspace(raw[pos]))) {
+				if (state == 0 && isspace(raw[pos])) {
+					pos++;
+				} else if (raw[pos] == '\n') {
+					pos++;
+					word[i++] = ' ';
+					state = 0;
+				} else {
+					if (raw[pos] == '"')
+						word[i++] = '\\';
+					word[i++] = raw[pos++];
+					state = 1;
+				}
+			}
+			word[i] = '\0';
+			tmp->description = strdup(word);
+			tmp->next = top;
+			top = tmp;
+			state = 0;
+			i = 0;
+			assert(strlen(tmp->name) < 30);
+			tmp = malloc(sizeof (struct param_opt));
+			tmp->next = NULL;
+			pos--;
+		}
+		pos++;
+	}
+	state = asprintf(&out3, "{\n \t\"parameters\": [\n");
+	assert(state);
+	for (tmp = top; tmp != NULL; ) {
+		param_assert(tmp);
+		state = asprintf(&out, "\t\t {\n"
+			"\t\t\t\"name\": \"%s\",\n"
+			"\t\t\t\"value\": \"%s\",\n"
+			"\t\t\t\"default\": \"%s\",\n"
+			"\t\t\t\"unit\": \"%s\",\n"
+			"\t\t\t\"description\": \"%s\"\n"
+			"\t\t}",
+			tmp->name, tmp->value, tmp->def,
+			tmp->unit, tmp->description);
+		assert(state);
+		state = asprintf(&out2, "%s%s%s", out3, out, (tmp->next) ? ",\n":"");
+		assert(state);
+		free(out);
+		free(out3);
+		out3 = out2;
+		tmp = param_free(tmp);
+	}
+	state = asprintf(&out2, "%s\n\t]\n}\n", out3);
+	free(out3);
+	return out2;
+}
+
+static void param_json(struct httpd_request *request, struct params_priv_t *params)
+{
+	struct ipc_ret_t vret;
+	char *tmp;
+	ipc_run(params->vadmin, &vret, "param.show -l");
+	tmp = params_show_json(vret.answer);
+	assert(tmp);
+	send_response_ok(request->connection, tmp);
+	free(tmp);
+}
+
 unsigned int params_reply(struct httpd_request *request, void *data)
 {
 	const char *arg;
@@ -83,10 +267,13 @@ unsigned int params_reply(struct httpd_request *request, void *data)
 	char *body;
 	plug = plugin_find(core,"params");
 	params = plug->data;
-	
 
 	if (!strcmp(request->url,"/help/param")) {
 		send_response_ok(request->connection, PARAM_HELP);
+		return 1;
+	}
+	if (!strcmp(request->url, "/paramjson/") && request->method == M_GET) {
+		param_json(request, params);
 		return 1;
 	}
 	if (request->method == M_GET) {
@@ -143,5 +330,6 @@ params_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
         httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
+        httpd_register_url(core, "/paramjson/", M_GET, params_reply, core);
         httpd_register_url(core, "/help/param", M_GET, params_reply, core);
 }
