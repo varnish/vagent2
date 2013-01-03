@@ -291,15 +291,18 @@
 		client.send();
 		paramlist = JSON.parse(client.responseText);
 		var list = document.getElementById("param-sel");
+		var v = list.value;
 		var arry = new Array();
 		for (x in paramlist) {
 			arry.push(x);
 		}
 		arry.sort();
-		list.size = 0;
+		list.options.length = 0;
 		for (x in arry) {
 			list.add(new Option(arry[x]));
 		}
+		if (v)
+			list.value = v;
 		paramChange();
 		} catch (err) {
 			out_clear();
@@ -326,7 +329,7 @@
 		out_clear();
 		out = "Non-default parameters:\n\n"
 		for (x in paramlist) {
-			if (paramlist[x].unit == "seconds" || paramlist[x].unit == "s") {
+			if (paramlist[x].unit == "seconds" || paramlist[x].unit == "s" || paramlist[x].unit == "bitmap") {
 				one = Number(paramlist[x].value);
 				two = Number(paramlist[x].default);
 				if (one != two) {
@@ -334,6 +337,15 @@
 					out = out + one + " vs ";
 					out = out + two + ")\n";
 				}
+			} else if (paramlist[x].unit == "bytes") {
+				one = paramlist[x].value == "-1" ? "unlimited" : paramlist[x].value;
+				two = paramlist[x].default == "-1" ? "unlimited" : paramlist[x].default;
+				if (one != two) {
+					out = out + x + "(";
+					out = out + one + " vs ";
+					out = out + two + ")\n";
+				}
+
 			} else if (paramlist[x].value != paramlist[x].default) {
 				out = out + x + "(";
 				out = out + paramlist[x].value + " vs ";
