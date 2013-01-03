@@ -2,7 +2,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -Werror
 
 
-vagent2_CFLAGS = @VARNISHAPI_CFLAGS@
+vagent2_CFLAGS = @VARNISHAPI_CFLAGS@ -Wall -Werror -Wextra
 
 bin_PROGRAMS = vagent2
 vagent2_SOURCES = \

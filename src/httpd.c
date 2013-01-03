@@ -130,6 +130,9 @@ int send_response_fail(struct MHD_Connection *connection, char *data)
 static void request_completed (void *cls, struct MHD_Connection *connection,
 		   void **con_cls, enum MHD_RequestTerminationCode toe)
 {
+	(void)cls;
+	(void)connection;
+	(void)toe;
 	struct connection_info_struct *con_info =
 		(struct connection_info_struct *) *con_cls;
 
@@ -166,7 +169,8 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_plugin_t *plug;
 	struct httpd_request request;
 	struct connection_info_struct *con_info = NULL;
-	
+
+	(void)version;	
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
 	assert(plug);
@@ -301,6 +305,7 @@ pthread_t *httpd_start(struct agent_core_t *core, const char *name)
 	assert(thread);
 	ret = pthread_create(thread,NULL,(*httpd_run),core);
 	assert(ret == 0);
+	(void)name;
 	return thread;
 }
 

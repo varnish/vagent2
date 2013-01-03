@@ -56,7 +56,7 @@ void *pingd_run(void *data)
 		sleep(1);
 		ipc_run(ping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
-			logger(ping->logger, "Ping failed. %d %s", vret.status, vret.answer);
+			logger(ping->logger, "Ping failed. %d ", vret.status);
 
 		ipc_run(ping->vadmin_sock, &vret, "status");
 		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
@@ -67,6 +67,7 @@ void *pingd_run(void *data)
 pthread_t *
 pingd_start(struct agent_core_t *core, const char *name)
 {
+	(void)name;
 	pthread_t *thread = malloc(sizeof (pthread_t));
 	pthread_create(thread,NULL,(*pingd_run),core);
 	return thread;

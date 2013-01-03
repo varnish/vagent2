@@ -53,6 +53,7 @@ unsigned int html_reply(struct httpd_request *request, void *data)
 	char *path;
 	char *buffer;
 	struct stat sbuf;
+	(void)data;
 	
 	fd = asprintf(&path, "html/%s", (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html");
 	assert(fd>0);

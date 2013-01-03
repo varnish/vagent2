@@ -70,6 +70,8 @@ cli_write(int sock, const char *s)
 	return 0;
 }
 
+int
+VSS_open(const char *str, double tmo);
 /*
  * This function establishes a connection to the specified ip and port and
  * sends a command to varnishd. If varnishd returns an OK status, the result
@@ -83,7 +85,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
-
+	printf("Timeout: %f\n", core->config->timeout);	
 	vadmin->sock = VSS_open(core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
 		fprintf(stderr, "Connection failed (%s)\n", core->config->T_arg);
@@ -133,24 +135,26 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 }
 
 void
-vadmin_run(int sock, char *cmd, struct ipc_ret_t *ret)
+vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 {
+	int sock = vadmin->sock;
 	assert(cmd);
 	cli_write(sock, cmd);
 	cli_write(sock, "\n");
-
+	logger(vadmin->logger, "Running %s",cmd);
 	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
+	logger(vadmin->logger, "Got: %d ",ret->status, ret->answer);
 }
 
 void
 read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct vadmin_config_t *vadmin = (struct vadmin_config_t *) private;
-	vadmin_run(vadmin->sock, msg, ret);
+	vadmin_run(vadmin, msg, ret);
 }
 
 static int
-n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
+n_arg_sock(struct agent_core_t *core)
 {
 	struct VSM_data *vsd;
 	char *p;
@@ -200,14 +204,15 @@ vadmin_init(struct agent_core_t *core)
 		if (core->config->T_arg != NULL || core->config->S_arg != NULL) {
 			return ;
 		}
-		n_arg_sock(vadmin,core);
+		n_arg_sock(core);
 	} else if (core->config->T_arg == NULL) {
 		core->config->n_arg = "";
-		n_arg_sock(vadmin, core);
+		n_arg_sock(core);
 	} else {
 		assert(core->config->T_arg != NULL);
 	}
 	cli_sock(vadmin, core);
+	vadmin->logger = ipc_register(core, "logd");
 	if (vadmin->sock < 0)
 		exit(2);
 		

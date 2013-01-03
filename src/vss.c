@@ -196,7 +196,6 @@ int
 VSS_bind(const struct vss_addr *va)
 {
 	int sd, val;
-
 	sd = socket(va->va_family, va->va_socktype, va->va_protocol);
 	if (sd < 0) {
 		perror("socket()");

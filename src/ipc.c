@@ -70,9 +70,7 @@
 #include "common.h"
 #include "ipc.h"
 #include "plugins.h"
-
-
-
+#include "vcli.h"
 
 /*
  * Client
@@ -97,7 +95,7 @@ static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 	ipc_write(handle, cmd);
 	ipc_write(handle, "\n");
 
-	(void)VCLI_ReadResult(handle, &ret->status, &ret->answer, 2000);
+	VCLI_ReadResult(handle, &ret->status, &ret->answer, 200.0);
 }
 
 void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)

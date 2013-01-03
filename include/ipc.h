@@ -54,7 +54,7 @@ struct ipc_ret_t {
  */
 struct ipc_t {
 	int listeners[MAX_LISTENERS];
-	unsigned int nlisteners;
+	int nlisteners;
 	void  (*cb)(void *priv, char *msg, struct ipc_ret_t *ret);
 	void *priv;
 };

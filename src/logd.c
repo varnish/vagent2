@@ -51,6 +51,7 @@ struct logd_priv_t {
 void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct logd_priv_t *log = (struct logd_priv_t *) private;
+	assert(log);
 
 	fprintf(log->out,"LOGGER: %s\n",msg);
 	
