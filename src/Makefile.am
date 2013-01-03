@@ -18,7 +18,8 @@ vagent2_SOURCES = \
 	modules/status.c \
 	modules/params.c \
 	modules/vcl.c \
-	modules/html.c
+	modules/html.c \
+	modules/ban.c
 
 vagent2_LDADD = \
 	@VARNISHAPI_LIBS@ \
