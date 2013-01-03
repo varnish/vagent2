@@ -16,6 +16,7 @@
       .sidebar-nav {
         padding: 9px 0;
       }
+
     </style>
     <link href="/html/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
 
@@ -27,7 +28,6 @@
   <style type="text/css"></style></head>
 
   <body>
-
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container-fluid">
@@ -39,9 +39,9 @@
           <a class="brand" href="http://varnish-software.com/">Varnish Agent</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active" id="nav-home"><a onclick="showHome()">Home</a></li>
-	      <li id="nav-vcl"><a onclick="showVCL()">VCL</a></li>
-	      <li id="nav-param"><a onclick="showParam()">Parameters</a></li>
+              <li class="active" id="nav-home"><a href="#home" onclick="showHome()">Home</a></li>
+	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
+	      <li id="nav-param"><a href="#params" onclick="showParam()">Parameters</a></li>
 	      <li><a href="/">Root</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -79,10 +79,12 @@
 	  </div>
         </div>
 	<div class="span9" id="params" style="DISPLAY: none">
-	    <div class="input-append">
 	    <select onchange="paramChange()" id="param-sel"></select>
+	    <div class="input-append">
 	      <input type="text" id="param-val" placeholder="Parameter value"/>
-	      <button class="btn btn-primary" onclick="saveParam()">Save parameter</button>
+	      <button type=submit class="btn btn-primary" onclick="saveParam()">Save parameter</button>
+	      <button class="btn" onclick="setParamDef()">Set to default</button>
+	      <button class="btn" onclick="paramListDiff()">View Diff</button>
 	    </div>
 	</div>
 	<div class="span9" id="home">
@@ -114,12 +116,8 @@
 	  </div>
 	</div>
       </div><!--/row-->
-      <hr>
-      <footer>
-           <p>&copy; Varnish Software AS 2012</p>
-      </footer>
-
     </div><!--/.fluid-container-->
+</div>
 
     <!-- Le javascript
     ================================================== -->
@@ -289,20 +287,30 @@
 		paramChange();
 		return paramlist;
 	}
+
 	function paramChange() {
 		var pname = document.getElementById("param-sel").value;
 		document.getElementById("param-val").value = paramlist[pname].value;
 		out_clear();
 		out = "Default: " + paramlist[pname].default + "\n";
 		out = out + "Value:   " + paramlist[pname].value + "\n";
+		out = out + "Unit:    " + paramlist[pname].unit + "\n";
 		out = out + paramlist[pname].description;
 		out_up();
 	}
 	function paramListDiff() {
 		out_clear();
-		out = "These differ parameter values from defaults:\n\n"
+		out = "Non-default parameters:\n\n"
 		for (x in paramlist) {
-			if (paramlist[x].value != paramlist[x].default) {
+			if (paramlist[x].unit == "seconds" || paramlist[x].unit == "s") {
+				one = Number(paramlist[x].value);
+				two = Number(paramlist[x].default);
+				if (one != two) {
+					out = out + x + "(";
+					out = out + one + " vs ";
+					out = out + two + ")\n";
+				}
+			} else if (paramlist[x].value != paramlist[x].default) {
 				out = out + x + "(";
 				out = out + paramlist[x].value + " vs ";
 				out = out + paramlist[x].default + ")\n";
@@ -326,6 +334,12 @@
 		} else {
 			show_status("warn","Couldn't save parameter");
 		}
+	}
+	function setParamDef()
+	{
+		var pname = document.getElementById("param-sel").value;
+		var pval = document.getElementById("param-val");
+		pval.value = paramlist[pname].default;
 	}
 	function vcl_use(id) {
 		var client = new XMLHttpRequest();
@@ -379,6 +393,7 @@
 		client.send();
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
+		status();
 	}
 	function start() {
 		var client = new XMLHttpRequest();
@@ -386,6 +401,7 @@
 		client.send();
 		doc = client.responseText;
 		document.getElementById("out").innerHTML = doc;
+		status();
 	}
 	function status() {
 		var client = new XMLHttpRequest();
