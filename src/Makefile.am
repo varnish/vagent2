@@ -1,6 +1,5 @@
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -Werror
-varnish_dir = $(top_builddir)/../varnish-cache/
 
 
 vagent2_CFLAGS = @VARNISHAPI_CFLAGS@
@@ -18,7 +17,8 @@ vagent2_SOURCES = \
 	params.c \
 	vcl.c \
 	html.c \
-	ipc.c
+	ipc.c \
+	vss.c
 
 vagent2_LDADD = \
 	@VARNISHAPI_LIBS@ \
