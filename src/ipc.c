@@ -66,11 +66,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <assert.h>
+#include <vcli.h>
 
 #include "common.h"
 #include "ipc.h"
 #include "plugins.h"
-#include "vcli.h"
 
 /*
  * Client

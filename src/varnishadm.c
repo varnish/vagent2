@@ -43,7 +43,7 @@
 #include <unistd.h>
 
 #include <varnishapi.h>
-#include "vcli.h"
+#include <vcli.h>
 
 #include "common.h"
 #include "plugins.h"
