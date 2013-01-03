@@ -129,9 +129,13 @@
 	var out;
     	function vcl_load(vcl, id) {
 		var client = new XMLHttpRequest();
+		try {
 		client.open("PUT", "/vcl/" + id, false);
 		client.send(vcl);
 		out = client.responseText;
+		} catch (err) {
+			out = "Com. errors with agent: \n" + err;
+		}
 		if (client.status == 201) {
 			return true;
 		} else {
@@ -140,6 +144,7 @@
 	}
 	function out_clear() {
 		document.getElementById("out").innerHTML = "";
+		out = "";
 	}
 	function out_up() {
 		document.getElementById("out").innerHTML = out;
@@ -147,8 +152,13 @@
 
 	function vcl_show(id) {
 		var client = new XMLHttpRequest();
+		try {
 		client.open("GET", "/vcl/" + id, false);
 		client.send();
+		} catch(err) {
+		out = "Com. errors with agent: \n" + err;
+		return null;
+		}
 		if (client.status == 200) {
 			return client.responseText;
 		} else {
@@ -189,10 +199,14 @@
 	var setstate = false;
 	function reset_status() {
 		but = document.getElementById("status-btn");
+		try {
 		var client = new XMLHttpRequest();
 		client.open("GET", "/status", false);
 		client.send();
 		stat = client.responseText;
+		} catch (err) {
+		stat = "Error communicating with agent: " + err;
+		}
 		but.textContent = stat;
 		if (stat == "Child in state running") {
 			but.className = "btn btn-primary btn-block disabled";
@@ -235,6 +249,7 @@
 			show_status("ok", "VCL loaded");
 		document.getElementById("vcl-text").value = ret;
 		document.getElementById("vclID").value = document.getElementById("loader").value;
+		out_up();
 	}
 	function listVCL() {
 		var client = new XMLHttpRequest();
@@ -270,6 +285,7 @@
 	var paramlist;
 
 	function list_params() {
+		try {
 		var client = new XMLHttpRequest();
 		client.open("GET", "/paramjson/", false);
 		client.send();
@@ -285,6 +301,14 @@
 			list.add(new Option(arry[x]));
 		}
 		paramChange();
+		} catch (err) {
+			out_clear();
+			out = "Error listing parameters.\n"
+			out = out + "Communication error with agent: \n"
+			out = out + err;
+			out_up();
+		}
+
 		return paramlist;
 	}
 
@@ -343,9 +367,14 @@
 	}
 	function vcl_use(id) {
 		var client = new XMLHttpRequest();
+		try {
 		client.open("PUT", "/vcldeploy/" + id, false);
 		client.send();
 		out = client.responseText;
+		} catch (err) {
+		out = "Com. errors with agent: \n" + err;
+		return false;
+		}
 		if (client.status = "200") {
 			return true;
 		} else {
@@ -367,10 +396,15 @@
 		document.getElementById("vclID").value = "";
 	}
 	function vcl_discard(id) {
+		try {
 		var client = new XMLHttpRequest();
 		client.open("DELETE", "/vcl/" + id, false);
 		client.send();
 		out = client.responseText;
+		} catch (err) {
+		out = "Com. errors with agent: \n" + err;
+		return false;
+		}
 		if (client.status = "200" && client.responseText == "") {
 			return true;
 		} else {
@@ -405,7 +439,10 @@
 	}
 	function status() {
 		var client = new XMLHttpRequest();
+		try {
 		listVCL();
+		} catch (err) {
+		}
 		if (!setstate)
 			reset_status();
 	}
