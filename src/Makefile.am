@@ -7,18 +7,18 @@ vagent2_CFLAGS = @VARNISHAPI_CFLAGS@ $(AM_CFLAGS)
 bin_PROGRAMS = vagent2
 vagent2_SOURCES = \
 	main.c \
-	varnishadm.c \
-	pingd.c \
 	plugins.c \
-	logd.c \
-	httpd.c \
-	echo.c \
-	status.c \
-	params.c \
-	vcl.c \
-	html.c \
 	ipc.c \
-	vss.c
+	vss.c \
+	modules/varnishadm.c \
+	modules/pingd.c \
+	modules/logd.c \
+	modules/httpd.c \
+	modules/echo.c \
+	modules/status.c \
+	modules/params.c \
+	modules/vcl.c \
+	modules/html.c
 
 vagent2_LDADD = \
 	@VARNISHAPI_LIBS@ \
