@@ -1,6 +1,6 @@
 /*-
  * Copyright (c) 2006 Verdens Gang AS
- * Copyright (c) 2006-2010 Varnish Software AS
+ * Copyright (c) 2006-2013 Varnish Software AS
  * All rights reserved.
  *
  * Author: Dag-Erling Smørgrav <des@des.no>
@@ -26,6 +26,17 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ */
+
+/*
+ * XXX: This is a direct copy/paste from varnish' lib/libvarnish/vss.c,
+ * with unused code removed. It's borrowed since VSS_connect is currently
+ * not exposed and we want to mimick varnishadm as closely as possible.
+ * 
+ * FIXME: Remove this file. Use proper libraries.
+ *
+ * Thief: Kristian Lyngstol <kristian@bohemians.org>
  */
 
 #include "config.h"
@@ -69,7 +80,7 @@ struct vss_addr {
  * See also RFC5952
  */
 
-int
+static int
 VSS_parse(const char *str, char **addr, char **port)
 {
 	const char *p;
@@ -127,7 +138,7 @@ VSS_parse(const char *str, char **addr, char **port)
  *
  * XXX: We need a function to free the allocated addresses.
  */
-int
+static int
 VSS_resolve(const char *addr, const char *port, struct vss_addr ***vap)
 {
 	struct addrinfo hints, *res0, *res;
@@ -185,75 +196,13 @@ VSS_resolve(const char *addr, const char *port, struct vss_addr ***vap)
 }
 
 /*
- * Given a struct vss_addr, open a socket of the appropriate type, and bind
- * it to the requested address.
- *
- * If the address is an IPv6 address, the IPV6_V6ONLY option is set to
- * avoid conflicts between INADDR_ANY and IN6ADDR_ANY.
- */
-
-int
-VSS_bind(const struct vss_addr *va)
-{
-	int sd, val;
-	sd = socket(va->va_family, va->va_socktype, va->va_protocol);
-	if (sd < 0) {
-		perror("socket()");
-		return (-1);
-	}
-	val = 1;
-	if (setsockopt(sd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof val) != 0) {
-		perror("setsockopt(SO_REUSEADDR, 1)");
-		(void)close(sd);
-		return (-1);
-	}
-#ifdef IPV6_V6ONLY
-	/* forcibly use separate sockets for IPv4 and IPv6 */
-	val = 1;
-	if (va->va_family == AF_INET6 &&
-	    setsockopt(sd, IPPROTO_IPV6, IPV6_V6ONLY, &val, sizeof val) != 0) {
-		perror("setsockopt(IPV6_V6ONLY, 1)");
-		(void)close(sd);
-		return (-1);
-	}
-#endif
-	if (bind(sd, (const void*)&va->va_addr, va->va_addrlen) != 0) {
-		perror("bind()");
-		(void)close(sd);
-		return (-1);
-	}
-	return (sd);
-}
-
-/*
- * Given a struct vss_addr, open a socket of the appropriate type, bind it
- * to the requested address, and start listening.
- *
- * If the address is an IPv6 address, the IPV6_V6ONLY option is set to
- * avoid conflicts between INADDR_ANY and IN6ADDR_ANY.
- */
-int
-VSS_listen(const struct vss_addr *va, int depth)
-{
-	int sd;
-
-	sd = VSS_bind(va);
-	if (sd >= 0)  {
-		if (listen(sd, depth) != 0) {
-			perror("listen()");
-			(void)close(sd);
-			return (-1);
-		}
-	}
-	return (sd);
-}
-
-/*
  * Connect to the socket specified by the address info in va.
  * Return the socket.
+ * XXX: Note that the non-blocking part is removed from the original vss.c
+ * XXX: since it was not used. -Kristian
  */
-int
-VSS_connect(const struct vss_addr *va, int nonblock)
+static int
+VSS_connect(const struct vss_addr *va)
 {
 	int sd, i;
 
@@ -274,7 +223,6 @@ VSS_connect(const struct vss_addr *va, int nonblock)
 /*
  * And the totally brutal version: Give me connection to this address
  */
-
 int
 VSS_open(const char *str, double tmo)
 {
@@ -285,7 +233,7 @@ VSS_open(const char *str, double tmo)
 
 	nvaddr = VSS_resolve(str, NULL, &vaddr);
 	for (n = 0; n < nvaddr; n++) {
-		retval = VSS_connect(vaddr[n], tmo != 0.0);
+		retval = VSS_connect(vaddr[n]);
 		if (retval >= 0 && tmo != 0.0) {
 			pfd.fd = retval;
 			pfd.events = POLLOUT;
