@@ -39,10 +39,9 @@
           <a class="brand" href="http://varnish-software.com/">Varnish Agent</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li class="active" id="nav-home"><a href="/html/">Home</a></li>
+              <li class="active" id="nav-home"><a onclick="showHome()">Home</a></li>
 	      <li id="nav-vcl"><a onclick="showVCL()">VCL</a></li>
 	      <li id="nav-param"><a onclick="showParam()">Parameters</a></li>
-              <li id="nav-about"><a href="/html/#">About</a></li>
 	      <li><a href="/">Root</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -85,6 +84,34 @@
 	      <input type="text" id="param-val" placeholder="Parameter value"/>
 	      <button class="btn btn-primary" onclick="saveParam()">Save parameter</button>
 	    </div>
+	</div>
+	<div class="span9" id="home">
+          <div class="hero-unit">
+	    <h1>Welcome to the Varnish Agent</h1>
+	    <p>This is the Varnish Agent's HTML interface. It is designed
+	    to showcase the various features of the Varnish Agent.</p>
+	    <p>The Varnish Agent is a small daemon that runs on the same
+	    machine as your <a href="http://varnish-cache.org">Varnish
+	    Cache</a>. It gives you a simple REST interface to control the
+	    behavior of Varnish, including most common administrative
+	    tasks, such as changing VCL, reviewing and setting parameters,
+	    stopping and starting the child and issuing bans (cache
+	    invalidation).</p>
+	    <p>The agent can be used stand alone through this web page, it
+	    can be integrated into other site-specific systems, it can be
+	    used in conjunction with the <a
+	    href="http://varnish-software.com">Varnish Administration
+	    Console</a> to control multiple Varnish caches, or a mix of
+	    them all.</p>
+	    <p>The agent strives to be "self documenting", meaning that the
+	    REST API should be easily understood by browsing the root
+	    directory. That is to say, browsing <a href="/">/</a>. The
+	    content you are currently viewing is the asset-serving portion
+	    of the agent, found under <a href="/html/">/html/</a>. You can
+	    change or add to this content by editing the content in the
+	    relative path /html/ to where you're running the agent
+	    from.</p>
+	  </div>
 	</div>
       </div><!--/row-->
       <hr>
@@ -132,7 +159,7 @@
 		}
 	}
 	function topActive(head) {
-		var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-about');
+		var navs = new Array('nav-home', 'nav-vcl', 'nav-param');
 
 		for (x in navs) {
 			document.getElementById(navs[x]).className = "";
@@ -142,11 +169,19 @@
 
 	function showVCL() {
 		document.getElementById("params").style.display = "NONE";
+		document.getElementById("home").style.display = "NONE";
 		document.getElementById("vcl").style.display = "block";
 		topActive("vcl");
 	}
+	function showHome() {
+		document.getElementById("params").style.display = "NONE";
+		document.getElementById("home").style.display = "block";
+		document.getElementById("vcl").style.display = "NONE";
+		topActive("home");
+	}
 	function showParam() {
 		document.getElementById("vcl").style.display = "NONE";
+		document.getElementById("home").style.display = "NONE";
 		document.getElementById("params").style.display = "block";
 		list_params();
 		topActive("param");
@@ -242,8 +277,14 @@
 		client.send();
 		paramlist = JSON.parse(client.responseText);
 		var list = document.getElementById("param-sel");
+		var arry = new Array();
 		for (x in paramlist) {
-			list.add(new Option(x));
+			arry.push(x);
+		}
+		arry.sort();
+		list.size = 0;
+		for (x in arry) {
+			list.add(new Option(arry[x]));
 		}
 		paramChange();
 		return paramlist;
@@ -279,8 +320,12 @@
 		client.send(pval);
 		out = client.responseText;
 		out_up();
-		if (client.status == 200)
+		if (client.status == 200) {
+			show_status("ok","Parameter saved");
 			list_params();
+		} else {
+			show_status("warn","Couldn't save parameter");
+		}
 	}
 	function vcl_use(id) {
 		var client = new XMLHttpRequest();
