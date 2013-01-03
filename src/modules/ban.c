@@ -88,8 +88,8 @@ ban_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
         httpd_register_url(core, "/ban", M_GET, ban_reply, core);
-        httpd_register_url(core, "/stop", M_PUT | M_POST, ban_stop, core);
-        httpd_register_url(core, "/start", M_PUT | M_POST, ban_start, core);
+        httpd_register_url(core, "/bstop", M_PUT | M_POST, ban_stop, core);
+        httpd_register_url(core, "/bstart", M_PUT | M_POST, ban_start, core);
 }
 
 
