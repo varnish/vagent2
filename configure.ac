@@ -30,6 +30,11 @@ AC_PROG_AWK
 AC_PROG_CC
 # Checks for libraries.
 
+m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install
+pkg-config])])
+PKG_PROG_PKG_CONFIG
+PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
+
 # Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS([limits.h stdlib.h string.h sys/param.h])

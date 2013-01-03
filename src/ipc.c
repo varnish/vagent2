@@ -70,11 +70,6 @@
 #include "ipc.h"
 #include "plugins.h"
 
-#include "vapi/vsl.h"
-#include "vapi/vsm.h"
-#include "vas.h"
-#include "vcli.h"
-#include "vss.h"
 
 
 

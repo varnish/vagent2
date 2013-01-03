@@ -32,7 +32,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
-
+#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -42,11 +42,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "vapi/vsl.h"
-#include "vapi/vsm.h"
-#include "vas.h"
+#include <varnishapi.h>
 #include "vcli.h"
-#include "vss.h"
 
 #include "common.h"
 #include "plugins.h"
@@ -69,7 +66,7 @@ cli_write(int sock, const char *s)
 	if (i == l)
 		return 1;
 	perror("Write error CLI socket");
-	AZ(close(sock));
+	assert(close(sock) == 0);
 	return 0;
 }
 
@@ -97,18 +94,18 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	if (status == CLIS_AUTH) {
 		if (core->config->S_arg == NULL) {
 			fprintf(stderr, "Authentication required\n");
-			AZ(close(vadmin->sock));
+			assert(close(vadmin->sock) == 0);
 			return(-1);
 		}
 		fd = open(core->config->S_arg, O_RDONLY);
 		if (fd < 0) {
 			fprintf(stderr, "Cannot open \"%s\": %s\n",
 			    core->config->S_arg, strerror(errno));
-			AZ(close(vadmin->sock));
+			assert(close(vadmin->sock) == 0);
 			return (-1);
 		}
 		VCLI_AuthResponse(fd, answer, buf);
-		AZ(close(fd));
+		assert(close(fd) == 0);
 		free(answer);
 
 		cli_write(vadmin->sock, "auth ");
@@ -118,7 +115,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	}
 	if (status != CLIS_OK) {
 		fprintf(stderr, "Rejected %u\n%s\n", status, answer);
-		AZ(close(vadmin->sock));
+		assert(close(vadmin->sock) == 0);
 		return (-1);
 	}
 	free(answer);
@@ -127,7 +124,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
 		fprintf(stderr, "No pong received from server\n");
-		AZ(close(vadmin->sock));
+		assert(close(vadmin->sock) == 0);
 		return(-1);
 	}
 	free(answer);
@@ -157,30 +154,30 @@ n_arg_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 {
 	struct VSM_data *vsd;
 	char *p;
-	struct VSM_fantom vt;
 
 	vsd = VSM_New();
 	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
-	if (VSM_Open(vsd)) {
-		fprintf(stderr, "%s\n", VSM_Error(vsd));
+	if (VSM_Open(vsd, 1)) {
+		fprintf(stderr, "Couldn't open VSM\n");
 		return (-1);
 	}
 
-	if (!VSM_Get(vsd, &vt, "Arg", "-T", "")) {
-		fprintf(stderr, "No -T arg in shared memory\n");
-		return (-1);
+        if (core->config->T_arg == NULL) {
+                p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
+                if (p == NULL)  {
+                        fprintf(stderr, "No -T arg in shared memory\n");
+                        return (-1);
+                }
+		core->config->T_arg = strdup(p);
+        }
+        if (core->config->S_arg == NULL) {
+		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
+		if (p != NULL)
+			core->config->S_arg = strdup(p);
 	}
-	AN(vt.b);
-	core->config->T_arg = strdup(vt.b);
 
-	if (VSM_Get(vsd, &vt, "Arg", "-S", "")) {
-		AN(vt.b);
-		core->config->S_arg = strdup(vt.b);
-	}
-
-	
 	p = strchr(core->config->T_arg, '\n');
-	AN(p);
+	assert(p);
 	*p = '\0';
 	return (1);
 }
