@@ -41,7 +41,7 @@ struct pingd_priv_t {
 	int logger;
 };
 
-void *pingd_run(void *data)
+static void *pingd_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct agent_plugin_t *plug;
@@ -64,7 +64,8 @@ void *pingd_run(void *data)
 	}
 	return NULL;
 }
-pthread_t *
+
+static pthread_t *
 pingd_start(struct agent_core_t *core, const char *name)
 {
 	(void)name;

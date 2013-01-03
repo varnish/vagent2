@@ -48,7 +48,7 @@ struct logd_priv_t {
 	FILE *out;
 };
 
-void read_log(void *private, char *msg, struct ipc_ret_t *ret)
+static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct logd_priv_t *log = (struct logd_priv_t *) private;
 	assert(log);
@@ -56,7 +56,7 @@ void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	fprintf(log->out,"LOGGER: %s\n",msg);
 	
 	ret->status = 200;
-	ret->answer = "OK";
+	ret->answer = strdup("OK");
 }
 
 void logd_init(struct agent_core_t *core)

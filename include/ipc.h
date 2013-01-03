@@ -66,7 +66,7 @@ struct ipc_t {
  * up the correct structure and do the rest. It returns a handle that will
  * later be used with ipc_run().
  */
-int ipc_register(struct agent_core_t *core, char *name) ;
+int ipc_register(struct agent_core_t *core, const char *name) ;
 
 /*
  * Execute an IPC command. The handle is that returned from ipc_register().

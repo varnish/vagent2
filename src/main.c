@@ -44,7 +44,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
 	core->config->T_arg = NULL;
-	core->config->c_arg = "6085";
+	core->config->c_arg = strdup("6085");
 	core->config->timeout = 5;
 	while ((opt = getopt(argc, argv, "n:S:T:t:c:")) != -1) {
 		switch (opt) {

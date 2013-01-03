@@ -31,6 +31,7 @@
 #include <string.h>
 #include "common.h"
 #include "ipc.h"
+#include "plugins.h"
 
 struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 {
@@ -49,7 +50,7 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 	return NULL;
 }
 
-void plugin_alloc(char *name, struct agent_core_t *core)
+void plugin_alloc(const char *name, struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug = calloc(1, sizeof(struct agent_plugin_t));
 	assert(plug);

@@ -84,14 +84,14 @@ struct httpd_request {
  * Note that this technically /queues/ the response, which means that the
  * client might not receive the data right away.
  */
-int send_response(struct MHD_Connection *connection, int status, void *data, unsigned int ndata);
+int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata);
 
 /*
  * Various shortcuts for send_response().
  */
 
-int send_response_ok(struct MHD_Connection *connection, char *data);
-int send_response_fail(struct MHD_Connection *connection, char *data);
+int send_response_ok(struct MHD_Connection *connection, const char *data);
+int send_response_fail(struct MHD_Connection *connection, const char *data);
 
 /*
  * URL    - the HTTP-protocol URL (e.g: req.url, not including host-header).
@@ -106,7 +106,7 @@ int send_response_fail(struct MHD_Connection *connection, char *data);
  * Note that you can not have multiple listeners for the same URL even if
  * they don't have overlapping methods.
  */
-int httpd_register_url(struct agent_core_t *core, char *url,
+int httpd_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method,
 		       unsigned int (*cb)(struct httpd_request *request,
 		       void *data), void *data);

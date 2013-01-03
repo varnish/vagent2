@@ -43,7 +43,7 @@ struct status_priv_t {
 	int vadmin;
 };
 
-static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd)
+static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd)
 {
 	struct agent_core_t *core = data;
 	struct status_priv_t *status;
@@ -57,19 +57,20 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, char *cmd
 	send_response_ok(request->connection, vret.answer);
 	return 0;
 }
-unsigned int status_reply(struct httpd_request *request, void *data)
+
+static unsigned int status_reply(struct httpd_request *request, void *data)
 {
 	run_cmd(request,data,"status");
 	return 0;
 }
 
-unsigned int status_stop(struct httpd_request *request, void *data)
+static unsigned int status_stop(struct httpd_request *request, void *data)
 {
 	run_cmd(request,data,"stop");
 	return 0;
 }
 
-unsigned int status_start(struct httpd_request *request, void *data)
+static unsigned int status_start(struct httpd_request *request, void *data)
 {
 	run_cmd(request,data,"start");
 	return 0;

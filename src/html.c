@@ -47,7 +47,7 @@ struct html_priv_t {
 	int logger;
 };
 
-unsigned int html_reply(struct httpd_request *request, void *data)
+static unsigned int html_reply(struct httpd_request *request, void *data)
 {
 	int fd, ret;
 	char *path;

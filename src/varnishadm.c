@@ -48,6 +48,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
+#include "vss-hack.h"
 
 #define RL_EXIT(s) exit(s)
 
@@ -70,8 +71,6 @@ cli_write(int sock, const char *s)
 	return 0;
 }
 
-int
-VSS_open(const char *str, double tmo);
 /*
  * This function establishes a connection to the specified ip and port and
  * sends a command to varnishd. If varnishd returns an OK status, the result
@@ -85,7 +84,6 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
-	printf("Timeout: %f\n", core->config->timeout);	
 	vadmin->sock = VSS_open(core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
 		fprintf(stderr, "Connection failed (%s)\n", core->config->T_arg);
@@ -134,7 +132,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	return (vadmin->sock);
 }
 
-void
+static void
 vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 {
 	int sock = vadmin->sock;
@@ -146,7 +144,7 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	logger(vadmin->logger, "Got: %d ",ret->status, ret->answer);
 }
 
-void
+static void
 read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct vadmin_config_t *vadmin = (struct vadmin_config_t *) private;
@@ -206,7 +204,7 @@ vadmin_init(struct agent_core_t *core)
 		}
 		n_arg_sock(core);
 	} else if (core->config->T_arg == NULL) {
-		core->config->n_arg = "";
+		core->config->n_arg = strdup("");
 		n_arg_sock(core);
 	} else {
 		assert(core->config->T_arg != NULL);

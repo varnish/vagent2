@@ -56,6 +56,8 @@
 
 #include <assert.h>
 
+#include "vss-hack.h"
+
 /* lightweight addrinfo */
 struct vss_addr {
 	int			 va_family;

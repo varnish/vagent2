@@ -101,12 +101,15 @@ static char *make_help(struct httpd_priv_t *http)
 	return body;
 }
 
-int send_response(struct MHD_Connection *connection, int status, void *data, unsigned int ndata)
+int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
 {
 	int ret;
 	struct MHD_Response *MHDresponse;
+	void *data_copy;
+	data_copy = malloc(ndata);
+	memcpy(data_copy, data, ndata);
 	MHDresponse = MHD_create_response_from_data(ndata,
-			data, MHD_NO, MHD_YES);
+			data_copy, MHD_YES, MHD_NO);
 	assert(MHDresponse);
 
 	ret = MHD_queue_response (connection, status, MHDresponse);
@@ -115,16 +118,16 @@ int send_response(struct MHD_Connection *connection, int status, void *data, uns
 	return ret;
 }
 
-int send_response_ok(struct MHD_Connection *connection, char *data)
+int send_response_ok(struct MHD_Connection *connection, const char *data)
 {
 	assert(data);
-	return send_response(connection, 200, (void *) data, strlen(data));
+	return send_response(connection, 200, data, strlen(data));
 }
 
-int send_response_fail(struct MHD_Connection *connection, char *data)
+int send_response_fail(struct MHD_Connection *connection, const char *data)
 {
 	assert(data);
-	return send_response(connection, 500, (void *) data, strlen(data));
+	return send_response(connection, 500, data, strlen(data));
 }
 
 static void request_completed (void *cls, struct MHD_Connection *connection,
@@ -242,7 +245,7 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	return send_response_fail (connection, "Failed\n");
 }
 
-void *httpd_run(void *data)
+static void *httpd_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct agent_plugin_t *plug;
@@ -276,7 +279,7 @@ void *httpd_run(void *data)
 }
 
 
-int httpd_register_url(struct agent_core_t *core, char *url,
+int httpd_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method,
 		       unsigned int (*cb)(struct httpd_request *request,
 		       void *data), void *data)
@@ -298,7 +301,7 @@ int httpd_register_url(struct agent_core_t *core, char *url,
 	return 1;
 }
 
-pthread_t *httpd_start(struct agent_core_t *core, const char *name)
+static pthread_t *httpd_start(struct agent_core_t *core, const char *name)
 {
 	int ret;
 	pthread_t *thread = malloc(sizeof (pthread_t));

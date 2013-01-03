@@ -8,7 +8,6 @@ AC_CONFIG_SRCDIR([config.h.in])
 AM_CONFIG_HEADER(config.h)
 
 AM_INIT_AUTOMAKE(vagent2, 0.1, [-Wall -Werror foreign])
-AM_CFLAGS="-Wall -Werror"
 
 save_LIBS="${LIBS}"
 LIBS=""

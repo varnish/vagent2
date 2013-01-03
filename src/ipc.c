@@ -113,7 +113,7 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 }
 
 
-int ipc_register(struct agent_core_t *core, char *name)
+int ipc_register(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *v;
 	int sv[2];

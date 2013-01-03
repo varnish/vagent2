@@ -260,7 +260,7 @@ static void param_json(struct httpd_request *request, struct params_priv_t *para
 	free(tmp);
 }
 
-unsigned int params_reply(struct httpd_request *request, void *data)
+static unsigned int params_reply(struct httpd_request *request, void *data)
 {
 	const char *arg;
 	struct agent_core_t *core = data;

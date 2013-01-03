@@ -46,7 +46,7 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name);
 /*
  * Allocate a plugin and IPC. Does NOT init the plugin.
  */
-void plugin_alloc(char *name, struct agent_core_t *core);
+void plugin_alloc(const char *name, struct agent_core_t *core);
 
 /*
  * Init functions for said plugins.

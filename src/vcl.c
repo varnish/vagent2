@@ -43,7 +43,7 @@
 struct vcl_priv_t {
 	int logger;
 	int vadmin;
-	char *help;
+	const char *help;
 };
 
 struct vcl_list {
