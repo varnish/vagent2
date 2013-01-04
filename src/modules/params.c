@@ -159,7 +159,6 @@ static char *params_show_json(char *raw)
 			word[i+1] = '\0';
 			assert(index(word,'"') == NULL);
 
-				
 			tmp->value = strdup(word);
 			i = 0;
 			if (raw[pos] == '\n')
@@ -294,8 +293,8 @@ static unsigned int params_reply(struct httpd_request *request, void *data)
 		}
 	} else if (request->method == M_PUT) {
 		char *mark;
-	 	assert(((char *)request->data)[request->ndata] == '\0');
-	 	body = strdup(request->data);
+		assert(((char *)request->data)[request->ndata] == '\0');
+		body = strdup(request->data);
 		mark = index(body,'\n');
 		if (mark)
 			*mark = '\0';
@@ -331,7 +330,7 @@ params_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
-        httpd_register_url(core, "/paramjson/", M_GET, params_reply, core);
-        httpd_register_url(core, "/help/param", M_GET, params_reply, core);
+	httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
+	httpd_register_url(core, "/paramjson/", M_GET, params_reply, core);
+	httpd_register_url(core, "/help/param", M_GET, params_reply, core);
 }

@@ -33,7 +33,7 @@
  * XXX: This is a direct copy/paste from varnish' lib/libvarnish/vss.c,
  * with unused code removed. It's borrowed since VSS_connect is currently
  * not exposed and we want to mimick varnishadm as closely as possible.
- * 
+ *
  * FIXME: Remove this file. Use proper libraries.
  *
  * Thief: Kristian Lyngstol <kristian@bohemians.org>

@@ -84,7 +84,7 @@ static char *make_help(struct httpd_priv_t *http)
 
 	for (listener = http->listener; listener != NULL; listener = listener->next) {
 		snprintf(buffer, 512, " - %-20s %-3s %-3s %-4s %s\n",
-			listener->url, 
+			listener->url,
 			(listener->method & M_GET) ? "GET" : "",
 			(listener->method & M_PUT) ? "PUT" : "",
 			(listener->method & M_POST) ? "POST" : "",
@@ -173,7 +173,7 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct httpd_request request;
 	struct connection_info_struct *con_info = NULL;
 
-	(void)version;	
+	(void)version;
 	plug = plugin_find(core,"httpd");
 	http = (struct httpd_priv_t *) plug->data;
 	assert(plug);
@@ -250,7 +250,7 @@ static void *httpd_run(void *data)
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct agent_plugin_t *plug;
 	struct httpd_priv_t *http;
-	int port;	
+	int port;
 	struct MHD_Daemon *d;
 	assert(data);
 	assert(core);
@@ -261,7 +261,7 @@ static void *httpd_run(void *data)
 	port = atoi(core->config->c_arg);
 	assert(port > 0);
 	logger(http->logger, "HTTPd starting");
-  	d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
+	d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
                              &answer_to_connection, data,
                              MHD_OPTION_NOTIFY_COMPLETED, request_completed,
                              NULL, MHD_OPTION_END);
