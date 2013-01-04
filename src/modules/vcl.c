@@ -115,8 +115,7 @@ static int vcl_persist_active(const char *id)
 	if (!(S_ISREG(sbuf.st_mode)))
 		return -1;
 	unlink(VCL_ACTIVE_PATH);
-	sprintf(buf, "%s.vcl", id);
-	ret = symlink(buf, VCL_ACTIVE_PATH);
+	ret = link(buf, VCL_ACTIVE_PATH);
 	if (ret!=0)
 		return -1;
 	return 0;
