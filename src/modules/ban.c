@@ -27,6 +27,7 @@
  */
 
 
+#define _GNU_SOURCE
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -37,42 +38,91 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+#include <stdarg.h>
+#include <assert.h>
+
+#define BAN_SHORTHAND "req.url ~ "
+#define BAN_HELP_TEXT \
+	"Banning supports three methods:\n" \
+	"GET /ban - list bans (ban.list)\n" \
+	"POST /ban - with request body. Uses request body for a literal ban\n" \
+	"POST /ban/foo - without request body. Uses the url-part after \"/ban\" to\n" \
+	"                ban using " BAN_SHORTHAND " url. E.g: POST /ban/foo: \n" \
+	"                ban " BAN_SHORTHAND "/foo\n"
 
 struct ban_priv_t {
 	int logger;
 	int vadmin;
 };
 
-static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd)
+static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 {
-	struct agent_core_t *core = data;
-	struct ban_priv_t *ban;
-	struct agent_plugin_t *plug;
 	struct ipc_ret_t vret;
+	va_list ap;
+	char *buffer;
+	int iret;
+	char *ans;
 
-	plug = plugin_find(core,"ban");
-	ban = plug->data;
 
-	ipc_run(ban->vadmin, &vret, cmd);
-	send_response_ok(request->connection, vret.answer);
-	return 0;
+	va_start(ap, fmt);
+	iret = vasprintf(&buffer, fmt, ap);
+	assert(iret>0);
+	va_end(ap);
+	ipc_run(vadmin, &vret, buffer);
+	free(buffer);
+	ans = vret.answer;
+
+	if (vret.status == 200)
+		send_response_ok(conn, ans);
+	else
+		send_response_fail(conn, ans);
 }
 
 static unsigned int ban_reply(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"ban");
+	struct ban_priv_t *ban;
+	struct agent_plugin_t *plug;
+	char *body;
+	plug = plugin_find(data,"ban");
+	ban = plug->data;
+
+	if (request->method == M_GET) {
+		run_and_respond(ban->vadmin, request->connection, "ban.list");
+		return 0;
+	} else {
+		char *mark;
+		assert(((char *)request->data)[request->ndata] == '\0');
+		body = strdup(request->data);
+		mark = index(body,'\n');
+		if (mark)
+			*mark = '\0';
+		if (strlen(request->url) == strlen("/ban"))
+			run_and_respond(ban->vadmin, request->connection, "ban %s",body);
+		else {
+			const char *path = request->url + strlen("/ban");
+			if (request->ndata != 0) {
+				send_response_fail(request->connection, "Banning with both a url and request body? Pick one or the other please.");
+				goto out;
+			}
+			assert(request->ndata == 0);
+			run_and_respond(ban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
+		}
+		out:
+		free(body);
+		return 0;
+	}
+
 	return 0;
 }
 
-static unsigned int ban_stop(struct httpd_request *request, void *data)
+static unsigned int ban_help(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"stop");
-	return 0;
-}
+	struct ban_priv_t *ban;
+	struct agent_plugin_t *plug;
+	plug = plugin_find(data,"ban");
+	ban = plug->data;
 
-static unsigned int ban_start(struct httpd_request *request, void *data)
-{
-	run_cmd(request,data,"start");
+	send_response_ok(request->connection, BAN_HELP_TEXT);
 	return 0;
 }
 
@@ -87,7 +137,6 @@ ban_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/ban", M_GET, ban_reply, core);
-	httpd_register_url(core, "/bstop", M_PUT | M_POST, ban_stop, core);
-	httpd_register_url(core, "/bstart", M_PUT | M_POST, ban_start, core);
+	httpd_register_url(core, "/ban", M_GET | M_POST, ban_reply, core);
+	httpd_register_url(core, "/help/ban", M_GET, ban_help, core);
 }
