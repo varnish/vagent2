@@ -4,10 +4,10 @@
 AC_PREREQ(2.61)
 AC_COPYRIGHT([Copyright (c) 2012 Varnish Software])
 AC_INIT([vagent2], [0.1])
-AC_CONFIG_SRCDIR([config.h.in])
+AC_CONFIG_SRCDIR([src/main.c])
 AM_CONFIG_HEADER(config.h)
 
-AM_INIT_AUTOMAKE(vagent2, 0.1, [-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
 save_LIBS="${LIBS}"
 LIBS=""
