@@ -54,8 +54,12 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	char *buffer;
 	struct stat sbuf;
 	(void)data;
-	
-	fd = asprintf(&path, "html/%s", (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html");
+	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
+	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
+		send_response_fail(request->connection, "Invalid URL");
+		return 0;
+	}
+	fd = asprintf(&path, "html/%s", url_stub);
 	assert(fd>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
@@ -65,6 +69,10 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		send_response_fail(request->connection, "open() was not happy");
+		return 0;
+	}
+	if (!S_ISREG(sbuf.st_mode)) {
+		send_response_fail(request->connection, "not a file");
 		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
