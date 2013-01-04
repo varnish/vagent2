@@ -31,6 +31,7 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"
+#include "helpers.h"
 
 #include <ctype.h>
 #include <assert.h>
@@ -60,29 +61,6 @@ struct param_opt {
 	char *description;
 	struct param_opt *next;
 };
-
-static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
-{
-	struct ipc_ret_t vret;
-	va_list ap;
-	char *buffer;
-	int iret;
-	char *ans;
-
-
-	va_start(ap, fmt);
-	iret = vasprintf(&buffer, fmt, ap);
-	assert(iret>0);
-	va_end(ap);
-	ipc_run(vadmin, &vret, buffer);
-	free(buffer);
-	ans = vret.answer;
-
-	if (vret.status == 200)
-		send_response_ok(conn, ans);
-	else
-		send_response_fail(conn, ans);
-}
 
 static void param_assert(struct param_opt *p)
 {

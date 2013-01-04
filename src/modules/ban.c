@@ -32,14 +32,14 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"
+#include "helpers.h"
 
+#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
-#include <stdarg.h>
-#include <assert.h>
 
 #define BAN_SHORTHAND "req.url ~ "
 #define BAN_HELP_TEXT \
@@ -54,29 +54,6 @@ struct ban_priv_t {
 	int logger;
 	int vadmin;
 };
-
-static void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
-{
-	struct ipc_ret_t vret;
-	va_list ap;
-	char *buffer;
-	int iret;
-	char *ans;
-
-
-	va_start(ap, fmt);
-	iret = vasprintf(&buffer, fmt, ap);
-	assert(iret>0);
-	va_end(ap);
-	ipc_run(vadmin, &vret, buffer);
-	free(buffer);
-	ans = vret.answer;
-
-	if (vret.status == 200)
-		send_response_ok(conn, ans);
-	else
-		send_response_fail(conn, ans);
-}
 
 static unsigned int ban_reply(struct httpd_request *request, void *data)
 {

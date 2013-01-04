@@ -10,6 +10,7 @@ vagent2_SOURCES = \
 	plugins.c \
 	ipc.c \
 	vss.c \
+	helpers.c \
 	modules/varnishadm.c \
 	modules/pingd.c \
 	modules/logd.c \
