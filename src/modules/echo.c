@@ -61,6 +61,5 @@ void echo_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logd");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
+	httpd_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
 }
-

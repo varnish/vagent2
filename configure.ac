@@ -24,29 +24,11 @@ NET_LIBS="${LIBS}"
 LIBS="${save_LIBS}"
 AC_SUBST(NET_LIBS)
 
-# Checks for programs.
-AC_PROG_AWK
 AC_PROG_CC
-# Checks for libraries.
 
-m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install
-pkg-config])])
+m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
-
-# Checks for header files.
-AC_HEADER_STDC
-AC_CHECK_HEADERS([limits.h stdlib.h string.h sys/param.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-AC_C_CONST
-AC_C_INLINE
-
-# Checks for library functions.
-AC_FUNC_MALLOC
-AC_FUNC_MEMCMP
-AC_FUNC_VPRINTF
-AC_CHECK_FUNCS([strcasecmp strerror strtol])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile])

@@ -87,9 +87,9 @@ status_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/status", M_GET, status_reply, core);
-        httpd_register_url(core, "/stop", M_PUT | M_POST, status_stop, core);
-        httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
+	httpd_register_url(core, "/status", M_GET, status_reply, core);
+	httpd_register_url(core, "/stop", M_PUT | M_POST, status_stop, core);
+	httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
 }
 
 

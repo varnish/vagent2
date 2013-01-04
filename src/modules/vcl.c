@@ -136,7 +136,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			return send_response_ok(request->connection, vret.answer);
-		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) { 
+		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
 			return send_response_ok(request->connection, vret.answer);
 		} else if(!strncmp(request->url, "/help/vcl", strlen("/help/vcl"))) {
@@ -189,8 +189,8 @@ void vcl_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
-        httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
-        httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
-        httpd_register_url(core, "/help/vcl",  M_GET , vcl_reply, core);
+	httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
+	httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
+	httpd_register_url(core, "/help/vcl",  M_GET , vcl_reply, core);
 	mk_help(priv);
 }

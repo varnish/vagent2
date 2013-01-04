@@ -157,7 +157,7 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	assert(buffer);
 	int length = 0;
 
-	length = ipc_read_line(fd, &buffer);	
+	length = ipc_read_line(fd, &buffer);
 	if (strstr(buffer,"<< ")) {
 		char *here;
 		char *line;
@@ -221,7 +221,7 @@ void ipc_init(struct ipc_t *ipc)
  */
 pthread_t *ipc_start(struct agent_core_t *core, const char *name)
 {
-	struct agent_plugin_t *plug;	
+	struct agent_plugin_t *plug;
 	pthread_t *thread = malloc(sizeof (pthread_t));
 	plug = plugin_find(core, name);
 	

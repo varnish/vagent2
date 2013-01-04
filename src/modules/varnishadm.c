@@ -164,15 +164,15 @@ n_arg_sock(struct agent_core_t *core)
 		return (-1);
 	}
 
-        if (core->config->T_arg == NULL) {
-                p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
-                if (p == NULL)  {
-                        fprintf(stderr, "No -T arg in shared memory\n");
-                        return (-1);
-                }
+	if (core->config->T_arg == NULL) {
+		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
+		if (p == NULL)  {
+			fprintf(stderr, "No -T arg in shared memory\n");
+			return (-1);
+		}
 		core->config->T_arg = strdup(p);
-        }
-        if (core->config->S_arg == NULL) {
+	}
+	if (core->config->S_arg == NULL) {
 		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
 		if (p != NULL)
 			core->config->S_arg = strdup(p);
@@ -213,6 +213,5 @@ vadmin_init(struct agent_core_t *core)
 	vadmin->logger = ipc_register(core, "logd");
 	if (vadmin->sock < 0)
 		exit(2);
-		
 	return ;
 }

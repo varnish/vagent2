@@ -76,7 +76,7 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
-	assert(buffer);	
+	assert(buffer);
 	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret>0);
 	assert(ret==sbuf.st_size);
@@ -96,7 +96,5 @@ html_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logd");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-        httpd_register_url(core, "/html/", M_GET, html_reply, core);
+	httpd_register_url(core, "/html/", M_GET, html_reply, core);
 }
-
-
