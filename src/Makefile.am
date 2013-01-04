@@ -24,4 +24,4 @@ vagent2_SOURCES = \
 vagent2_LDADD = \
 	@VARNISHAPI_LIBS@ \
 	-lmicrohttpd \
-	${PTHREAD_LIBS} ${NET_LIBS} ${LIBM}
+	${PTHREAD_LIBS} ${NET_LIBS}
