@@ -51,7 +51,7 @@
 struct vcl_priv_t {
 	int logger;
 	int vadmin;
-	const char *help;
+	char *help;
 };
 
 struct vcl_list {
@@ -60,14 +60,24 @@ struct vcl_list {
 	char ref[11];
 };
 
-static void mk_help(struct vcl_priv_t *vcl) {
-	vcl->help = "The following logic can be used:\n"
+static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
+{
+	int ret;
+	ret = asprintf(&vcl->help, "The following logic can be used:\n"
 		"GET /vcl/ - Fetch a list of VCLs (e.g: vcl.list)\n"
 		"GET /vcl/vclname - Fetch the vcl named vclname (vcl.show)\n"
 		"POST /vcl/ - Upload a new VCL, named dynamically. (vcl.inline).\n"
 		"PUT /vcl/vclname - Upload a new VCL with the specified name.\n"
 		"DELETE /vcl/vclname - Discard a named VCL (vcl.discard)\n"
-		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n";
+		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n\n"
+		"VCL is saved to '%s/<name>.auto.vcl'.\n"
+		"A successful vcl.deploy through the agent will update\n"
+		"'%s/boot.vcl'\n"
+		"That way, you can start varnishd with the most recent VCL\n"
+		"by using:\n"
+		"\"varnishd (...) -f %s/boot.vcl\"\n",
+		core->config->p_arg, core->config->p_arg, core->config->p_arg);
+	assert(ret>0);
 }
 
 static int vcl_persist(const char *id, const char *vcl, struct agent_core_t *core) {
@@ -271,5 +281,5 @@ void vcl_init(struct agent_core_t *core)
 	httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
 	httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
 	httpd_register_url(core, "/help/vcl",  M_GET , vcl_reply, core);
-	mk_help(priv);
+	mk_help(core, priv);
 }
