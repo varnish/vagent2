@@ -32,6 +32,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
+#include <signal.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -50,10 +51,9 @@
 #include "ipc.h"
 #include "vss-hack.h"
 
-#define RL_EXIT(s) exit(s)
-
 struct vadmin_config_t {
 	int sock;
+	int state;
 	int logger;
 };
 
@@ -67,7 +67,7 @@ cli_write(int sock, const char *s)
 	if (i == l)
 		return 1;
 	perror("Write error CLI socket");
-	assert(close(sock) == 0);
+	close(sock);
 	return 0;
 }
 
@@ -86,14 +86,14 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
 	vadmin->sock = VSS_open(core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
-		fprintf(stderr, "Connection failed (%s)\n", core->config->T_arg);
+		logger(vadmin->logger, "Connection failed (%s)", core->config->T_arg);
 		return (-1);
 	}
 
 	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status == CLIS_AUTH) {
 		if (core->config->S_arg == NULL) {
-			fprintf(stderr, "Authentication required\n");
+			logger(vadmin->logger, "Authentication required");
 			assert(close(vadmin->sock) == 0);
 			return(-1);
 		}
@@ -114,7 +114,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	}
 	if (status != CLIS_OK) {
-		fprintf(stderr, "Rejected %u\n%s\n", status, answer);
+		logger(vadmin->logger, "Rejected %u\n%s", status, answer);
 		assert(close(vadmin->sock) == 0);
 		return (-1);
 	}
@@ -123,11 +123,12 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	cli_write(vadmin->sock, "ping\n");
 	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
-		fprintf(stderr, "No pong received from server\n");
+		logger(vadmin->logger, "No pong received from server");
 		assert(close(vadmin->sock) == 0);
 		return(-1);
 	}
 	free(answer);
+	vadmin->state = 1;
 
 	return (vadmin->sock);
 }
@@ -136,9 +137,24 @@ static void
 vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 {
 	int sock = vadmin->sock;
+	int nret;
 	assert(cmd);
-	cli_write(sock, cmd);
-	cli_write(sock, "\n");
+	nret = cli_write(sock, cmd);
+	if (!nret) {
+		logger(vadmin->logger, "Communication error with varnishd.");
+		ret->status = 400;
+		ret->answer = strdup("Varnishd disconnected");
+		vadmin->state = 0;
+		return;
+	}
+	nret = cli_write(sock, "\n");
+	if (!nret) {
+		logger(vadmin->logger, "Communication error with varnishd.");
+		ret->status = 400;
+		ret->answer = strdup("Varnishd disconnected");
+		vadmin->state = 0;
+		return;
+	}
 	logger(vadmin->logger, "Running %s",cmd);
 	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
 	logger(vadmin->logger, "Got: %d ",ret->status, ret->answer);
@@ -147,7 +163,13 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 static void
 read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 {
-	struct vadmin_config_t *vadmin = (struct vadmin_config_t *) private;
+	struct agent_core_t *core = private;
+	struct agent_plugin_t *plug;
+	struct vadmin_config_t *vadmin;
+	plug = plugin_find(core,"vadmin");
+	vadmin = plug->data;
+	if (vadmin->state == 0)
+		cli_sock(vadmin, core);
 	vadmin_run(vadmin, msg, ret);
 }
 
@@ -194,7 +216,7 @@ vadmin_init(struct agent_core_t *core)
 	v->ipc->cb = read_cmd;
 	vadmin = malloc(sizeof(struct vadmin_config_t ));
 	v->data = vadmin;
-	v->ipc->priv = vadmin;
+	v->ipc->priv = core;
 	v->start = ipc_start;
 	vadmin->sock = -1;
 
@@ -209,9 +231,8 @@ vadmin_init(struct agent_core_t *core)
 	} else {
 		assert(core->config->T_arg != NULL);
 	}
-	cli_sock(vadmin, core);
+	vadmin->state = 0;
 	vadmin->logger = ipc_register(core, "logd");
-	if (vadmin->sock < 0)
-		exit(2);
+	signal(SIGPIPE, SIG_IGN);
 	return ;
 }
