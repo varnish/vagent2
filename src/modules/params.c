@@ -231,10 +231,14 @@ static void param_json(struct httpd_request *request, struct params_priv_t *para
 	struct ipc_ret_t vret;
 	char *tmp;
 	ipc_run(params->vadmin, &vret, "param.show -l");
-	tmp = params_show_json(vret.answer);
-	assert(tmp);
-	send_response_ok(request->connection, tmp);
-	free(tmp);
+	if (vret.status == 200) {
+		tmp = params_show_json(vret.answer);
+		assert(tmp);
+		send_response_ok(request->connection, tmp);
+		free(tmp);
+	} else {
+		send_response_fail(request->connection, vret.answer);
+	}
 }
 
 static unsigned int params_reply(struct httpd_request *request, void *data)

@@ -257,6 +257,7 @@
 	function listVCL() {
 		var client = new XMLHttpRequest();
 		client.open("GET", "/vcljson/", false);
+		try {
 		client.send();
 		var vcllist = JSON.parse(client.responseText);
 		if (client.responseText == vcl)
@@ -283,6 +284,9 @@
 			document.getElementById("vclID").value = active;
 			loadVCL();
 		}
+		} catch (err) {
+			out = "... failed.";
+		}
 	}
 
 	var paramlist;
@@ -292,6 +296,9 @@
 		var client = new XMLHttpRequest();
 		client.open("GET", "/paramjson/", false);
 		client.send();
+		if (client.status != 200)
+			throw new Error("Varnish-Agent returned " +
+			client.status + ":" + client.responseText);
 		paramlist = JSON.parse(client.responseText);
 		var list = document.getElementById("param-sel");
 		var v = list.value;
@@ -462,8 +469,8 @@
 			reset_status();
 	}
 	$('.btn').button();
-	listVCL();
 	setInterval(function(){status()},10000);
+	listVCL();
     </script>
   </body>
 </html>
