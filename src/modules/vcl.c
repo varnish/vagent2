@@ -240,8 +240,8 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			if (vret.status == 400) {
 				send_response_fail(request->connection, vret.answer);
 			} else {
-				json = vret.answer = vcl_list_json(vret.answer);
-				send_response_ok(request->connection, vret.answer);
+				json = vcl_list_json(vret.answer);
+				send_response_ok(request->connection, json);
 				free(json);
 			}
 			free(vret.answer);
