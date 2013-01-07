@@ -16,7 +16,7 @@ src/.deps/
 src/Makefile
 stamp-h1
 src/*.o
-src/vagent2
+src/varnish-agent
 tags
 src/.*.swp
 include/.*.swp
