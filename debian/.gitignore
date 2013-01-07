@@ -1,0 +1,5 @@
+files
+tmp/
+*.debhelper
+*.debhelper.log
+*.substvars
