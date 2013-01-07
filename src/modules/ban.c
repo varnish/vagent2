@@ -94,10 +94,7 @@ static unsigned int ban_reply(struct httpd_request *request, void *data)
 
 static unsigned int ban_help(struct httpd_request *request, void *data)
 {
-	struct ban_priv_t *ban;
-	struct agent_plugin_t *plug;
-	plug = plugin_find(data,"ban");
-	ban = plug->data;
+	(void)data;
 
 	send_response_ok(request->connection, BAN_HELP_TEXT);
 	return 0;
