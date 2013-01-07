@@ -34,5 +34,6 @@ PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
 
 AC_CONFIG_FILES([Makefile
+		 include/Makefile
                  src/Makefile])
 AC_OUTPUT
