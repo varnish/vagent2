@@ -156,10 +156,10 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	struct ipc_ret_t ret;
 	assert(buffer);
 	int length = 0;
+	char *here = NULL;
 
 	length = ipc_read_line(fd, &buffer);
 	if (strstr(buffer,"<< ")) {
-		char *here;
 		char *line;
 		here = strdup(strstr(buffer, "<< ") + 3);
 		buffer[length] = '\n';
@@ -175,6 +175,8 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 		}
 		buffer[length] = '\0';
 	}
+	if (here)
+		free(here);
 	/*
 	 * XXX: Typically hit if you throw in an empty newline at ipc_run,
 	 * e.g: ipc_run(...,"param.set foo bar\n");
@@ -185,6 +187,8 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	ipc->cb(ipc->priv, buffer, &ret);
 	VCLI_WriteResult(fd, ret.status, ret.answer);
 	free(buffer);
+	if (ret.answer)
+		free(ret.answer);
 	return 1;
 }
 

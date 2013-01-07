@@ -285,17 +285,15 @@ static unsigned int params_reply(struct httpd_request *request, void *data)
 			run_and_respond(params->vadmin,
 				request->connection,
 				"param.set %s",body);
-			free(body);
-			return 1;
 		} else {
 			arg = request->url + strlen("/param/");
 			assert(arg && *arg);
 			run_and_respond(params->vadmin,
 				request->connection,
 				"param.set %s %s",arg, body);
-			free(body);
-			return 1;
 		}
+		free(body);
+		return 1;
 
 	}
 	send_response_fail(request->connection, "Failed");

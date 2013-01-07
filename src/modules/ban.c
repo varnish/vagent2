@@ -79,12 +79,11 @@ static unsigned int ban_reply(struct httpd_request *request, void *data)
 			const char *path = request->url + strlen("/ban");
 			if (request->ndata != 0) {
 				send_response_fail(request->connection, "Banning with both a url and request body? Pick one or the other please.");
-				goto out;
+			} else {
+				assert(request->ndata == 0);
+				run_and_respond(ban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
 			}
-			assert(request->ndata == 0);
-			run_and_respond(ban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
 		}
-		out:
 		free(body);
 		return 0;
 	}

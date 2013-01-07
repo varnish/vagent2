@@ -216,22 +216,36 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	if (request->method == M_GET) {
 		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
-			if (vret.status == 400)
-				return send_response_fail(request->connection, vret.answer);
-			return send_response_ok(request->connection, vret.answer);
+			if (vret.status == 400) {
+				send_response_fail(request->connection, vret.answer);
+			} else {
+				send_response_ok(request->connection, vret.answer);
+			}
+			free(vret.answer);
+			return 0;
 		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
-			if (vret.status == 400)
-				return send_response_fail(request->connection, vret.answer);
-			return send_response_ok(request->connection, vret.answer);
+			if (vret.status == 400) {
+				send_response_fail(request->connection, vret.answer);
+			} else {
+				send_response_ok(request->connection, vret.answer);
+			}
+			free(vret.answer);
+			return 0;
 		} else if(!strncmp(request->url, "/help/vcl", strlen("/help/vcl"))) {
 			return send_response_ok(request->connection, vcl->help);
 		} else if(!strcmp(request->url, "/vcljson/")) {
+			char *json;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
-			if (vret.status == 400)
-				return send_response_fail(request->connection, vret.answer);
-			vret.answer = vcl_list_json(vret.answer);
-			return send_response_ok(request->connection, vret.answer);
+			if (vret.status == 400) {
+				send_response_fail(request->connection, vret.answer);
+			} else {
+				json = vret.answer = vcl_list_json(vret.answer);
+				send_response_ok(request->connection, vret.answer);
+				free(json);
+			}
+			free(vret.answer);
+			return 0;
 		}
 	} else if (request->method == M_POST) {
 		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));
