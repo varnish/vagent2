@@ -28,6 +28,23 @@ Everything is written as a module, and the goal is:
 - Maintainable
 - Generic
 
+KNOWN BUGS
+==========
+
+- There are a number of minor memory leaks with regards to IPC and similar
+  issues. I consider them minor enough for now, but you don't want to run
+  the agent in it's current state for long periods of time.
+- Logging is just to stderr for now, and quite noisy.
+- When varnish is down, not all output goes over the logger.
+- The frontend doesn't look that good when varnishd is down, but it is
+  visible.
+- The frontend doesn't handle history too well.
+- Writing of VCL isn't 100% safe. We should write to a temp file and move
+  it into place. Same goes for boot.vcl. A power loss or crash while
+  updating VCL could leave us with incomplete VCL.
+- General quality...
+- No manual page.
+- No daemon-mode.
 
 IPC
 ===
