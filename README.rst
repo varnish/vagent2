@@ -1,14 +1,20 @@
-=================
-Varnish Agent (2)
-=================
+=============
+Varnish Agent
+=============
 
 ``varnish-agent`` is a small daemon meant to communicate with Varnish and
 other varnish-related service to allow remote control and monitoring of
 Varnish.
 
-Since it is written with the Varnish Administration Console (VAC) as the
-primary user, the documentation uses the VAC as the example, even though it
-is not really vac-specific.
+In addition to many varnishadm-commands, it also persists configuration
+changes to disk. Uploading VCL will both load it in varnish and store it to
+disk (assuming varnish compiled the VCL OK). Deploying vcl (e.g: using it)
+will make sure ``/usr/lib/varnish-agent/boot.vcl`` points to the deployed
+VCL. Similar logic will be available for the parameters too, though it's
+not currently implemented.
+
+It is mainly meant for the Varnish Administration Console, but also
+provides a fully functional "HTML" interface (Aka: web interface).
 
 Design
 ======
@@ -35,7 +41,8 @@ thread). Please read and understand include/ipc.h for details.
 Modules
 =======
 
-"Everything" is a module.
+"Everything" is a module. See src/modules/ for a complete list, but here
+are some of them:
 
 vadmin
 ------

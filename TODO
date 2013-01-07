@@ -1,10 +1,7 @@
 Chores:
 
-- Fix build system (e.g: messed up linking to libvarnishcompat, no
-  microhttpd-logic etc)
 - Fix numerous memory leaks associated with ipc_run() and return, and
   others.
-- Clean up /html/ with regards to old files.
 - Fix dynamic building and linking of plugins
 - Add HTTP authentication
 - Fix http binding on other IPs.
