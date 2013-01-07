@@ -32,12 +32,33 @@
 #include "ipc.h"
 #include "httpd.h"
 
+#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 
+
+#define PANIC_HELP \
+	"Varnish consists of two processes: The manager and the worker child.\n" \
+	"The worker child is the process that does the majority of the work,\n" \
+	"while the manager is responsible for \"administrative\" things, like\n" \
+	"compiling VCL, talking to the varnish-agent, starting the worker, etc.\n" \
+	"\n" \
+	"Since the worker is where the majority of the logic lives, this is the one\n" \
+	"most vulnerable to bugs. Varnish' typical reaction to bugs is to abort the\n" \
+	"worker process and restart it. This typically takes a second or two and can\n" \
+	"be hard to notice. It also clears the cache.\n" \
+	"\n" \
+	"When this occurs, a detailed log is made, which can be retrieved through the\n" \
+	"management thread. It is also logged to syslog.\n" \
+	"\n" \
+	"GET /panic - This retrieves the last panic message\n" \
+	"DELETE /panic - This clears the last panic\n" \
+	"\n" \
+	"Output from GET /panic can be used in bug reports or support tickets.\n" \
+	"Keep in mind that not all bugs will be logged here of course. Bugs are tricky.\n"
 struct status_priv_t {
 	int logger;
 	int vadmin;
@@ -81,6 +102,26 @@ static unsigned int status_start(struct httpd_request *request, void *data)
 	return 0;
 }
 
+static unsigned int status_panic(struct httpd_request *request, void *data)
+{
+	if (request->method == M_GET)
+		run_cmd(request,data,"panic.show");
+	else if (request->method == M_DELETE)
+		run_cmd(request, data, "panic.clear");
+	else
+		assert("Shouldn't happen");
+	return 0;
+}
+
+
+static unsigned int status_panic_help(struct httpd_request *request, void *data)
+{
+	(void)data;
+	send_response_ok(request->connection, PANIC_HELP);
+	return 0;
+}
+
+
 void
 status_init(struct agent_core_t *core)
 {
@@ -95,6 +136,8 @@ status_init(struct agent_core_t *core)
 	httpd_register_url(core, "/status", M_GET, status_reply, core);
 	httpd_register_url(core, "/stop", M_PUT | M_POST, status_stop, core);
 	httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
+	httpd_register_url(core, "/panic", M_GET | M_DELETE, status_panic, core);
+	httpd_register_url(core, "/help/panic", M_GET, status_panic_help, core);
 }
 
 
