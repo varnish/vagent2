@@ -216,14 +216,20 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	if (request->method == M_GET) {
 		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
+			if (vret.status == 400)
+				return send_response_fail(request->connection, vret.answer);
 			return send_response_ok(request->connection, vret.answer);
 		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
+			if (vret.status == 400)
+				return send_response_fail(request->connection, vret.answer);
 			return send_response_ok(request->connection, vret.answer);
 		} else if(!strncmp(request->url, "/help/vcl", strlen("/help/vcl"))) {
 			return send_response_ok(request->connection, vcl->help);
 		} else if(!strcmp(request->url, "/vcljson/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
+			if (vret.status == 400)
+				return send_response_fail(request->connection, vret.answer);
 			vret.answer = vcl_list_json(vret.answer);
 			return send_response_ok(request->connection, vret.answer);
 		}
@@ -252,12 +258,13 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			if (vret.status == 200 && ret == 0)
 				return send_response_ok(request->connection, vret.answer);
 			return send_response_fail(request->connection, vret.answer);
-
 		}
 	} else if (request->method == M_DELETE) {
 		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
 				request->url + strlen("/vcl/"));
+			if (vret.status == 400)
+				return send_response_fail(request->connection, vret.answer);
 			return send_response_ok(request->connection, vret.answer);
 		}
 	} else {

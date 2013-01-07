@@ -54,6 +54,10 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, const cha
 	status = plug->data;
 
 	ipc_run(status->vadmin, &vret, cmd);
+	if (vret.status == 400) {
+		send_response_fail(request->connection, vret.answer);
+		return 0;
+	}
 	send_response_ok(request->connection, vret.answer);
 	return 0;
 }
