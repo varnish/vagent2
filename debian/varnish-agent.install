@@ -1,2 +1,2 @@
-usr/bin/varnish-agent
-usr/share/varnish-agent/html
+src/varnish-agent usr/bin
+html/ usr/share/varnish-agent/html
