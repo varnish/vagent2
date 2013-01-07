@@ -87,4 +87,5 @@ void logger_real(int handle, const char *file, const char *func, const unsigned 
 	vsnprintf(buffer2, 1024, fmt, ap);
 	va_end(ap);
 	ipc_run(handle,&ret,"%s (%s:%d): %s", func, file, line, buffer2);
+	free(ret.answer);
 }

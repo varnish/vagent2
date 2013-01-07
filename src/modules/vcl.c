@@ -238,14 +238,18 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		assert(ret>0);
 		status = vcl_store(request, vcl, &vret, core, cmd);
 		free(cmd);
-		return send_response(request->connection,status, vret.answer, strlen(vret.answer));
+		send_response(request->connection,status, vret.answer, strlen(vret.answer));
+		free(vret.answer);
+		return 0;
 	} else if (request->method == M_PUT) {
 		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			if (strlen(request->url) >= 6) {
 				status = vcl_store(request, vcl, &vret, core,
 					           request->url + strlen("/vcl/"));
-				return send_response(request->connection,status,
+				send_response(request->connection,status,
 						     vret.answer, strlen(vret.answer));
+				free(vret.answer);
+				return 0;
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
@@ -254,18 +258,25 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 				ret = vcl_persist_active(request->url + strlen("/vcldeploy/"), core);
 			}
 			if (vret.status == 200 && ret)
-				return send_response_fail(request->connection, "Deployed ok, but NOT PERSISTED.");
-			if (vret.status == 200 && ret == 0)
-				return send_response_ok(request->connection, vret.answer);
-			return send_response_fail(request->connection, vret.answer);
+				send_response_fail(request->connection, "Deployed ok, but NOT PERSISTED.");
+			else if (vret.status == 200 && ret == 0)
+				send_response_ok(request->connection, vret.answer);
+			else
+				send_response_fail(request->connection, vret.answer);
+			free(vret.answer);
+			return 0;
 		}
 	} else if (request->method == M_DELETE) {
 		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
 				request->url + strlen("/vcl/"));
-			if (vret.status == 400)
-				return send_response_fail(request->connection, vret.answer);
-			return send_response_ok(request->connection, vret.answer);
+			if (vret.status == 400) {
+				send_response_fail(request->connection, vret.answer);
+			} else {
+				send_response_ok(request->connection, vret.answer);
+			}
+			free(vret.answer);
+			return 0;
 		}
 	} else {
 		return send_response_fail(request->connection, "Unknown request?");

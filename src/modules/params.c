@@ -239,6 +239,7 @@ static void param_json(struct httpd_request *request, struct params_priv_t *para
 	} else {
 		send_response_fail(request->connection, vret.answer);
 	}
+	free(vret.answer);
 }
 
 static unsigned int params_reply(struct httpd_request *request, void *data)

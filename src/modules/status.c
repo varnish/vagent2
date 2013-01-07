@@ -56,9 +56,10 @@ static unsigned int run_cmd(struct httpd_request *request, void *data, const cha
 	ipc_run(status->vadmin, &vret, cmd);
 	if (vret.status == 400) {
 		send_response_fail(request->connection, vret.answer);
-		return 0;
+	} else {
+		send_response_ok(request->connection, vret.answer);
 	}
-	send_response_ok(request->connection, vret.answer);
+	free(vret.answer);
 	return 0;
 }
 

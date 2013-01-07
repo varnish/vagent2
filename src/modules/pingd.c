@@ -57,10 +57,12 @@ static void *pingd_run(void *data)
 		ipc_run(ping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
 			logger(ping->logger, "Ping failed. %d ", vret.status);
+		free(vret.answer);
 
 		ipc_run(ping->vadmin_sock, &vret, "status");
 		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
 			logger(ping->logger, "%d %s", vret.status, vret.answer);
+		free(vret.answer);
 	}
 	return NULL;
 }

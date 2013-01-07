@@ -53,7 +53,6 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	va_list ap;
 	char *buffer;
 	int iret;
-	char *ans;
 
 
 	va_start(ap, fmt);
@@ -62,11 +61,11 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	va_end(ap);
 	ipc_run(vadmin, &vret, buffer);
 	free(buffer);
-	ans = vret.answer;
 
 	if (vret.status == 200)
-		send_response_ok(conn, ans);
+		send_response_ok(conn, vret.answer);
 	else
-		send_response_fail(conn, ans);
+		send_response_fail(conn, vret.answer);
+	free(vret.answer);
 }
 
