@@ -70,11 +70,11 @@ static void mk_help(struct vcl_priv_t *vcl) {
 		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n";
 }
 
-static int vcl_persist(const char *id, const char *vcl) {
+static int vcl_persist(const char *id, const char *vcl, struct agent_core_t *core) {
 	int fd, ret;
 	char *path;
 	struct stat sbuf;
-	fd = asprintf(&path, VCL_PATH "%s.vcl", id);
+	fd = asprintf(&path, "%s/%s.auto.vcl", core->config->p_arg, id);
 	assert(fd>0);
 	fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	if (fd < 0) {
@@ -99,23 +99,26 @@ static int vcl_persist(const char *id, const char *vcl) {
 	return ret;
 }
 
-static int vcl_persist_active(const char *id)
+static int vcl_persist_active(const char *id, struct agent_core_t *core)
 {
 	int ret;
 	char buf[1024];
+	char active[1024];
 	struct stat sbuf;
 	/*
 	 * FIXME: need to move things into place to avoid disaster if we
 	 * crash during update, leaving no active vcl in place.
 	 */
-	sprintf(buf, VCL_PATH "%s.vcl", id);
+	sprintf(buf, "%s/%s.auto.vcl", core->config->p_arg, id);
+	sprintf(active, "%s/boot.vcl", core->config->p_arg);
+	
 	ret = stat(buf, &sbuf);
 	if (ret < 0)
 		return -1;
 	if (!(S_ISREG(sbuf.st_mode)))
 		return -1;
-	unlink(VCL_ACTIVE_PATH);
-	ret = link(buf, VCL_ACTIVE_PATH);
+	unlink(active);
+	ret = link(buf, active);
 	if (ret!=0)
 		return -1;
 	return 0;
@@ -124,6 +127,7 @@ static int vcl_persist_active(const char *id)
 static int vcl_store(struct httpd_request *request,
 		      struct vcl_priv_t *vcl,
 		      struct ipc_ret_t *vret,
+		      struct agent_core_t *core,
 		      const char *id)
 {
 	int ret;
@@ -131,7 +135,7 @@ static int vcl_store(struct httpd_request *request,
 		id,id,(char *)request->data,id);
 	if (vret->status == 200) {
 		logger(vcl->logger, "VCL stored OK");
-		ret = vcl_persist(id, request->data);
+		ret = vcl_persist(id, request->data, core);
 		if (ret) {
 			logger(vcl->logger, "vcl.inline OK, but persisting to disk failed. Errno: %d", errno);
 			free(vret->answer);
@@ -216,13 +220,13 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	} else if (request->method == M_POST) {
 		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));
 		assert(ret>0);
-		status = vcl_store(request, vcl, &vret, cmd);
+		status = vcl_store(request, vcl, &vret, core, cmd);
 		free(cmd);
 		return send_response(request->connection,status, vret.answer, strlen(vret.answer));
 	} else if (request->method == M_PUT) {
 		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			if (strlen(request->url) >= 6) {
-				status = vcl_store(request, vcl, &vret,
+				status = vcl_store(request, vcl, &vret, core,
 					           request->url + strlen("/vcl/"));
 				return send_response(request->connection,status,
 						     vret.answer, strlen(vret.answer));
@@ -231,7 +235,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
 				request->url + strlen("/vcldeploy/"));
 			if (vret.status == 200) {
-				ret = vcl_persist_active(request->url + strlen("/vcldeploy/"));
+				ret = vcl_persist_active(request->url + strlen("/vcldeploy/"), core);
 			}
 			if (vret.status == 200 && ret)
 				return send_response_fail(request->connection, "Deployed ok, but NOT PERSISTED.");

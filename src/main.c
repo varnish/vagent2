@@ -37,17 +37,36 @@
 #include "common.h"
 #include "plugins.h"
 
+static void usage(const char *argv0)
+{
+	fprintf(stderr,
+	"Varnish Agent usage: \n"
+	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
+	"   [-T host:port] [-t timeout] [-c port] [-h]\n\n"
+	"-p directory        Persistence directory: where VCL and parameters\n"
+	"                    are stored. Default: " AGENT_PERSIST_DIR "\n"
+	"-H                  Where /html/ is located. Default: " AGENT_HTML_DIR "\n", argv0);
+}
 static void core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
+	const char *argv0 = argv[0];
 	assert(core->config != NULL);
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
 	core->config->T_arg = NULL;
 	core->config->c_arg = strdup("6085");
 	core->config->timeout = 5;
-	while ((opt = getopt(argc, argv, "n:S:T:t:c:")) != -1) {
+	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
+	core->config->H_arg = strdup(AGENT_HTML_DIR);
+	while ((opt = getopt(argc, argv, "hp:H:n:S:T:t:c:")) != -1) {
 		switch (opt) {
+		case 'p':
+			core->config->p_arg = optarg;
+			break;
+		case 'H':
+			core->config->H_arg = optarg;
+			break;
 		case 'n':
 			core->config->n_arg = optarg;
 			break;
@@ -62,6 +81,10 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'c':
 			core->config->c_arg = optarg;
+			break;
+		case 'h':
+			usage(argv0);
+			exit(1);
 			break;
 		}
 	}

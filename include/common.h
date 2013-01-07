@@ -35,11 +35,17 @@
  * Configuration, handled by main for now.
  */
 struct agent_config_t {
+	/*
+	 * Varnishadm-related:
+	 */
 	double timeout;
 	char *T_arg;
 	char *S_arg;
 	char *n_arg;
-	char *c_arg;
+
+	char *c_arg; // Listening port for incoming requests
+	char *p_arg; // Persistence directory
+	char *H_arg; // HTML directory
 };
 
 /*

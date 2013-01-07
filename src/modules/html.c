@@ -53,13 +53,13 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	char *path;
 	char *buffer;
 	struct stat sbuf;
-	(void)data;
+	struct agent_core_t *core = data;
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
 		send_response_fail(request->connection, "Invalid URL");
 		return 0;
 	}
-	fd = asprintf(&path, "html/%s", url_stub);
+	fd = asprintf(&path, "%s/%s", core->config->H_arg, url_stub);
 	assert(fd>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
