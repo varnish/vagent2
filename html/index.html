@@ -60,6 +60,7 @@
             </ul>
           </div><!--/.well -->
 	  <button class="btn disabled btn-block btn-primary" id="vcl-btn"></button>
+	  <button class="btn disabled btn-block btn-primary" id="stats-btn"></button>
 	  <button class="btn disabled btn-block" id="status-btn"></button>
 	  <pre id="out"></pre>
 	  <p id="test-out"></p>
@@ -468,8 +469,40 @@
 		if (!setstate)
 			reset_status();
 	}
+	var stats = new Array();
+	function update_stats() {
+		var client = new XMLHttpRequest();
+		var d = document.getElementById("stats-btn");
+		try {
+		client.open("GET","/stats", false);
+		client.send();
+		for (i = 0; i < 3; i++) {
+			stats[i] = stats[i+1];
+		}
+		stats[3] = JSON.parse(client.responseText);
+		var n_req = 0;
+		var n_n_req = 0;
+		for (i = 3; stats[i-1] != null; i--) {
+			if (stats[i] == null) 
+				break;
+			if (stats[i].client_req == null)
+				break;
+			if (stats[i-1] != null && stats[i-1].client_req != null)
+				n_req += stats[i].client_req.value - stats[i-1].client_req.value;
+			else
+				n_req += stats[i].client_req.value;
+			n_n_req++;
+		}
+		if (n_n_req>0)
+			d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";
+		} catch (err) {
+			d.innerHTML = "Couldn't get stats";
+		}
+
+	}
 	$('.btn').button();
 	setInterval(function(){status()},10000);
+	setInterval(function(){update_stats()},1000);
 	listVCL();
     </script>
   </body>
