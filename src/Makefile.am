@@ -20,6 +20,7 @@ varnish_agent_SOURCES = \
 	modules/params.c \
 	modules/vcl.c \
 	modules/html.c \
+	modules/varnishstat.c \
 	modules/ban.c
 
 varnish_agent_LDADD = \
