@@ -71,6 +71,7 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 	buffer2[0] = buffer[0] = '\0';
 	assert(!strcmp(pt->fmt, "uint64_t"));
 	val = *(const volatile uint64_t*)pt->ptr;
+	assert(sizeof(uint64_t) == sizeof(uintmax_t));
 
 	if (varnishstat->jp)
 		varnishstat->jp = 0;
@@ -101,7 +102,7 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 		strncat(buffer2,buffer,4096);
 	}
 
-	snprintf(buffer,4096,"\"value\": %ju, ", val);
+	snprintf(buffer,4096,"\"value\": %ju, ", (uintmax_t)val);
 	strncat(buffer2,buffer,4096);
 
 	snprintf(buffer,4096,"\"flag\": \"%c\", ", pt->flag);
