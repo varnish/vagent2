@@ -20,3 +20,4 @@ src/varnish-agent
 tags
 src/.*.swp
 include/.*.swp
+compile
