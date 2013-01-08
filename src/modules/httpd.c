@@ -260,7 +260,7 @@ static void *httpd_run(void *data)
 	assert(http);
 	port = atoi(core->config->c_arg);
 	assert(port > 0);
-	logger(http->logger, "HTTPd starting");
+	logger(http->logger, "HTTPd starting on port %i",port);
 	d = MHD_start_daemon (MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
                              &answer_to_connection, data,
                              MHD_OPTION_NOTIFY_COMPLETED, request_completed,
