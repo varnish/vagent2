@@ -1,7 +1,21 @@
-var stats = new Array();
-var paramlist;
-var out;
-var setstate = false;
+var agent = {
+	stats:new Array(),
+	params:null,
+	out:"Initializing frontend",
+	setstate:false,
+	vcl:"",
+	vclId:"",
+	vclList:null,
+	activeVcl:""
+};
+
+/*
+ * Old legacy variables. Remove "after a while".
+ */
+var stats = null;
+var paramlist = null;
+var out = null;
+var setstate = null;
 
 function assert(val)
 {
@@ -23,9 +37,10 @@ function vcl_load(vcl, id) {
 	try {
 		client.open("PUT", "/vcl/" + id, false);
 		client.send(vcl);
-		out = client.responseText;
+		agent.out = client.responseText;
 	} catch (err) {
-		out = "Com. errors with agent: \n" + err;
+		agent.out = "Com. errors with agent: \n" + err;
+		return false;
 	}
 	if (client.status == 201) {
 		return true;
@@ -36,11 +51,11 @@ function vcl_load(vcl, id) {
 
 function out_clear() {
 	document.getElementById("out").innerHTML = "";
-	out = "";
+	agent.out = "";
 }
 
 function out_up() {
-	document.getElementById("out").innerHTML = out;
+	document.getElementById("out").innerHTML = agent.out;
 }
 
 function vcl_show(id) {
@@ -50,14 +65,16 @@ function vcl_show(id) {
 		client.open("GET", "/vcl/" + id, false);
 		client.send();
 	} catch (err) {
-		out = "Com. errors with agent: \n" + err.message;
-		return null;
+		agent.out = "Com. errors with agent: \n" + err.message;
+		return false;
 	}
 	if (client.status == 200) {
-		return client.responseText;
+		agent.vcl = client.responseText;
+		agent.vclId = id;
+		return true;
 	} else {
-		out = client.responseText;
-		return null;
+		agent.out = client.responseText;
+		return false;
 	}
 }
 
@@ -77,12 +94,14 @@ function showVCL() {
 	document.getElementById("vcl").style.display = "block";
 	topActive("vcl");
 }
+
 function showHome() {
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
 	topActive("home");
 }
+
 function showParam() {
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
@@ -91,11 +110,11 @@ function showParam() {
 	topActive("param");
 }
 
-
 function reset_status()
 {
-	but = document.getElementById("status-btn");
+	var but = document.getElementById("status-btn");
 	assert(but != null);
+	var stat;
 	try {
 		var client = new XMLHttpRequest();
 		client.open("GET", "/status", false);
@@ -111,14 +130,14 @@ function reset_status()
 	} else {
 		but.className = "btn btn-danger btn-block disabled";
 	}
-	setstate = false;
+	agent.setstate = false;
 }	
 
 function show_status(state,message)
 {
 	assertText(state);
 	assertText(message);
-	setstate = true;
+	agent.setstate = true;
 	but = document.getElementById("status-btn");
 	if (state == "ok")
 		but.className = "btn btn-success btn-block disabled";
@@ -144,35 +163,42 @@ function uploadVCL()
 
 function loadVCL()
 {
+	var ret;
 	out_clear();
-	ret = vcl_show(document.getElementById("loader").value);
-	if (ret == null)
+	var id = document.getElementById("loader").value;
+	assertText(id);
+	ret = vcl_show(id);
+	if (!ret)
 		show_status("warn","VCL load failed");
 	else
 		show_status("ok", "VCL loaded");
-	document.getElementById("vcl-text").value = ret;
-	document.getElementById("vclID").value = document.getElementById("loader").value;
+	if (ret) {
+		document.getElementById("vcl-text").value = agent.vcl;
+		document.getElementById("vclID").value = agent.vclId;
+	}
 	out_up();
 }
+
 
 function listVCL() {
 	var client = new XMLHttpRequest();
 	client.open("GET", "/vcljson/", false);
 	try {
 		client.send();
-		var vcllist = JSON.parse(client.responseText);
-		if (client.responseText == vcl)
-			return;
-		vcl = client.responseText;
+		var vclList = JSON.parse(client.responseText);
+		/*
+		 * XXX: If json parsing fails, this leaves agent.vcllist
+		 * intact.
+		 */
+		agent.vclList = vclList;
 		var txt = "";
-		var active = "";
-		for (x in vcllist["vcls"]) {
-			v = vcllist["vcls"][x];
+		for (x in agent.vclList["vcls"]) {
+			v = agent.vclList["vcls"][x];
 			if (v.status == "discarded") {
 				continue;
 			}
 			if (v.status == "active") {
-				active = v.name;
+				agent.activeVcl = v.name;
 				document.getElementById("vcl-btn").innerHTML = "Active VCL: " + v.name;
 			}
 			txt = txt + "\n" + "<option>" + v.name + "</option>";
@@ -180,12 +206,12 @@ function listVCL() {
 		var d = document.getElementById("loader");
 		d.innerHTML = txt;
 		if (document.getElementById("vcl-text").value == "") {
-			d.value = active;
-			document.getElementById("vclID").value = active;
+			d.value = agent.activeVcl;
+			document.getElementById("vclID").value = agent.activeVcl;
 			loadVCL();
 		}
 	} catch (err) {
-		out = "Listing VCL failed.";
+		agent.out = "Listing VCL failed.";
 	}
 }
 
@@ -198,11 +224,12 @@ function list_params()
 		if (client.status != 200)
 			throw new Error("Varnish-Agent returned " +
 					client.status + ":" + client.responseText);
-		paramlist = JSON.parse(client.responseText);
+		var paramlist = JSON.parse(client.responseText);
+		agent.params = paramlist;
 		var list = document.getElementById("param-sel");
 		var v = list.value;
 		var arry = new Array();
-		for (x in paramlist) {
+		for (x in agent.params) {
 			arry.push(x);
 		}
 		arry.sort();
@@ -215,54 +242,54 @@ function list_params()
 		paramChange();
 	} catch (err) {
 		out_clear();
-		out = "Error listing parameters.\n"
-			out = out + "Communication error with agent: \n"
-			out = out + err;
+		agent.out = "Error listing parameters.\n";
+		agent.out += "Communication error with agent: \n";
+		agent.out += err;
 		out_up();
 	}
-	return paramlist;
+	return true;
 }
 
 function paramChange()
 {
 	var pname = document.getElementById("param-sel").value;
 	assertText(pname);
-	document.getElementById("param-val").value = paramlist[pname].value;
+	document.getElementById("param-val").value = agent.params[pname].value;
 	out_clear();
-	out = "Default: " + paramlist[pname].default + "\n";
-	out = out + "Value:   " + paramlist[pname].value + "\n";
-	out = out + "Unit:    " + paramlist[pname].unit + "\n";
-	out = out + paramlist[pname].description;
+	agent.out =  "Default: " + agent.params[pname].default + "\n";
+	agent.out += "Value:   " + agent.params[pname].value + "\n";
+	agent.out += "Unit:    " + agent.params[pname].unit + "\n";
+	agent.out += agent.params[pname].description;
 	out_up();
 }
 
 function paramListDiff()
 {
 	out_clear();
-	out = "Non-default parameters:\n\n";
-	assert(paramlist != null);
-	for (x in paramlist) {
-		if (paramlist[x].unit == "seconds" || paramlist[x].unit == "s" || paramlist[x].unit == "bitmap") {
-			one = Number(paramlist[x].value);
-			two = Number(paramlist[x].default);
+	agent.out = "Non-default parameters:\n\n";
+	assert(agent.params != null);
+	for (x in agent.params) {
+		if (agent.params[x].unit == "seconds" || agent.params[x].unit == "s" || agent.params[x].unit == "bitmap") {
+			var one = Number(agent.params[x].value);
+			var two = Number(agent.params[x].default);
 			if (one != two) {
-				out = out + x + "(";
-				out = out + one + " vs ";
-				out = out + two + ")\n";
+				agent.out +=  x + "(";
+				agent.out += one + " vs ";
+				agent.out += two + ")\n";
 			}
-		} else if (paramlist[x].unit == "bytes") {
-			one = paramlist[x].value == "-1" ? "unlimited" : paramlist[x].value;
-			two = paramlist[x].default == "-1" ? "unlimited" : paramlist[x].default;
+		} else if (agent.params[x].unit == "bytes") {
+			var one = agent.params[x].value == "-1" ? "unlimited" : agent.params[x].value;
+			var two = agent.params[x].default == "-1" ? "unlimited" : agent.params[x].default;
 			if (one != two) {
-				out = out + x + "(";
-				out = out + one + " vs ";
-				out = out + two + ")\n";
+				agent.out += x + "(";
+				agent.out +=  one + " vs ";
+				agent.out +=  two + ")\n";
 			}
 
-		} else if (paramlist[x].value != paramlist[x].default) {
-			out = out + x + "(";
-			out = out + paramlist[x].value + " vs ";
-			out = out + paramlist[x].default + ")\n";
+		} else if (agent.params[x].value != agent.params[x].default) {
+			agent.out += x + "(";
+			agent.out += agent.params[x].value + " vs ";
+			agent.out += agent.params[x].default + ")\n";
 		}
 	}
 	out_up();
@@ -278,7 +305,7 @@ function saveParam()
 	out_clear();
 	client.open("PUT", "/param/" + pname, false);
 	client.send(pval);
-	out = client.responseText;
+	agent.out = client.responseText;
 	out_up();
 	if (client.status == 200) {
 		show_status("ok","Parameter saved");
@@ -293,7 +320,8 @@ function setParamDef()
 	var pname = document.getElementById("param-sel").value;
 	var pval = document.getElementById("param-val");
 	assertText(pname);
-	pval.value = paramlist[pname].default;
+	assertText(agent.params[pname].default);
+	pval.value = agent.params[pname].default;
 }
 
 function vcl_use(id)
@@ -303,12 +331,13 @@ function vcl_use(id)
 	try {
 		client.open("PUT", "/vcldeploy/" + id, false);
 		client.send();
-		out = client.responseText;
+		agent.out = client.responseText;
 	} catch (err) {
-		out = "Com. errors with agent: \n" + err;
+		agent.out = "Com. errors with agent: \n" + err;
 		return false;
 	}
 	if (client.status = "200") {
+		agent.activeVcl = id;
 		return true;
 	} else {
 		return false;
@@ -318,9 +347,9 @@ function vcl_use(id)
 function deployVCL()
 {
 	out_clear();
-	id = document.getElementById("loader").value;
+	var id = document.getElementById("loader").value;
 	assertText(id);
-	doc = vcl_use(id);
+	var doc = vcl_use(id);
 	if (doc) {
 		show_status("ok","VCL deployed");
 	} else {
@@ -332,6 +361,7 @@ function deployVCL()
 function clearID()
 {
 	document.getElementById("vclID").value = "";
+	agent.vclId = "";
 }
 
 function vcl_discard(id)
@@ -341,9 +371,9 @@ function vcl_discard(id)
 		var client = new XMLHttpRequest();
 		client.open("DELETE", "/vcl/" + id, false);
 		client.send();
-		out = client.responseText;
+		agent.out = client.responseText;
 	} catch (err) {
-		out = "Com. errors with agent: \n" + err;
+		agent.out = "Com. errors with agent: \n" + err;
 		return false;
 	}
 	if (client.status = "200" && client.responseText == "") {
@@ -356,7 +386,7 @@ function vcl_discard(id)
 function discardVCL()
 {
 	out_clear();
-	doc = vcl_discard(document.getElementById("loader").value);
+	var doc = vcl_discard(document.getElementById("loader").value);
 	if (doc) {
 		show_status("ok","VCL discarded");
 	} else {
@@ -370,7 +400,7 @@ function stop()
 	var client = new XMLHttpRequest();
 	client.open("PUT", "/stop", false);
 	client.send();
-	doc = client.responseText;
+	var doc = client.responseText;
 	document.getElementById("out").innerHTML = doc;
 	status();
 }
@@ -380,7 +410,7 @@ function start()
 	var client = new XMLHttpRequest();
 	client.open("PUT", "/start", false);
 	client.send();
-	doc = client.responseText;
+	var doc = client.responseText;
 	document.getElementById("out").innerHTML = doc;
 	status();
 }
@@ -389,7 +419,7 @@ function status()
 {
 	var client = new XMLHttpRequest();
 	listVCL();
-	if (!setstate)
+	if (!agent.setstate)
 		reset_status();
 }
 
@@ -402,20 +432,20 @@ function update_stats()
 		client.open("GET","/stats", false);
 		client.send();
 		for (i = 0; i < 3; i++) {
-			stats[i] = stats[i+1];
+			agent.stats[i] = agent.stats[i+1];
 		}
-		stats[3] = JSON.parse(client.responseText);
+		agent.stats[3] = JSON.parse(client.responseText);
 		var n_req = 0;
 		var n_n_req = 0;
-		for (i = 3; stats[i-1] != null; i--) {
-			if (stats[i] == null) 
+		for (i = 3; agent.stats[i-1] != null; i--) {
+			if (agent.stats[i] == null) 
 				break;
-			if (stats[i].client_req == null)
+			if (agent.stats[i].client_req == null)
 				break;
-			if (stats[i-1] != null && stats[i-1].client_req != null)
-				n_req += stats[i].client_req.value - stats[i-1].client_req.value;
+			if (agent.stats[i-1] != null && agent.stats[i-1].client_req != null)
+				n_req += agent.stats[i].client_req.value - agent.stats[i-1].client_req.value;
 			else
-				n_req += stats[i].client_req.value;
+				n_req += agent.stats[i].client_req.value;
 			n_n_req++;
 		}
 		if (n_n_req>0)
@@ -425,7 +455,16 @@ function update_stats()
 	}
 
 }
+
+function sanity() {
+	assert(stats == null);
+	assert(paramlist == null);
+	assert(out == null);
+	assert(setstate == null);
+}
+
 $('.btn').button();
 setInterval(function(){status()},10000);
 setInterval(function(){update_stats()},1000);
+setInterval(function(){sanity()},1000);
 listVCL();
