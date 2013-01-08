@@ -51,9 +51,9 @@ static void *pingd_run(void *data)
 	plug = plugin_find(core,"pingd");
 	ping = (struct pingd_priv_t *) plug->data;
 
-	logger(ping->logger, "Health check starting at 1 second intervals");
+	logger(ping->logger, "Health check starting at 30 second intervals");
 	while (1) {
-		sleep(1);
+		sleep(30);
 		ipc_run(ping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
 			logger(ping->logger, "Ping failed. %d ", vret.status);
