@@ -95,7 +95,7 @@ static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 	ipc_write(handle, cmd);
 	ipc_write(handle, "\n");
 
-	VCLI_ReadResult(handle, &ret->status, &ret->answer, 200.0);
+	VCLI_ReadResult(handle, &ret->status, &ret->answer, 2.0);
 }
 
 void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
@@ -103,11 +103,12 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	va_list ap;
 	char *buffer;
 	int iret;
-
+	assert(fmt);
 	va_start(ap, fmt);
 	iret = vasprintf(&buffer, fmt, ap);
 	assert(iret>0);
 	va_end(ap);
+	assert(buffer);
 	ipc_run_real(handle, buffer, ret);
 	free(buffer);
 }

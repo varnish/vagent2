@@ -141,6 +141,20 @@ static int vcl_store(struct httpd_request *request,
 		      const char *id)
 {
 	int ret;
+	assert(request->data);
+	if (request->ndata == 0) {
+		logger(vcl->logger, "vcl.inline with ndata == 0");
+		vret->status = 400;
+		vret->answer = strdup("No VCL found");
+		return 500;
+	}
+	assert(request->ndata > 0);
+	assert(id);
+	assert(strlen(id)>0);
+	assert(index(id,'\n') == NULL);
+	assert(index(id,'\r') == NULL);
+	assert(index(id,' ') == NULL);
+
 	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s\n__EOF_%s__",
 		id,id,(char *)request->data,id);
 	if (vret->status == 200) {
@@ -264,6 +278,9 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 						     vret.answer, strlen(vret.answer));
 				free(vret.answer);
 				return 0;
+			} else {
+				send_response(request->connection, 400, "Bad URL?", strlen("Bad URL?"));
+				return 0;
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
@@ -295,7 +312,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 	} else {
 		return send_response_fail(request->connection, "Unknown request?");
 	}
-	assert("Shouldn't get here");
+	assert("Shouldn't get here" == NULL);
 	return 0;
 }
 
