@@ -25,6 +25,7 @@ LIBS="${save_LIBS}"
 AC_SUBST(NET_LIBS)
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 AGENT_PERSIST_DIR='${localstatedir}/varnish-agent'
 AC_SUBST(AGENT_PERSIST_DIR)
 AGENT_HTML_DIR='${datadir}/varnish-agent/html'
