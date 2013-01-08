@@ -32,6 +32,7 @@ AC_SUBST(AGENT_HTML_DIR)
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
+PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
 
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
