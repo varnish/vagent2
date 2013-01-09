@@ -1,0 +1,1 @@
+backend foo { .host = "localhost"; }
