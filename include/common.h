@@ -91,14 +91,9 @@ struct agent_plugin_t {
  * Logger macro to include file, func, line etc.
  * Register with the logd-plugin and use that as the handle.
  */
-#define logger(l,...) logger_real(l, __FILE__, __func__, __LINE__, __VA_ARGS__)
-
-/*
- * Avoid using this directly.
- *
- * FIXME: Should be fixed to just be ipc_run directly now that it does
- * va_args.
- */
-void logger_real(int handle, const char *file, const char *func, const unsigned int line, const char *fmt, ...);
-
+#define logger(l,fmt,...) do { \
+	struct ipc_ret_t logger_thing_int; \
+	ipc_run(l, &logger_thing_int, "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+	free(logger_thing_int.answer); \
+} while(0)
 #endif

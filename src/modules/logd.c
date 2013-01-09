@@ -71,21 +71,3 @@ void logd_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = ipc_start;
 }
-
-/*
- * Underlying log writer.
- *
- * This is used by the logger() macro to send the log entry.
- */
-void logger_real(int handle, const char *file, const char *func, const unsigned int line, const char *fmt, ...)
-{
-	va_list ap;
-	struct ipc_ret_t ret;
-	char buffer2[1024];
-
-	va_start(ap, fmt);
-	vsnprintf(buffer2, 1024, fmt, ap);
-	va_end(ap);
-	ipc_run(handle,&ret,"%s (%s:%d): %s", func, file, line, buffer2);
-	free(ret.answer);
-}
