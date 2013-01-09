@@ -154,9 +154,10 @@ static int vcl_store(struct httpd_request *request,
 	assert(index(id,'\n') == NULL);
 	assert(index(id,'\r') == NULL);
 	assert(index(id,' ') == NULL);
+	const char *end = (((char*)request->data)[request->ndata-1] == '\n') ? "" : "\n";
 
-	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s\n__EOF_%s__",
-		id,id,(char *)request->data,id);
+	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s%s__EOF_%s__",
+		id,id,(char *)request->data,end,id);
 	if (vret->status == 200) {
 		logger(vcl->logger, "VCL stored OK");
 		ret = vcl_persist(id, request->data, core);
