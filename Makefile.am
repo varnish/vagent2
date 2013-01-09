@@ -1,5 +1,6 @@
 SUBDIRS = src include
 EXTRA_DIST = autogen.sh include html
+AUTOMAKE_OPTIONS=-Wno-portability
 
 # html/
 webrootdir = $(pkgdatadir)/html
