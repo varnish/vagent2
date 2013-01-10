@@ -48,6 +48,7 @@
 #include "httpd.h"
 #include "ipc.h"
 #include "plugins.h"
+#include "helpers.h"
 
 
 struct varnishstat_priv_t {
@@ -58,8 +59,7 @@ struct varnishstat_priv_t {
 };
 
 /*
- * FIXME: Should make a strfcat function or something instead of this silly
- * snprintf/strncat stuff.
+ * FIXME: Should use VSB_printf!
  */
 static int
 do_json_cb(void *priv, const struct VSC_point * const pt)
@@ -140,12 +140,8 @@ do_json(struct varnishstat_priv_t *varnishstat)
 
 static unsigned int varnishstat_reply(struct httpd_request *request, void *data)
 {
-	struct agent_core_t *core = data;
-	struct agent_plugin_t *plug;
 	struct varnishstat_priv_t *varnishstat;
-	plug = plugin_find(core,"varnishstat");
-	assert(plug);
-	varnishstat = plug->data;
+	GET_PRIV(data,varnishstat);
 	do_json(varnishstat);
 	send_response(request->connection, 200, varnishstat->buffer, strlen(varnishstat->buffer));
 	free(varnishstat->buffer);

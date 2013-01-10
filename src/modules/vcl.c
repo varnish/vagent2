@@ -80,6 +80,9 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 	assert(ret>0);
 }
 
+/*
+ * Store VCL to disk if possible. Returns bytes written.
+ */
 static int vcl_persist(const char *id, const char *vcl, struct agent_core_t *core) {
 	int fd, ret;
 	char *path;

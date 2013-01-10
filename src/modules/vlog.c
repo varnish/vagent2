@@ -77,6 +77,7 @@
 #include "ipc.h"
 #include "plugins.h"
 #include "vsb.h"
+#include "helpers.h"
 
 struct vlog_priv_t {
 	int logger;
@@ -92,7 +93,10 @@ struct vlog_priv_t {
 
 /* Ordering-----------------------------------------------------------*/
 
-
+/*
+ * Print to a vsb, but escape \ and ". Might want to escape more, I
+ * suppose.
+ */
 static void print_escaped(struct vsb *target, const char *string, int len)
 {
 	int i;
@@ -281,8 +285,7 @@ do_order(struct vlog_priv_t *vlog)
 	}
 	clean_order(vlog);
 }
-static void
-do_unorder(struct vlog_priv_t *vlog)
+static void do_unorder(struct vlog_priv_t *vlog)
 {
 	int i;
 	while (1) {
@@ -291,8 +294,6 @@ do_unorder(struct vlog_priv_t *vlog)
 			break;
 	}
 }
-
-/*--------------------------------------------------------------------*/
 
 static char *next_slash(const char *p)
 {
@@ -304,20 +305,16 @@ static char *next_slash(const char *p)
 		ret = NULL;
 	return ret;
 }
+
 static unsigned int vlog_reply(struct httpd_request *request, void *data)
 {
-	struct agent_core_t *core = data;
-	struct agent_plugin_t *plug;
 	struct vlog_priv_t *vlog;
 	int ret;
 	char *limit = NULL;
 	char *p;
 	char *tag = NULL;
+	GET_PRIV(data,vlog);
 	p = next_slash(request->url + 1);
-
-	plug = plugin_find(core,"vlog");
-	assert(plug);
-	vlog = plug->data;
 
 	assert(vlog->tag==NULL);
 	assert(vlog->answer == NULL);
@@ -382,7 +379,6 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 
 void vlog_init(struct agent_core_t *core)
 {
-
 	struct agent_plugin_t *plug;
 	struct vlog_priv_t *priv = malloc(sizeof(struct vlog_priv_t));
 	plug = plugin_find(core,"vlog");
