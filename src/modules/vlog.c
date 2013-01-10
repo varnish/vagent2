@@ -32,6 +32,35 @@
  * All bugs introduced by unknown third party.
  */
 
+/*
+ * XXX: Huge XXX....
+ *
+ * The entire varnishlod -d logic is flawed, and I've done little to
+ * mitigate it.
+ *
+ * First: It will read from the beginning of the file (shmlog), and to
+ * where-ever varnish is writing to. If varnish just wrapped around, you
+ * get almost no data.
+ *
+ * Second: The -k logic works as |head, not tail, when combined with -d.
+ *
+ * Third: -k and -d in varnishlog is broken completely: 
+ * kristian@freud:~$ varnishlog -d -k 100   | wc -l
+ * 10554
+ *
+ * Fourth: As is -k, -d and -i:
+ * kristian@freud:~$ varnishlog -d -k 100 -i ReqStart   | wc -l
+ * 86
+ * kristian@freud:~$ varnishlog -d -k 10 -i ReqStart   | wc -l
+ * 85
+ *
+ * The correct fix for these issues is to fix the API, which Martin is
+ * doing for 3.0+1 (4.0? 3.1? 3.14?). The fix may or may not fix -k for -d.
+ *
+ * As such, this plugin is of limited use. It's made available in it's
+ * neutered form to allow frontend testing awaiting the next Varnish
+ * release.
+ */
 #include "config.h"
 
 #include <errno.h>
@@ -58,6 +87,7 @@ struct vlog_priv_t {
 	uint64_t       bitmap[65536];
 	struct vsb	*answer;
 	int entries;
+	char *tag;
 };
 
 /* Ordering-----------------------------------------------------------*/
@@ -74,6 +104,14 @@ static void print_escaped(struct vsb *target, const char *string, int len)
 	}
 }
 
+/*
+ * Print a single line of varnishlog as json, possibly adding a comma.
+ *
+ * XXX: This concept is slightly flawed. It is global, which means that the
+ * comma-logic can mess up. Assume that the first line /read/ is part of a
+ * session, but that the first line output is not. If that happens, the
+ * first entry output will have a comma prefixed. Plain wrong.
+ */
 static void print_entry(struct vlog_priv_t *vlog, int fd,
 			enum VSL_tag_e tag, int type,
 			const char *ptr, unsigned len)
@@ -152,6 +190,18 @@ clean_order(struct vlog_priv_t *vlog)
 }
 
 static int
+h_unorder(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
+    unsigned spec, const char *ptr, uint64_t bm)
+{
+	char type;
+	struct vlog_priv_t *vlog = priv;
+	type = (spec & VSL_S_CLIENT) ? 'c' :
+	    (spec & VSL_S_BACKEND) ? 'b' : '-';
+	local_print(vlog,tag,fd,len,spec,ptr,bm);
+	return 0;
+}
+
+static int
 h_order(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
     unsigned spec, const char *ptr, uint64_t bm)
 {
@@ -215,13 +265,12 @@ static void
 do_order(struct vlog_priv_t *vlog)
 {
 	int i;
-
-	VSL_Select(vlog->vd, SLT_SessionOpen);
-	VSL_Select(vlog->vd, SLT_SessionClose);
-	VSL_Select(vlog->vd, SLT_ReqEnd);
-	VSL_Select(vlog->vd, SLT_BackendOpen);
-	VSL_Select(vlog->vd, SLT_BackendClose);
-	VSL_Select(vlog->vd, SLT_BackendReuse);
+		VSL_Select(vlog->vd, SLT_SessionOpen);
+		VSL_Select(vlog->vd, SLT_SessionClose);
+		VSL_Select(vlog->vd, SLT_ReqEnd);
+		VSL_Select(vlog->vd, SLT_BackendOpen);
+		VSL_Select(vlog->vd, SLT_BackendClose);
+		VSL_Select(vlog->vd, SLT_BackendReuse);
 	while (1) {
 		i = VSL_Dispatch(vlog->vd, h_order, vlog);
 		if (i == 0) {
@@ -232,33 +281,90 @@ do_order(struct vlog_priv_t *vlog)
 	}
 	clean_order(vlog);
 }
+static void
+do_unorder(struct vlog_priv_t *vlog)
+{
+	int i;
+	while (1) {
+		i = VSL_Dispatch(vlog->vd, h_unorder, vlog);
+		if ( i < 0)
+			break;
+	}
+}
 
 /*--------------------------------------------------------------------*/
 
+static char *next_slash(const char *p)
+{
+	char *ret;
+	ret = index(p, '/');
+	if (ret != NULL)
+		ret++;
+	if (ret && *ret == '\0')
+		ret = NULL;
+	return ret;
+}
 static unsigned int vlog_reply(struct httpd_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct agent_plugin_t *plug;
 	struct vlog_priv_t *vlog;
 	int ret;
+	char *limit = NULL;
+	char *p;
+	char *tag = NULL;
+	p = next_slash(request->url + 1);
 
 	plug = plugin_find(core,"vlog");
 	assert(plug);
 	vlog = plug->data;
 
+	assert(vlog->tag==NULL);
 	assert(vlog->answer == NULL);
+
+	if (p) {
+		limit = strdup(p);
+		assert(limit);
+		char *tmp2 = index(limit,'/');
+		if (tmp2 && *tmp2) *tmp2 = '\0';
+
+		if(!(atoi(limit) > 0)) {
+			free(limit);
+			send_response_fail(request->connection,"Not a number");
+			return 0;
+		}
+		p = next_slash(p);
+	}
+	if (p) {
+		tag = strdup(p);
+		char *tmp2 = next_slash(tag);
+		if (tmp2)
+			*tmp2 = '\0';
+	}
 	vlog->answer = VSB_new_auto();
 	assert(vlog->answer != NULL);
-	
 	vlog->vd = VSM_New();
 	VSL_Setup(vlog->vd);
 	VSL_Arg(vlog->vd, 'd', "");
-	VSL_Arg(vlog->vd, 'k',"100");
-	VSB_printf(vlog->answer, "{ \"log\": [\n");
+	if (tag) {
+		VSL_Arg(vlog->vd, 'i', tag);
+	} else {
+		VSL_Arg(vlog->vd, 'k', limit ? limit : "10");
+	}
+
+	if (limit)
+		free(limit);
+	VSB_printf(vlog->answer, "{ \"log\": [");
 	ret = VSL_Open(vlog->vd, 1);
 	assert(!ret);
 
-	do_order(vlog);
+	if (tag == NULL) {
+		do_order(vlog);
+	} else {
+		do_unorder(vlog);
+	}
+	if (tag)
+		free(tag);
 
 	VSB_printf(vlog->answer, "\n] }\n");
 	assert(VSB_finish(vlog->answer) == 0);
@@ -270,6 +376,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	VSB_clear(vlog->answer);
 	VSM_Close(vlog->vd);
 	vlog->answer = NULL;
+	vlog->entries = 0;
 	return 0;
 }
 
