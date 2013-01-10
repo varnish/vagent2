@@ -16,6 +16,39 @@ not currently implemented.
 It is mainly meant for the Varnish Administration Console, but also
 provides a fully functional "HTML" interface (Aka: web interface).
 
+Installation and usage
+======================
+
+See INSTALL for generic details.
+
+In short:
+
+- ``./autogen.sh``
+- ``./configure``
+- ``make``
+- ``make install``
+- ``varnish-agent``
+
+Requirements:
+
+- Varnish 3.0.3 (might work on other 3.0-versions too) with the api dev files 
+  (e.g: ``apt-get install libvarnish-dev``)
+- ``libmicrohttpd``
+- ``pkg-config``
+- ``pthreads``
+
+The agent will use the same -n argument as whatever Varnish it's built
+against. If you do not start ``varnishd`` with a ``-n`` argument, then the
+agent does not require it either - otherwise they much match. Your
+``varnishd`` should be running with a ``-T`` option. Otherwise you will
+miss a lot of functions.
+
+The agent normally runs on port 6085, but this can be configured with ``-c
+PORT``.
+
+For an introduction to using the agent, visit ``http://localhost:6085/``
+and/or ``http://localhost:6085/html/``.
+
 Design
 ======
 
@@ -27,84 +60,48 @@ Everything is written as a module, and the goal is:
 - "Just works"
 - Maintainable
 - Generic
+- Stateless
 
-IPC
-===
-
-The agent is multi-threaded and provides a simple IPC for all plugins.
-
-The IPC uses a socket to communicate, and a plugin has to register itself
-with any other plugin during initialization (which is done in a single
-thread). Please read and understand include/ipc.h for details.
-
-Modules
+Hacking
 =======
 
-"Everything" is a module. See src/modules/ for a complete list, but here
-are some of them:
+1. Read ``include/*.h``
+2. Read ``src/main.c`` to grasp the module init stuff
+3. Read some simple modules, e.g: ``src/modules/echo.c`` and
+   ``src/modules/status.c``
+4. Write a module.
 
-vadmin
-------
+Everything is done in threads, but we currently assume that individual
+modules are a single thread (sort of). That is to say: Until further
+notice, you will not have to deal with handling two requests to /foo at the
+same time, as they will come in sequence. This has two consequences:
 
-This module executes commands on the varnishadm interface. It also
-auto-configures itself based on the shm-log.
+1. It's easier to write modules
+2. If you freeze while handling a HTTP request, all HTTP requests freeze.
 
-logd
-----
+You should anticipate that at some point we might want to re-factor this to
+actually be re-entrant, where possible.
 
-Used for logging. Use the logger(...) macro instead of ipc_run directly
-(this provides function names, line numbers etc).
+Never turn off compiler warnings during development.
 
-httpd
------
+Using assert() as much as you can. To (miss-)quote PHK (who possibly quoted
+someone else): The cost of adding assert() to your code is negative:
+whatever time you spend adding it and running it is made up for ten-fold
+once it reveals a bug.
 
-Provides the HTTP listener, using libmicrohttpd.
+Document any API change thoroughly.
 
-Provides a register-function for other modules to register callbacks that
-will be executed to handle given requests. The only actual resource
-provided by the httpd plugin itself is the /-resource with some basic help.
+If an API is causing you headache, don't be afraid to fix the API itself
+instead of working around it.
 
-echo
-----
+Avoid printf(). Use logger() instead, as that's easy to redirect. We might
+want to extend the log logic. 
 
-Test-plugin listening to /echo that reads POST and PUT-data and spits it
-back at the user.
+While it has not been the rule thus far, try to write "unit tests" for the
+REST api as much as possible, see ``tests/*.sh``.
 
-html
-----
+Ensure that a GET request to / can provide enough help to explain the REST
+interface itself. Some modules provide additional help urls (e.g:
+``/help/param``). That is encouraged if the function of the interface isn't
+obvious (e.g: no point documenting ``/stop`` and ``/stats``).
 
-File-access for /html/. The /html/ build-directory (I know) is made
-available through /html/.
-
-vcl
----
-
-Provides mechanisms for uploading, downloading, discarding and using VCL.
-
-GET /vcl/ gives a list.
-GET /vcl/foo gives the foo-named VCL.
-POST /vcl/ uploads a new VCL with a dynamic name (e.g: timestamp).
-PUT /vcl/name uploads a new VCL with a specified name.
-PUT /vcldeploy/name issues vcl.use on the named VCL.
-GET /vclhelp prints help.
-
-status
-------
-
-Provides PUT /start, PUT /stop and GET /status, which should be self
-explanatory.
-
-pingd
------
-
-Test-plugin (so far) that polls varnishadm, looks at the data and the
-discards it. Might be responsible for pushing at a later date.
-
-
-HTML PoC
-========
-
-The /html/ directory (either relative to the source dir, or web service)
-contains a PoC client-implementation using bootstrap.
-
-It is intended to show-case and test most functionality if possible.
