@@ -21,3 +21,4 @@ tags
 src/.*.swp
 include/.*.swp
 compile
+tests/tmp
