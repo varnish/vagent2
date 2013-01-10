@@ -177,6 +177,9 @@ static int vcl_store(struct httpd_request *request,
 	}
 }
 
+/*
+ * FIXME: use VSB
+ */
 static char *vcl_list_json(char *raw)
 {
 	struct vcl_list *tmp;
