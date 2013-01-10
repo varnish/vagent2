@@ -13,7 +13,7 @@ var agent = {
  * some global settings for client-side
 */
 var globaltimeout = 2000; //2 sec timeout for ajax calls.
-var debug = true;	//global flag for debug
+var debug = false;	//global flag for debug
 
 function clog(text) {
 	if(debug) {
