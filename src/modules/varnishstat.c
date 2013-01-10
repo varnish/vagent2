@@ -44,6 +44,7 @@
 #include <unistd.h>
 #include <varnishapi.h>
 #include <assert.h>
+#include "vsb.h"
 #include "common.h"
 #include "httpd.h"
 #include "ipc.h"
@@ -54,70 +55,35 @@
 struct varnishstat_priv_t {
 	struct VSM_data *vd;
 	int jp;
-	char *buffer;
 	const struct VSC_C_main *VSC_C_main;
+	struct vsb *vsb;
 };
 
-/*
- * FIXME: Should use VSB_printf!
- */
 static int
 do_json_cb(void *priv, const struct VSC_point * const pt)
 {
 	uint64_t val;
 	struct varnishstat_priv_t *varnishstat = priv;
-	char buffer[4096+1];
-	char buffer2[4096+1];
-	buffer2[0] = buffer[0] = '\0';
 	assert(!strcmp(pt->fmt, "uint64_t"));
 	val = *(const volatile uint64_t*)pt->ptr;
 	assert(sizeof(uint64_t) == sizeof(uintmax_t));
 
-	if (varnishstat->jp)
-		varnishstat->jp = 0;
-	else {
-		snprintf(buffer,4096,",\n");
-		strncat(buffer2,buffer,4096);
-	}
-	snprintf(buffer,4096,"\t\"");
-	strncat(buffer2,buffer,4096);
+	VSB_printf(varnishstat->vsb, ",\n\t\"");
 	/* build the JSON key name.  */
-	if (pt->class[0]) {
-		snprintf(buffer,4096,"%s.", pt->class);
-		strncat(buffer2,buffer,4096);
-	}
-	if (pt->ident[0]) {
-		snprintf(buffer,4096,"%s.", pt->ident);
-		strncat(buffer2,buffer,4096);
-	}
-	snprintf(buffer,4096,"%s\": {", pt->name);
-	strncat(buffer2,buffer,4096);
+	if (pt->class[0])
+		VSB_printf(varnishstat->vsb,"%s.",pt->class);
+	if (pt->ident[0])
+		VSB_printf(varnishstat->vsb,"%s.",pt->ident);
+	VSB_printf(varnishstat->vsb,"%s\": {", pt->name);
 
-	if (strcmp(pt->class, "")) {
-		snprintf(buffer,4096,"\"type\": \"%s\", ",  pt->class);
-		strncat(buffer2,buffer,4096);
-	}
-	if (strcmp(pt->ident, "")) {
-		snprintf(buffer,4096,"\"ident\": \"%s\", ", pt->ident);
-		strncat(buffer2,buffer,4096);
-	}
+	if (strcmp(pt->class, ""))
+		VSB_printf(varnishstat->vsb,"\"type\": \"%s\", ", pt->class);
+	if (strcmp(pt->ident, ""))
+		VSB_printf(varnishstat->vsb,"\"ident\": \"%s\", ", pt->ident);
 
-	snprintf(buffer,4096,"\"value\": %ju, ", (uintmax_t)val);
-	strncat(buffer2,buffer,4096);
-
-	snprintf(buffer,4096,"\"flag\": \"%c\", ", pt->flag);
-	strncat(buffer2,buffer,4096);
-	snprintf(buffer,4096,"\"description\": \"%s\"", pt->desc);
-	strncat(buffer2,buffer,4096);
-	snprintf(buffer,4096,"}");
-	strncat(buffer2,buffer,4096);
-
-	if (varnishstat->jp) {
-		snprintf(buffer,4096,"\n");
-		strncat(buffer2,buffer,4096);
-	}
-	varnishstat->buffer = realloc(varnishstat->buffer, (varnishstat->buffer ? strlen(varnishstat->buffer) : 0) + strlen(buffer2) + 1);
-	strcat(varnishstat->buffer, buffer2);
+	VSB_printf(varnishstat->vsb, "\"value\": %ju, ", (uintmax_t)val);
+	VSB_printf(varnishstat->vsb, "\"flag\": \"%c\",", pt->flag);
+	VSB_printf(varnishstat->vsb, "\"description\": \"%s\" }", pt->desc);
 	return (0);
 }
 
@@ -126,16 +92,13 @@ do_json(struct varnishstat_priv_t *varnishstat)
 {
 	char time_stamp[20];
 	time_t now;
-	int ret;
-	varnishstat->jp = 1;
 	now = time(NULL);
 
+	assert(varnishstat->vsb);
 	(void)strftime(time_stamp, 20, "%Y-%m-%dT%H:%M:%S", localtime(&now));
-	ret = asprintf(&(varnishstat->buffer),"{\n\t\"timestamp\": \"%s\",\n", time_stamp);
-	assert(ret);
+	VSB_printf(varnishstat->vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
 	(void)VSC_Iter(varnishstat->vd, do_json_cb, varnishstat);
-	varnishstat->buffer = realloc(varnishstat->buffer, strlen(varnishstat->buffer) + 1 + 3);
-	strcat(varnishstat->buffer, "\n}\n");
+	VSB_printf(varnishstat->vsb, "\n}\n");
 }
 
 static unsigned int varnishstat_reply(struct httpd_request *request, void *data)
@@ -143,8 +106,9 @@ static unsigned int varnishstat_reply(struct httpd_request *request, void *data)
 	struct varnishstat_priv_t *varnishstat;
 	GET_PRIV(data,varnishstat);
 	do_json(varnishstat);
-	send_response(request->connection, 200, varnishstat->buffer, strlen(varnishstat->buffer));
-	free(varnishstat->buffer);
+	assert(VSB_finish(varnishstat->vsb) == 0);
+	send_response(request->connection, 200, VSB_data(varnishstat->vsb), VSB_len(varnishstat->vsb));
+	VSB_clear(varnishstat->vsb);
 	return 0;
 }
 void
@@ -160,7 +124,8 @@ varnishstat_init(struct agent_core_t *core)
 	assert(priv->vd);
 	VSC_Setup(priv->vd);
 	priv->jp = 0;
-	priv->buffer = NULL;
+	priv->vsb = NULL;
+	priv->vsb = VSB_new_auto();
 	plug->data = priv;
 
 	if (core->config->n_arg)
