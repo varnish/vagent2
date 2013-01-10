@@ -27,6 +27,11 @@
 __FBSDID("$FreeBSD: head/sys/kern/subr_vsb.c 222004 2011-05-17 06:36:32Z phk $")
  */
 
+/*
+ * String handling, borrowed from varnish, which in turn is "borrowed" from
+ * FreeBSD.
+ */
+
 #include "config.h"
 
 #include <ctype.h>

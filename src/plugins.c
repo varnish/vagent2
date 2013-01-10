@@ -51,6 +51,9 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 	return NULL;
 }
 
+/*
+ * Allocate memory and IPC for a plugin. init the IPC.
+ */
 void plugin_alloc(const char *name, struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug = calloc(1, sizeof(struct agent_plugin_t));

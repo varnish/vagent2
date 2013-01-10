@@ -41,6 +41,10 @@ struct pingd_priv_t {
 	int logger;
 };
 
+/*
+ * Pings the varnish server every Nth second. First vadmin-plugin written,
+ * not sure if it still has value.
+ */
 static void *pingd_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
@@ -88,5 +92,3 @@ pingd_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = pingd_start;
 }
-
-

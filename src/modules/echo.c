@@ -26,6 +26,10 @@
  * SUCH DAMAGE.
  */
 
+/*
+ * Mostly just a demo/test plugin. Read for profit.
+ */
+
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -53,13 +57,37 @@ static unsigned int echo_reply(struct httpd_request *request, void *data)
 
 void echo_init(struct agent_core_t *core)
 {
-	struct agent_plugin_t *plug;
+	/*
+	 * Allocate the private data structure we'll keep using.
+	 */
 	struct echo_priv_t *priv = malloc(sizeof(struct echo_priv_t));
+
+	/*
+	 * Find our pre-allocated data structure. This is only used to
+	 * define start-functions (which we don't have), module-specific
+	 * private data and an IPC for the module (which we don't use).
+	 */
+	struct agent_plugin_t *plug;
 	plug = plugin_find(core,"echo");
 	assert(plug);
-	
+
+	/*
+	 * Register with the logger.
+	 */	
 	priv->logger = ipc_register(core,"logd");
+	
+	/*
+	 * Store our private data somewhere we can reach it, and set our
+	 * start function to NULL since echo is only triggered by HTTP
+	 * requests.
+	 */
 	plug->data = (void *)priv;
 	plug->start = NULL;
+
+	/*
+	 * Register the url /echo for the methods POST, PUT and GET. When a
+	 * request like that is encountered, the echo_reply function will
+	 * be called with "priv" as the last argument.
+	 */
 	httpd_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
 }

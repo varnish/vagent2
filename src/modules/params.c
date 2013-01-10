@@ -53,6 +53,9 @@ struct params_priv_t {
 	int vadmin;
 };
 
+/*
+ * Parameter list, used for JSON parsing.
+ */
 struct param_opt {
 	char *name;
 	char *value;
@@ -92,6 +95,10 @@ static struct param_opt *param_free(struct param_opt *p)
 /*
  * I hate myself and I want to die.
  *
+ * This should be cleaned up considerably. Numerous flaws (e.g: word-size
+ * mix). Unmanageable. Ugly. Fugly. Etc.
+ *
+ * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
 static char *params_show_json(char *raw)
@@ -242,6 +249,9 @@ static void param_json(struct httpd_request *request, struct params_priv_t *para
 	free(vret.answer);
 }
 
+/*
+ * FIXME: Should be simplified/split up.
+ */
 static unsigned int params_reply(struct httpd_request *request, void *data)
 {
 	const char *arg;

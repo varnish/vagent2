@@ -31,6 +31,7 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"
+#include "helpers.h"
 
 #include <assert.h>
 #include <unistd.h>
@@ -59,55 +60,44 @@
 	"\n" \
 	"Output from GET /panic can be used in bug reports or support tickets.\n" \
 	"Keep in mind that not all bugs will be logged here of course. Bugs are tricky.\n"
+
 struct status_priv_t {
 	int logger;
 	int vadmin;
 };
 
-static unsigned int run_cmd(struct httpd_request *request, void *data, const char *cmd)
-{
-	struct agent_core_t *core = data;
-	struct status_priv_t *status;
-	struct agent_plugin_t *plug;
-	struct ipc_ret_t vret;
-
-	plug = plugin_find(core,"status");
-	status = plug->data;
-
-	ipc_run(status->vadmin, &vret, cmd);
-	if (vret.status == 400) {
-		send_response_fail(request->connection, vret.answer);
-	} else {
-		send_response_ok(request->connection, vret.answer);
-	}
-	free(vret.answer);
-	return 0;
-}
-
 static unsigned int status_reply(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"status");
+	struct status_priv_t *status;
+	GET_PRIV(data, status);
+	run_and_respond(status->vadmin,request->connection,"status");
 	return 0;
 }
 
 static unsigned int status_stop(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"stop");
+	struct status_priv_t *status;
+	GET_PRIV(data, status);
+	run_and_respond(status->vadmin,request->connection,"stop");
 	return 0;
 }
 
 static unsigned int status_start(struct httpd_request *request, void *data)
 {
-	run_cmd(request,data,"start");
+	struct status_priv_t *status;
+	GET_PRIV(data, status);
+	run_and_respond(status->vadmin,request->connection,"start");
 	return 0;
 }
 
 static unsigned int status_panic(struct httpd_request *request, void *data)
 {
+	struct status_priv_t *status;
+	GET_PRIV(data, status);
 	if (request->method == M_GET)
-		run_cmd(request,data,"panic.show");
+		run_and_respond(status->vadmin,request->connection,"panic.show");
 	else if (request->method == M_DELETE)
-		run_cmd(request, data, "panic.clear");
+		run_and_respond(status->vadmin,request->connection,"panic.clear");
 	else
 		assert("Shouldn't happen");
 	return 0;

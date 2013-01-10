@@ -75,6 +75,11 @@
 /*
  * Client
  */
+
+/*
+ * Write text to a socket. Close it if we fail.
+ * Returns true on success.
+ */
 static int ipc_write(int sock, const char *s)
 {
 	int i, l;
@@ -88,6 +93,11 @@ static int ipc_write(int sock, const char *s)
 	return 0;
 }
 
+/*
+ * Write the command, read the result.
+ * XXX: VCLI_ReadResult will allocate ret->answer. Caller MUST free it.
+ * XXX: Note the \n is added. Do not add your own, or you wont get a reply.
+ */
 static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 {
 	assert(cmd);
@@ -98,6 +108,9 @@ static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
 	VCLI_ReadResult(handle, &ret->status, &ret->answer, 2.0);
 }
 
+/*
+ * Parse a command of arbitrary length, execute it, place result in *ret.
+ */
 void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 {
 	va_list ap;
@@ -113,7 +126,12 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	free(buffer);
 }
 
-
+/*
+ * Grab a IPC handle for a named plugin.
+ * Return value is later used for ipc_run().
+ * XXX: Must execute prior to plugins starting, otherwise we might use the
+ * ipc structure before it's fully populated.
+ */
 int ipc_register(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *v;
@@ -132,6 +150,13 @@ int ipc_register(struct agent_core_t *core, const char *name)
  * Server
  */
 
+/*
+ * Read everything up to the first new line.
+ * FIXME: The 1024-limit here is a bit weird. Should probably use VSB
+ * instead.
+ * FIXME: read() has no timeout. We will block forever. FOREVER. Causes
+ * havoc if a plugin is bugged, as it blocks other plugins.
+ */
 static int ipc_read_line(int fd, char **line)
 {
 	char *buf = *line;
@@ -151,6 +176,11 @@ static int ipc_read_line(int fd, char **line)
 	return i;
 }
 
+/*
+ * A command was apparently issued. Read the data, including any here-doc
+ * stuff, then execute the command.
+ * Note that &ret must be populated with something we can free().
+ */
 static int ipc_cmd(int fd, struct ipc_t *ipc)
 {
 	char *buffer = malloc(1024);
@@ -193,6 +223,10 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	return 1;
 }
 
+/*
+ * IPC main loop.
+ * Just wait for data on the fds provided, then trigger ipc_cmd().
+ */
 static void *ipc_loop(void *data)
 {
 	struct ipc_t *ipc = (struct ipc_t *)data;
@@ -216,6 +250,9 @@ static void *ipc_loop(void *data)
 	return NULL;
 }
 
+/*
+ * Should probably be redundant...
+ */
 void ipc_init(struct ipc_t *ipc)
 {
 	ipc->nlisteners = 0;

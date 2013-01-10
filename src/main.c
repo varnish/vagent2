@@ -45,8 +45,18 @@ static void usage(const char *argv0)
 	"   [-T host:port] [-t timeout] [-c port] [-h]\n\n"
 	"-p directory        Persistence directory: where VCL and parameters\n"
 	"                    are stored. Default: " AGENT_PERSIST_DIR "\n"
-	"-H                  Where /html/ is located. Default: " AGENT_HTML_DIR "\n", argv0);
+	"-H                  Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
+	"-n name             Name. Should match varnishd -n option.\n"
+	"-S secretfile       location of the varnishd secret file.\n"
+	"-T host:port        Varnishd administrative interface.\n"
+	"-t timeout          timeout for talking to varnishd.\n"
+	"-c port             TCP port (default: 6085).\n"
+	"-h                  Prints this.\n"
+	"\n"
+	"All arguments are optional.\n"
+	, argv0);
 }
+
 static void core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
@@ -93,6 +103,11 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	argv += optind;
 }
 
+/*
+ * Allocate the plugin data structures for all plugins. Has to happen
+ * before they are initialized, as this also include the generic IPC.
+ * Otherwise ipc_register() would fail miserably.
+ */
 static void core_alloc_plugins(struct agent_core_t *core)
 {
 	plugin_alloc("pingd",core);
@@ -134,6 +149,10 @@ int main(int argc, char **argv)
 	assert(core.config);
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
+	/*
+	 * XXX: A couple of modules use options here (vlog,vadmin,httpd)
+	 * Some order is unfortunately required....
+	 */
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
 	printf("Starting plugins: ");

@@ -45,7 +45,8 @@
 #include "httpd.h"
 
 /*
- * Run a varnishadm-command and send the result of that command back.
+ * Run a varnishadm-command and send the result of that command back to the
+ * http connection. If varnishd returns 200, then so do we. Otherwise: 500.
  */
 void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 {
@@ -53,7 +54,6 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	va_list ap;
 	char *buffer;
 	int iret;
-
 
 	va_start(ap, fmt);
 	iret = vasprintf(&buffer, fmt, ap);

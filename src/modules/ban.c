@@ -41,6 +41,10 @@
 #include <pthread.h>
 #include <string.h>
 
+/*
+ * FIXME: Should be a compile-time option.
+ * This is what we use when you do POST /ban/foo
+ */
 #define BAN_SHORTHAND "req.url ~ "
 #define BAN_HELP_TEXT \
 	"Banning supports three methods:\n" \
@@ -94,13 +98,11 @@ static unsigned int ban_reply(struct httpd_request *request, void *data)
 static unsigned int ban_help(struct httpd_request *request, void *data)
 {
 	(void)data;
-
 	send_response_ok(request->connection, BAN_HELP_TEXT);
 	return 0;
 }
 
-void
-ban_init(struct agent_core_t *core)
+void ban_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct ban_priv_t *priv = malloc(sizeof(struct ban_priv_t));
