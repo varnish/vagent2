@@ -10,6 +10,17 @@ var agent = {
 };
 
 /*
+ * some global settings for client-side
+*/
+var globaltimeout = 2000; //2 sec timeout for ajax calls.
+var debug = true;	//global flag for debug
+
+function clog(text) {
+	if(debug) {
+		console.log(text);
+	}
+}
+/*
  * Old legacy variables. Remove "after a while".
  */
 var stats = null;
@@ -30,25 +41,6 @@ function assertText(val)
 	assert(val.length > 0);
 }
 
-function vcl_load(vcl, id) {
-	var client = new XMLHttpRequest();
-	assertText(vcl);
-	assertText(id);
-	try {
-		client.open("PUT", "/vcl/" + id, false);
-		client.send(vcl);
-		agent.out = client.responseText;
-	} catch (err) {
-		agent.out = "Com. errors with agent: \n" + err;
-		return false;
-	}
-	if (client.status == 201) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 function out_clear() {
 	document.getElementById("out").innerHTML = "";
 	agent.out = "";
@@ -56,26 +48,6 @@ function out_clear() {
 
 function out_up() {
 	document.getElementById("out").innerHTML = agent.out;
-}
-
-function vcl_show(id) {
-	var client = new XMLHttpRequest();
-	assertText(id);
-	try {
-		client.open("GET", "/vcl/" + id, false);
-		client.send();
-	} catch (err) {
-		agent.out = "Com. errors with agent: \n" + err.message;
-		return false;
-	}
-	if (client.status == 200) {
-		agent.vcl = client.responseText;
-		agent.vclId = id;
-		return true;
-	} else {
-		agent.out = client.responseText;
-		return false;
-	}
 }
 
 function topActive(head) {
@@ -115,22 +87,36 @@ function reset_status()
 	var but = document.getElementById("status-btn");
 	assert(but != null);
 	var stat;
-	try {
-		var client = new XMLHttpRequest();
-		client.open("GET", "/status", false);
-		client.send();
-		stat = client.responseText;
-		assertText(stat);
-	} catch (err) {
-		stat = "Error communicating with agent: " + err;
-	}
-	but.textContent = stat;
-	if (stat == "Child in state running") {
-		but.className = "btn btn-primary btn-block disabled";
-	} else {
-		but.className = "btn btn-danger btn-block disabled";
-	}
-	agent.setstate = false;
+	$.ajax({
+		type: "GET",
+		url: "/status",
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) {
+			stat = data; 
+			clog("success:" + data);
+			clog("success:" + textStatus);
+			clog("success:" + jqXHR);
+			clog(jqXHR);
+			assertText(stat);
+			but.textContent = stat;
+        },
+        error: function( jqXHR, textStatus, errorThrown) {
+			stat = "Error communicating with agent. " + errorThrown;
+			clog("error: "+stat);
+			clog(textStatus);
+			clog(jqXHR);
+        },
+        complete: function( jqXHR, textStatus) {
+   			but.textContent = stat;
+        	clog("complete: "+stat);
+	        if (stat == "Child in state running") {
+				but.className = "btn btn-primary btn-block disabled";
+			} else {
+				but.className = "btn btn-danger btn-block disabled";
+			}
+			agent.setstate = false;
+        }
+	});
 }	
 
 function show_status(state,message)
@@ -149,105 +135,177 @@ function show_status(state,message)
 	setTimeout(function() { reset_status(); }, 3000);
 }
 
-function uploadVCL()
-{
-	out_clear();
-	ret = vcl_load(document.getElementById("vcl-text").value, document.getElementById("vclID").value);
-	out_up();
-	if (ret) {
-		show_status("ok","VCL stored");
-	} else {
-		show_status("warn", "VCL save failed");
-	}
+function uploadVCL() {
+	var id = document.getElementById("vclID").value;
+	var vcl = document.getElementById("vcl-text").value;
+	assertText(vcl);
+	assertText(id);
+   	out_clear();
+	$.ajax({
+		type: "PUT",
+		url: "/vcl/" + id,
+		timeout: globaltimeout,
+		contentType: "application/xml",
+		data: vcl,
+		success: function (data, textStatus, jqXHR) {
+			agent.out = jqXHR.responseText;
+			clog("success");
+			clog(data);
+			clog(textStatus);
+			clog(jqXHR);
+        },
+        error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+			clog("error");
+			clog(errorThrown);
+			clog(textStatus);
+			clog(jqXHR);
+        },
+        complete: function( jqXHR, textStatus) {
+        	out_up();
+   			if( jqXHR.status == 201) {
+	   			show_status("ok","VCL stored");
+			} else {
+				show_status("warn", "VCL save failed");
+			}
+        }
+	});
 }
 
 function loadVCL()
 {
-	var ret;
 	out_clear();
 	var id = document.getElementById("loader").value;
 	assertText(id);
-	ret = vcl_show(id);
-	if (!ret)
-		show_status("warn","VCL load failed");
-	else
-		show_status("ok", "VCL loaded");
-	if (ret) {
-		document.getElementById("vcl-text").value = agent.vcl;
-		document.getElementById("vclID").value = agent.vclId;
-	}
-	out_up();
+	$.ajax({
+		type: "GET",
+		url: "/vcl/" + id,
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) {
+			clog("success");
+			clog(data);
+			clog(textStatus);
+			clog(jqXHR);
+        },
+        error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Com. errors with agent: \n" + errorThrown;
+			clog("error");
+			clog(errorThrown);
+			clog(textStatus);
+			clog(jqXHR);
+        },
+        complete: function( jqXHR, textStatus) {
+   			if( jqXHR.status == 200) {
+   				agent.vcl = jqXHR.responseText;
+   				agent.vclId = id;
+   				show_status("ok", "VCL loaded");
+	   			document.getElementById("vcl-text").value = agent.vcl;
+	   			document.getElementById("vclID").value = agent.vclId;
+			} else {
+				agent.out = jqXHR.responseText;
+				show_status("warn","VCL load failed");
+			}
+        	out_up();
+        }
+	});
+
 }
 
 
 function listVCL() {
-	var client = new XMLHttpRequest();
-	client.open("GET", "/vcljson/", false);
-	try {
-		client.send();
-		var vclList = JSON.parse(client.responseText);
-		/*
-		 * XXX: If json parsing fails, this leaves agent.vcllist
-		 * intact.
-		 */
-		agent.vclList = vclList;
-		var txt = "";
-		for (x in agent.vclList["vcls"]) {
-			v = agent.vclList["vcls"][x];
-			if (v.status == "discarded") {
-				continue;
+	$.ajax({
+		type: "GET",
+		url: "/vcljson/",
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) {
+			clog("success");
+			clog(data);
+			clog(textStatus);
+			clog(jqXHR);
+			var vclList = JSON.parse(data);
+			agent.vclList = vclList;
+			var txt = "";
+			for (x in agent.vclList["vcls"]) {
+				v = agent.vclList["vcls"][x];
+				if (v.status == "discarded") {
+					continue;
+				}
+				if (v.status == "active") {
+					agent.activeVcl = v.name;
+					document.getElementById("vcl-btn").innerHTML = "Active VCL: " + v.name;
+				}
+				txt = txt + "\n" + "<option>" + v.name + "</option>";
 			}
-			if (v.status == "active") {
-				agent.activeVcl = v.name;
-				document.getElementById("vcl-btn").innerHTML = "Active VCL: " + v.name;
+			var d = document.getElementById("loader");
+			d.innerHTML = txt;
+			if (document.getElementById("vcl-text").value == "") {
+				d.value = agent.activeVcl;
+				document.getElementById("vclID").value = agent.activeVcl;
+				loadVCL();
 			}
-			txt = txt + "\n" + "<option>" + v.name + "</option>";
-		}
-		var d = document.getElementById("loader");
-		d.innerHTML = txt;
-		if (document.getElementById("vcl-text").value == "") {
-			d.value = agent.activeVcl;
-			document.getElementById("vclID").value = agent.activeVcl;
-			loadVCL();
-		}
-	} catch (err) {
-		agent.out = "Listing VCL failed.";
-	}
+        },
+        error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Listing VCL failed.";
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);
+        }
+	});
 }
 
-function list_params()
-{
-	try {
-		var client = new XMLHttpRequest();
-		client.open("GET", "/paramjson/", false);
-		client.send();
-		if (client.status != 200)
-			throw new Error("Varnish-Agent returned " +
-					client.status + ":" + client.responseText);
-		var paramlist = JSON.parse(client.responseText);
-		agent.params = paramlist;
-		var list = document.getElementById("param-sel");
-		var v = list.value;
-		var arry = new Array();
-		for (x in agent.params) {
-			arry.push(x);
-		}
-		arry.sort();
-		list.options.length = 0;
-		for (x in arry) {
-			list.add(new Option(arry[x]));
-		}
-		if (v)
-			list.value = v;
-		paramChange();
-	} catch (err) {
-		out_clear();
-		agent.out = "Error listing parameters.\n";
-		agent.out += "Communication error with agent: \n";
-		agent.out += err;
-		out_up();
-	}
-	return true;
+function list_params() {
+	$.ajax({
+		type: "GET",
+		url: "/paramjson/",
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) { 
+			if( jqXHR.status == 200) {
+				var paramlist = JSON.parse(jqXHR.responseText);
+				agent.params = paramlist;
+				var list = document.getElementById("param-sel");
+				var v = list.value;
+				var arry = new Array();
+				for (x in agent.params) {
+					arry.push(x);
+				}
+				arry.sort();
+				list.options.length = 0;
+				for (x in arry) {
+					list.add(new Option(arry[x]));
+				}
+				if (v)
+					list.value = v;
+				paramChange();
+			}
+			clog("success");
+			clog(data);		
+			clog(textStatus);
+			clog(jqXHR);
+		},
+        
+        error: function( jqXHR, textStatus, errorThrown) { 
+        	clog("error");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	clog(errorThrown);
+        	out_clear();
+			agent.out = "Error listing parameters.\n";
+			agent.out += "Communication error with agent: \n";
+			agent.out += errorThrown;
+        },
+        
+        complete: function( jqXHR, textStatus) {
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	if (jqXHR.status != 200) {
+				agent.out += "Varnish-Agent returned " +
+					jqXHR.status + ":" + jqXHR.responseText;
+			}
+			out_up();
+        }
+	});
+	
 }
 
 function paramChange()
@@ -295,24 +353,33 @@ function paramListDiff()
 	out_up();
 }
 
-function saveParam()
-{
+function saveParam() {
 	var pname = document.getElementById("param-sel").value;
 	var pval = document.getElementById("param-val").value;
-	var client = new XMLHttpRequest();
 	assertText(pname);
 	assertText(pval);
 	out_clear();
-	client.open("PUT", "/param/" + pname, false);
-	client.send(pval);
-	agent.out = client.responseText;
-	out_up();
-	if (client.status == 200) {
-		show_status("ok","Parameter saved");
-		list_params();
-	} else {
-		show_status("warn","Couldn't save parameter");
-	}
+
+	$.ajax({
+		type: "PUT",
+		url: "/param/"+pname,
+		timeout: globaltimeout,
+		contentType: "application/xml",
+		data: pval,     
+        complete: function( jqXHR, textStatus) {
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	agent.out = jqXHR.responseText;
+			out_up();
+			if (jqXHR.status == 200) {
+				show_status("ok","Parameter saved");
+				list_params();
+			} else {
+				show_status("warn","Couldn't save parameter");
+			}
+        }
+	});
 }
 
 function setParamDef()
@@ -324,38 +391,44 @@ function setParamDef()
 	pval.value = agent.params[pname].default;
 }
 
-function vcl_use(id)
-{
-	var client = new XMLHttpRequest();
-	assertText(id);
-	try {
-		client.open("PUT", "/vcldeploy/" + id, false);
-		client.send();
-		agent.out = client.responseText;
-	} catch (err) {
-		agent.out = "Com. errors with agent: \n" + err;
-		return false;
-	}
-	if (client.status = "200") {
-		agent.activeVcl = id;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-function deployVCL()
-{
+function deployVCL() {
 	out_clear();
 	var id = document.getElementById("loader").value;
 	assertText(id);
-	var doc = vcl_use(id);
-	if (doc) {
-		show_status("ok","VCL deployed");
-	} else {
-		show_status("warn","vcl deploy failed");
-	}
-	out_up();	
+	$.ajax({
+		type: "PUT",
+		url: "/vcldeploy/" + id,
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) { 
+			agent.out = jqXHR.responseText;
+			clog("success");
+			clog(data);		
+			clog(textStatus);
+			clog(jqXHR);
+		},
+        
+        error: function( jqXHR, textStatus, errorThrown) { 
+        	agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+        	clog("error");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	clog(errorThrown);	
+        },
+        
+        complete: function( jqXHR, textStatus) {
+	        if (jqXHR.status = "200") {
+				agent.activeVcl = id;
+				show_status("ok","VCL deployed");
+			} else {
+				show_status("warn","vcl deploy failed");
+			}
+			out_up();	
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        }
+	});
+
 }
 
 function clearID()
@@ -364,96 +437,125 @@ function clearID()
 	agent.vclId = "";
 }
 
-function vcl_discard(id)
-{
-	assertText(id);
-	try {
-		var client = new XMLHttpRequest();
-		client.open("DELETE", "/vcl/" + id, false);
-		client.send();
-		agent.out = client.responseText;
-	} catch (err) {
-		agent.out = "Com. errors with agent: \n" + err;
-		return false;
-	}
-	if (client.status = "200" && client.responseText == "") {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 function discardVCL()
 {
 	out_clear();
-	var doc = vcl_discard(document.getElementById("loader").value);
-	if (doc) {
-		show_status("ok","VCL discarded");
-	} else {
-		show_status("warn","VCL discard failed");
-	}
-	out_up();	
+	var id = document.getElementById("loader").value;
+	assertText(id);
+
+	$.ajax({
+		type: "DELETE",
+		url: "/vcl/" + id,
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) { 
+			agent.out = jqXHR.responseText;
+			clog("success");
+			clog(data);		
+			clog(textStatus);
+			clog(jqXHR);
+		},
+        
+        error: function( jqXHR, textStatus, errorThrown) { 
+        	agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+        	clog("error");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	clog(errorThrown);
+        },
+        
+        complete: function( jqXHR, textStatus) {
+   			if (jqXHR.status = "200" && jqXHR.responseText == "") {
+				show_status("ok","VCL discarded");
+	   		} else {
+		   		show_status("warn","VCL discard failed. "+jqXHR.responseText);
+	   		} 
+   			out_up();
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        }
+	});
+
 }
 
-function stop()
-{
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/stop", false);
-	client.send();
-	var doc = client.responseText;
-	document.getElementById("out").innerHTML = doc;
-	status();
+function stop() {
+	$.ajax({
+		type: "PUT",
+		url: "/stop/",
+		timeout: globaltimeout,   
+        complete: function( jqXHR, textStatus) {
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	var doc = jqXHR.responseText;
+        	document.getElementById("out").innerHTML = doc;
+        	status();
+        }
+	});
 }
 
-function start()
-{
-	var client = new XMLHttpRequest();
-	client.open("PUT", "/start", false);
-	client.send();
-	var doc = client.responseText;
-	document.getElementById("out").innerHTML = doc;
-	status();
+function start() {
+	$.ajax({
+		type: "PUT",
+		url: "/start",
+		timeout: globaltimeout,   
+        complete: function( jqXHR, textStatus) {
+        	clog("complete");
+        	clog(jqXHR);
+        	clog(textStatus);
+        	var doc = jqXHR.responseText;
+        	document.getElementById("out").innerHTML = doc;
+        	status();
+        }
+	});
+
 }
 
 function status()
 {
-	var client = new XMLHttpRequest();
 	listVCL();
-	if (!agent.setstate)
-		reset_status();
+	reset_status();
 }
 
-function update_stats()
-{
-	var client = new XMLHttpRequest();
+function update_stats() {
 	var d = document.getElementById("stats-btn");
 	assert(d != null);
-	try {
-		client.open("GET","/stats", false);
-		client.send();
-		for (i = 0; i < 3; i++) {
-			agent.stats[i] = agent.stats[i+1];
-		}
-		agent.stats[3] = JSON.parse(client.responseText);
-		var n_req = 0;
-		var n_n_req = 0;
-		for (i = 3; agent.stats[i-1] != null; i--) {
-			if (agent.stats[i] == null) 
-				break;
-			if (agent.stats[i].client_req == null)
-				break;
-			if (agent.stats[i-1] != null && agent.stats[i-1].client_req != null)
-				n_req += agent.stats[i].client_req.value - agent.stats[i-1].client_req.value;
-			else
-				n_req += agent.stats[i].client_req.value;
-			n_n_req++;
-		}
-		if (n_n_req>0)
-			d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";
-	} catch (err) {
-		d.innerHTML = "Couldn't get stats: " + err;
-	}
-
+	$.ajax({
+		type: "GET",
+		url: "/stats",
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) {
+			clog("success");
+			clog(data);
+			clog(textStatus);
+			clog(jqXHR);
+			for (i = 0; i < 3; i++) {
+				agent.stats[i] = agent.stats[i+1];
+				}
+			agent.stats[3] = JSON.parse(data);
+			var n_req = 0;
+			var n_n_req = 0;
+			for (i = 3; agent.stats[i-1] != null; i--) {
+				if (agent.stats[i] == null) 
+					break;
+				if (agent.stats[i].client_req == null)
+					break;
+				if (agent.stats[i-1] != null && agent.stats[i-1].client_req != null)
+					n_req += agent.stats[i].client_req.value - agent.stats[i-1].client_req.value;
+				else 
+					n_req += agent.stats[i].client_req.value;
+				n_n_req++;
+			}
+			if (n_n_req>0)
+				d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";        
+		},
+        error: function( jqXHR, textStatus, errorThrown) {
+			d.innerHTML = "Couldn't get stats: " + err;
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);
+        }
+	});
 }
 
 function sanity() {
