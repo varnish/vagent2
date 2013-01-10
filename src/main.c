@@ -134,18 +134,16 @@ int main(int argc, char **argv)
 	core_alloc_plugins(&core);
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
+	printf("Starting plugins: ");
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
-		printf("Starting %s\n", plug->name);
+		printf("%s ", plug->name);
 		if (plug->start != NULL)
 			plug->start(&core, plug->name);
 	}
-
+	printf("\n");
 	for (plug = core.plugins; plug; plug = plug->next) {
 		if (plug->thread) {
-			printf("Waiting for %s\n", plug->name);
 			pthread_join(*plug->thread, NULL);
-		} else {
-			printf("Plugin %s has no threads\n", plug->name);
 		}
 	}
 	return 0;
