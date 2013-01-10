@@ -11,6 +11,7 @@ varnish_agent_SOURCES = \
 	ipc.c \
 	vss.c \
 	helpers.c \
+	vsb.c \
 	modules/varnishadm.c \
 	modules/pingd.c \
 	modules/logd.c \
@@ -21,6 +22,7 @@ varnish_agent_SOURCES = \
 	modules/vcl.c \
 	modules/html.c \
 	modules/varnishstat.c \
+	modules/vlog.c \
 	modules/ban.c
 
 varnish_agent_LDADD = \

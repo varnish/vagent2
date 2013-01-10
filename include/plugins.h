@@ -68,5 +68,6 @@ void vadmin_init(struct agent_core_t *core);
 void params_init(struct agent_core_t *core);
 void ban_init(struct agent_core_t *core);
 void varnishstat_init(struct agent_core_t *core);
+void vlog_init(struct agent_core_t *core);
 #endif
 
