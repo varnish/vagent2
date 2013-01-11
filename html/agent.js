@@ -13,7 +13,7 @@ var agent = {
  * some global settings for client-side
 */
 var globaltimeout = 2000; //2 sec timeout for ajax calls.
-var debug = false;	//global flag for debug
+var debug = true;	//global flag for debug
 
 function clog(text) {
 	if(debug) {
@@ -558,6 +558,53 @@ function update_stats() {
 	});
 }
 
+function updateTop() {
+	$.ajax({
+		type: "GET",
+		url: "/log/1/TxURL",
+		timeout: globaltimeout,
+		success: function (data, textStatus, jqXHR) {
+			clog("success - update_top");
+			clog(data);
+			clog(textStatus);
+			clog(jqXHR);
+			agent.rxtop = JSON.parse(data);
+			var tmp = "Cache misses (Varnishtop -i TxURL):\n";
+			var list = new Object();
+			for (var i = 0; i < agent.rxtop.log.length; i++) {
+				clog("update_top[" + i + "]: " + agent.rxtop.log[i].value);
+				if (list[agent.rxtop.log[i].value] == null)
+					list[agent.rxtop.log[i].value] = 1;
+				else
+					list[agent.rxtop.log[i].value]++;
+			}
+			agent.out = "";
+			clog(list);
+			var arr = new Array();
+			for (i in list) {
+				arr.push({"url":i,"num":list[i]});
+			}
+			arr.sort(function(a,b) {return b.num - a.num;});
+			for (var i=0; i<arr.length && i < 5; i++) {
+				tmp += arr[i].url + "  (" + arr[i].num + " misses)\n";
+			}
+			clog(arr);
+			clog(tmp);
+			var d = document.getElementById("varnishtop");
+			d.innerHTML = tmp;
+
+			clog(agent.out);
+			out_up();
+		},
+        error: function( jqXHR, textStatus, errorThrown) {
+			d.innerHTML = "Couldn't get stats: " + err;
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);
+        }
+	});
+}
+
 function sanity() {
 	assert(stats == null);
 	assert(paramlist == null);
@@ -569,4 +616,6 @@ $('.btn').button();
 setInterval(function(){status()},10000);
 setInterval(function(){update_stats()},1000);
 setInterval(function(){sanity()},1000);
+setInterval(function(){updateTop()},5000);
+updateTop();
 listVCL();
