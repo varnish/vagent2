@@ -6,7 +6,6 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Le styles -->
     <link href="/html/bootstrap/css/bootstrap.css" rel="stylesheet">
     <style type="text/css">
       body {
@@ -26,7 +25,6 @@
     <![endif]-->
 
   <style type="text/css"></style></head>
-
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
@@ -99,39 +97,40 @@
 	    <h1>Welcome to the Varnish Agent</h1>
 	    <p>This is the Varnish Agent's HTML interface. It is designed
 	    to showcase the various features of the Varnish Agent.</p>
-	    <p>The Varnish Agent is a small daemon that runs on the same
-	    machine as your <a href="http://varnish-cache.org">Varnish
-	    Cache</a>. It gives you a simple REST interface to control the
-	    behavior of Varnish, including most common administrative
-	    tasks, such as changing VCL, reviewing and setting parameters,
-	    stopping and starting the child and issuing bans (cache
-	    invalidation).</p>
-	    <p>The agent can be used stand alone through this web page, it
-	    can be integrated into other site-specific systems, it can be
-	    used in conjunction with the <a
-	    href="http://varnish-software.com">Varnish Administration
-	    Console</a> to control multiple Varnish caches, or a mix of
-	    them all.</p>
+	    <p>Features of the varnish agent:</p>
+	    <ul>
+	    <li>VCL uploading, downloading, persisting (storing to
+	    disk).</li>
+	    <li>Parameter viewing, storing. Not persisting yet.</li>
+	    <li>Varnishstat in json format</li>
+	    <li>Varnishlog (somewhat flawed at the moment, but usable).
+	    Frontend can use this data to simulate varnishlog, varnishtop,
+	    varnishhist and more.</li>
+	    <li>Panic show/clear, start/stop/status.</li>
+	    <li>Banning.</li>
+	    <li>Static file distribution (e.g: /html/)</li>
+	    <li>Proof of Concept front end (what you're looking at).</li>
+	    </ul>
+	    <p>You can think of the Varnish Agent as a web frontend and
+	    REST interface to your <a href="http://varnish-cache.org">Varnish
+	    Cache</a>. 
 	    <p>The agent strives to be "self documenting", meaning that the
-	    REST API should be easily understood by browsing the root
-	    directory. That is to say, browsing <a href="/">/</a>. The
-	    content you are currently viewing is the asset-serving portion
-	    of the agent, found under <a href="/html/">/html/</a>.
-	    Typically installed to /usr/local/share/varnish-agent/html or
-	    /usr/share/varnish-agent/html.</p>
-	    <p>VCL is typically stored to /usr/local/var/varnish-agent/ or
-	    /usr/share/varnish-agent/, but check 
-	    <a href="/help/vcl">/help/vcl</a> for the absolute
-	    reference.</p>
+	    REST API should be easily understood by browsing the <a
+	    href="/">root directory</a>.The content you are currently
+	    viewing is the asset-serving portion of the agent, found under
+	    <a href="/html/">/html/</a>.
+	    <p>The agent is under development, and is written for the
+	    <a href="http://www.varnish-software.com">Varnish
+	    Administration Console</a>.</p>
+	    <p>File bugs to the <a
+	    href="http://github.com/varnish/vagent2/">github
+	    repository</a>.</p>
+	    
 	  </div>
 	</div>
       </div><!--/row-->
     </div><!--/.fluid-container-->
 </div>
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
     <script src="/html/jquery.js"></script>
     <script src="/html/bootstrap/js/bootstrap.js"></script>
     <script src="/html/agent.js"></script>
