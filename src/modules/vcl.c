@@ -31,7 +31,7 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "httpd.h"
-
+#include "vsb.h"
 #include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -178,33 +178,31 @@ static int vcl_store(struct httpd_request *request,
 }
 
 /*
- * FIXME: use VSB
+ * Takes unformatted vcl.list as input and returns a vsb with the json
+ * version. The caller must clean up the vsb.
  */
-static char *vcl_list_json(char *raw)
+static struct vsb *vcl_list_json(char *raw)
 {
-	struct vcl_list *tmp;
-	int ret, ret2;
+	struct vcl_list tmp;
+	int ret;
 	char *pos;
-	char *buffer = calloc(1,10241);
-	char *b;
+	struct vsb *vsb;
+	vsb = VSB_new_auto();
 	pos = raw;
-	tmp = malloc(sizeof (struct vcl_list));
-	strcat(buffer,"{\n\"vcls\": [\n");
+	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
 	do {
-		ret = sscanf(pos, "%10s %6s %s\n", tmp->available, tmp->ref, tmp->name);
+		ret = sscanf(pos, "%10s %6s %s\n", tmp.available, tmp.ref, tmp.name);
 		if (ret == 0) {
 			printf("Confused! line: %s\n", pos);
 		}
 		assert(ret>0);
-		ret2 = asprintf(&b, "%s{\n"
-			"\t\"name\": \"%s\",\n"
-			"\t\"status\": \"%s\",\n"
-			"\t\"refs\": \"%s\"\n"
-			"}",pos != raw ? ",\n" : "",
-			tmp->name, tmp->available, tmp->ref);
-		assert(ret2>0);
-		strncat(buffer,b,10240);
-		free(b);
+		VSB_printf(vsb, "%s{\n"
+			"\t\t\t\"name\": \"%s\",\n"
+			"\t\t\t\"status\": \"%s\",\n"
+			"\t\t\t\"refs\": \"%s\"\n"
+			"\t\t}",pos != raw ? ",\n\t\t" : "\t\t",
+			tmp.name, tmp.available, tmp.ref);
+
 		pos = strstr(pos,"\n");
 		if (pos == NULL)
 			break;
@@ -212,8 +210,8 @@ static char *vcl_list_json(char *raw)
 		if (pos[0] == '\0' || pos[0] == '\n')
 			break;
 	} while (1);
-	strncat(buffer,"]\n}\n",10240);
-	return buffer;
+	VSB_printf(vsb,"\n\t]\n}\n");
+	return vsb;
 }
 
 static unsigned int vcl_reply(struct httpd_request *request, void *data)
@@ -256,14 +254,16 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		} else if(!strncmp(request->url, "/help/vcl", strlen("/help/vcl"))) {
 			return send_response_ok(request->connection, vcl->help);
 		} else if(!strcmp(request->url, "/vcljson/")) {
-			char *json;
+			struct vsb *json;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
 				send_response_fail(request->connection, vret.answer);
 			} else {
 				json = vcl_list_json(vret.answer);
-				send_response_ok(request->connection, json);
-				free(json);
+				assert(VSB_finish(json) == 0);
+				send_response(request->connection,200, VSB_data(json),VSB_len(json));
+				VSB_clear(json);
+				VSB_delete(json);
 			}
 			free(vret.answer);
 			return 0;
