@@ -580,7 +580,6 @@ function updateTop() {
 				else
 					list[agent.rxtop.log[i].value]++;
 			}
-			agent.out = "";
 			clog(list);
 			var arr = new Array();
 			for (i in list) {
@@ -595,8 +594,6 @@ function updateTop() {
 			var d = document.getElementById("varnishtop");
 			d.innerHTML = tmp;
 
-			clog(agent.out);
-			out_up();
 		},
         error: function( jqXHR, textStatus, errorThrown) {
 			d.innerHTML = "Couldn't get stats: " + err;
