@@ -201,7 +201,7 @@ h_unorder(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
 	struct vlog_priv_t *vlog = priv;
 	type = (spec & VSL_S_CLIENT) ? 'c' :
 	    (spec & VSL_S_BACKEND) ? 'b' : '-';
-	local_print(vlog,tag,fd,len,spec,ptr,bm);
+	local_print(vlog,tag,fd,len,type,ptr,bm);
 	return 0;
 }
 
