@@ -559,9 +559,11 @@ function update_stats() {
 }
 
 function updateTop() {
+	var tag = document.getElementById("varnishtop-sel").value;
+	assertText(tag);
 	$.ajax({
 		type: "GET",
-		url: "/log/1/TxURL",
+		url: "/log/1/" + tag,
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			clog("success - update_top");
@@ -569,7 +571,7 @@ function updateTop() {
 			clog(textStatus);
 			clog(jqXHR);
 			agent.rxtop = JSON.parse(data);
-			var tmp = "Cache misses (Varnishtop -i TxURL):\n";
+			var tmp = "";
 			var list = new Object();
 			for (var i = 0; i < agent.rxtop.log.length; i++) {
 				clog("update_top[" + i + "]: " + agent.rxtop.log[i].value);
@@ -586,7 +588,7 @@ function updateTop() {
 			}
 			arr.sort(function(a,b) {return b.num - a.num;});
 			for (var i=0; i<arr.length && i < 5; i++) {
-				tmp += arr[i].url + "  (" + arr[i].num + " misses)\n";
+				tmp += arr[i].url + "  (" + arr[i].num + " times)\n";
 			}
 			clog(arr);
 			clog(tmp);

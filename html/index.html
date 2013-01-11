@@ -62,6 +62,11 @@
 	  <button class="btn disabled btn-block btn-primary" id="vcl-btn"></button>
 	  <button class="btn disabled btn-block btn-primary" id="stats-btn"></button>
 	  <button class="btn disabled btn-block" id="status-btn"></button>
+	  <select id="varnishtop-sel" class="input-block-level" onChange="updateTop()">
+	    <option value="TxURL">Cache misses</option>
+	    <option value="RxURL">Requested URLs</option>
+	    <option value="TxStatus">Response codes</option>
+	  </select>
 	  <pre id="varnishtop"></pre>
 	  <pre id="out"></pre>
 	  <p id="test-out"></p>
