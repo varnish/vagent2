@@ -63,10 +63,12 @@
 	  <select id="varnishtop-sel" class="input-block-level" onChange="updateTop()">
 	    <option value="TxURL">Cache misses</option>
 	    <option value="RxURL">Requested URLs</option>
-	    <option value="TxStatus">Response codes</option>
-	    <option value="RxHeader/^Vary">Vary headers</option>
-	    <option value="RxHeader/^Server">Server headers</option>
-	    <option value="RxHeader/^Host">Host headers</option>
+	    <option value="TxStatus">Response codes sent</option>
+	    <option value="RxHeader/^Vary:">Vary headers received</option>
+	    <option value="TxHeader/^Vary:">Vary headers sent</option>
+	    <option value="RxHeader/^Server:">Server headers received</option>
+	    <option value="RxHeader/^Host:">Host headers received</option>
+	    <option value="TxHeader/^Content-Type:">Content type</option>
 	  </select>
 	  <pre id="varnishtop"></pre>
 	  <pre id="out"></pre>
