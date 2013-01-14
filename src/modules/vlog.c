@@ -313,6 +313,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	char *limit = NULL;
 	char *p;
 	char *tag = NULL;
+	char *itag = NULL;
 	GET_PRIV(data,vlog);
 	p = next_slash(request->url + 1);
 
@@ -334,9 +335,15 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	}
 	if (p) {
 		tag = strdup(p);
-		char *tmp2 = next_slash(tag);
-		if (tmp2)
-			*tmp2 = '\0';
+		char *tmp2 = index(tag,'/');
+		if (tmp2 && *tmp2) *tmp2 = '\0';
+		p = next_slash(p);
+	}
+	if (p) {
+		itag = strdup(p);
+		char *tmp2 = index(itag,'/');
+		if (tmp2 && *tmp2) *tmp2 = '\0';
+		p = next_slash(p);
 	}
 	vlog->answer = VSB_new_auto();
 	assert(vlog->answer != NULL);
@@ -345,6 +352,8 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	VSL_Arg(vlog->vd, 'd', "");
 	if (tag) {
 		VSL_Arg(vlog->vd, 'i', tag);
+		if (itag)
+			VSL_Arg(vlog->vd,'I',itag);
 	} else {
 		VSL_Arg(vlog->vd, 'k', limit ? limit : "10");
 	}
@@ -362,6 +371,8 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	}
 	if (tag)
 		free(tag);
+	if (itag)
+		free(itag);
 
 	VSB_printf(vlog->answer, "\n] }\n");
 	assert(VSB_finish(vlog->answer) == 0);
