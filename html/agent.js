@@ -217,6 +217,7 @@ function listVCL() {
 		type: "GET",
 		url: "/vcljson/",
 		timeout: globaltimeout,
+		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			clog("success");
 			clog(data);
@@ -258,6 +259,7 @@ function list_params() {
 		type: "GET",
 		url: "/paramjson/",
 		timeout: globaltimeout,
+		dataType: "text",
 		success: function (data, textStatus, jqXHR) { 
 			if( jqXHR.status == 200) {
 				var paramlist = JSON.parse(jqXHR.responseText);
@@ -365,7 +367,7 @@ function saveParam() {
 		url: "/param/"+pname,
 		timeout: globaltimeout,
 		contentType: "application/xml",
-		data: pval,     
+		data: pval,
         complete: function( jqXHR, textStatus) {
         	clog("complete");
         	clog(jqXHR);
@@ -524,11 +526,8 @@ function update_stats() {
 		type: "GET",
 		url: "/stats",
 		timeout: globaltimeout,
+		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
-			clog("success");
-			clog(data);
-			clog(textStatus);
-			clog(jqXHR);
 			for (i = 0; i < 3; i++) {
 				agent.stats[i] = agent.stats[i+1];
 				}
@@ -565,6 +564,7 @@ function updateTop() {
 		type: "GET",
 		url: "/log/1/" + tag,
 		timeout: globaltimeout,
+		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			clog("success - update_top");
 			clog(data);
