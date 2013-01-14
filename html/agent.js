@@ -90,6 +90,7 @@ function reset_status()
 	$.ajax({
 		type: "GET",
 		url: "/status",
+		dataType: "text",
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			stat = data; 
@@ -601,6 +602,78 @@ function updateTop() {
 			clog(textStatus);
 			clog(errorThrown);
         }
+	});
+}
+
+function banSmart() {
+	var banUrl = document.getElementById("smartBan").value;
+	assertText(banUrl);
+	$.ajax({
+		type: "POST",
+		url: "/ban" + banUrl,
+		timeout: globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			clog("success - smartBan");
+			agent.out = "OK!"+  data;
+			out_up();
+
+		},
+        error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Couldn't ban: " + errorThrown;
+			out_up();
+        }
+	});
+}
+
+function banList() {
+	$.ajax({
+		type: "GET",
+		url: "/ban",
+		timeout: globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			agent.out = data;
+			out_up();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			agent.out = "Failed to list!\n" + errorThrown;
+			out_up();
+		}
+	});
+}
+
+function panicShow() {
+	$.ajax({
+		type: "GET",
+		url: "/panic",
+		timeout: globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			agent.out = data;
+			out_up();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			agent.out = "Failed to run panic.show\n" + errorThrown;
+			out_up();
+		}
+	});
+}
+
+function panicClear() {
+	$.ajax({
+		type: "DELETE",
+		url: "/panic",
+		timeout: globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			agent.out = data;
+			out_up();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			agent.out = "Failed to run panic.clear\n" + errorThrown;
+			out_up();
+		}
 	});
 }
 
