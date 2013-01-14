@@ -94,9 +94,6 @@ function reset_status()
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			stat = data; 
-			clog("success:" + data);
-			clog("success:" + textStatus);
-			clog("success:" + jqXHR);
 			clog(jqXHR);
 			assertText(stat);
 			but.textContent = stat;
@@ -109,7 +106,6 @@ function reset_status()
         },
         complete: function( jqXHR, textStatus) {
    			but.textContent = stat;
-        	clog("complete: "+stat);
 	        if (stat == "Child in state running") {
 				but.className = "btn btn-primary btn-block disabled";
 			} else {
@@ -150,17 +146,9 @@ function uploadVCL() {
 		data: vcl,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
-			clog("success");
-			clog(data);
-			clog(textStatus);
-			clog(jqXHR);
         },
         error: function( jqXHR, textStatus, errorThrown) {
 			agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
-			clog("error");
-			clog(errorThrown);
-			clog(textStatus);
-			clog(jqXHR);
         },
         complete: function( jqXHR, textStatus) {
         	out_up();
@@ -220,10 +208,6 @@ function listVCL() {
 		timeout: globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
-			clog("success");
-			clog(data);
-			clog(textStatus);
-			clog(jqXHR);
 			var vclList = JSON.parse(data);
 			agent.vclList = vclList;
 			var txt = "";
@@ -280,12 +264,7 @@ function list_params() {
 					list.value = v;
 				paramChange();
 			}
-			clog("success");
-			clog(data);		
-			clog(textStatus);
-			clog(jqXHR);
 		},
-        
         error: function( jqXHR, textStatus, errorThrown) { 
         	clog("error");
         	clog(jqXHR);
@@ -298,9 +277,6 @@ function list_params() {
         },
         
         complete: function( jqXHR, textStatus) {
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         	if (jqXHR.status != 200) {
 				agent.out += "Varnish-Agent returned " +
 					jqXHR.status + ":" + jqXHR.responseText;
@@ -370,9 +346,6 @@ function saveParam() {
 		contentType: "application/xml",
 		data: pval,
         complete: function( jqXHR, textStatus) {
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         	agent.out = jqXHR.responseText;
 			out_up();
 			if (jqXHR.status == 200) {
@@ -404,10 +377,6 @@ function deployVCL() {
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) { 
 			agent.out = jqXHR.responseText;
-			clog("success");
-			clog(data);		
-			clog(textStatus);
-			clog(jqXHR);
 		},
         
         error: function( jqXHR, textStatus, errorThrown) { 
@@ -426,9 +395,6 @@ function deployVCL() {
 				show_status("warn","vcl deploy failed");
 			}
 			out_up();	
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         }
 	});
 
@@ -452,10 +418,6 @@ function discardVCL()
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) { 
 			agent.out = jqXHR.responseText;
-			clog("success");
-			clog(data);		
-			clog(textStatus);
-			clog(jqXHR);
 		},
         
         error: function( jqXHR, textStatus, errorThrown) { 
@@ -473,9 +435,6 @@ function discardVCL()
 		   		show_status("warn","VCL discard failed. "+jqXHR.responseText);
 	   		} 
    			out_up();
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         }
 	});
 
@@ -487,9 +446,6 @@ function stop() {
 		url: "/stop/",
 		timeout: globaltimeout,   
         complete: function( jqXHR, textStatus) {
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         	var doc = jqXHR.responseText;
         	document.getElementById("out").innerHTML = doc;
         	status();
@@ -503,9 +459,6 @@ function start() {
 		url: "/start",
 		timeout: globaltimeout,   
         complete: function( jqXHR, textStatus) {
-        	clog("complete");
-        	clog(jqXHR);
-        	clog(textStatus);
         	var doc = jqXHR.responseText;
         	document.getElementById("out").innerHTML = doc;
         	status();
@@ -567,21 +520,15 @@ function updateTop() {
 		timeout: globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
-			clog("success - update_top");
-			clog(data);
-			clog(textStatus);
-			clog(jqXHR);
 			agent.rxtop = JSON.parse(data);
 			var tmp = "";
 			var list = new Object();
 			for (var i = 0; i < agent.rxtop.log.length; i++) {
-				clog("update_top[" + i + "]: " + agent.rxtop.log[i].value);
 				if (list[agent.rxtop.log[i].value] == null)
 					list[agent.rxtop.log[i].value] = 1;
 				else
 					list[agent.rxtop.log[i].value]++;
 			}
-			clog(list);
 			var arr = new Array();
 			for (i in list) {
 				arr.push({"url":i,"num":list[i]});
@@ -590,11 +537,8 @@ function updateTop() {
 			for (var i=0; i<arr.length && i < 5; i++) {
 				tmp += arr[i].url + "  (" + arr[i].num + " times)\n";
 			}
-			clog(arr);
-			clog(tmp);
 			var d = document.getElementById("varnishtop");
 			d.innerHTML = tmp;
-
 		},
         error: function( jqXHR, textStatus, errorThrown) {
 			d.innerHTML = "Couldn't get stats: " + err;
@@ -614,7 +558,6 @@ function banSmart() {
 		timeout: globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
-			clog("success - smartBan");
 			agent.out = "OK!"+  data;
 			out_up();
 
@@ -654,7 +597,13 @@ function panicShow() {
 			out_up();
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
-			agent.out = "Failed to run panic.show\n" + errorThrown;
+			agent.out = "Failed to run panic.show\n" + errorThrown + "\n" + textStatus + "\n" + jqXHR;
+			agent.out += jqXHR.responseText;
+			if (jqXHR.responseText == "Child has not panicked or panic has been cleared")
+				agent.out = jqXHR.responseText;
+
+			clog(jqXHR);
+			clog(errorThrown);
 			out_up();
 		}
 	});
@@ -672,6 +621,8 @@ function panicClear() {
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
 			agent.out = "Failed to run panic.clear\n" + errorThrown;
+			if (jqXHR.responseText == "Child has not panicked or panic has been cleared")
+				agent.out = jqXHR.responseText;
 			out_up();
 		}
 	});

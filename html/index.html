@@ -74,6 +74,13 @@
 	    <div class="row-fluid span12">
 	    <div class="span6">
 	      <h1>Parameters</h1>
+	      <p>These are run-time parameters of the Varnish Cache daemon.
+	      Most of them can be changed on the fly, but some might not
+	      take effect for some time (e.g: Changing default_ttl will
+	      only apply to new content). Others might require a child
+	      restart.</p>
+	      <p>Best practices is to keep your parameters as close to the
+	      defaults as possible.</p>
 	      <select onchange="paramChange()" id="param-sel"></select>
 	      <div class="input-append">
 	        <input type="text" id="param-val" placeholder="Parameter value"/>
@@ -105,6 +112,13 @@
 	      <h1>Cache invalidation</h1>
 	      <p>The agent only supports banning. For other methods, use
 	      VCL.</p>
+	      <p>The agent issues ban commands over the Varnish CLI. It
+	      will not free up memory unless you use smart bans.</p>
+	      <p>Keep in mind that if your cache is empty, your ban list
+	      will also always be empty. In other words: If you are just
+	      testing this and banning something, then get an empty ban
+	      list instead of seeing your own ban: make sure the cache has
+	      content.</p>
 	      <div class="input-append">
 	        <input id="smartBan" type="text" placeholder="URL to ban. E.g: /foobar.html" />
 	        <button class="btn btn-primary" onclick="banSmart()">Ban</button>
@@ -113,6 +127,10 @@
 	    </div>
             <div class="span6">
 	      <h1>Varnishtop</h1>
+	      <p>This is a JavaScript implementation of varnishtop. It can
+	      help you determine what traffic you should look closer at
+	      (e.g: cache misses), what web servers you are using (e.g:
+	      Server headers), etc.</p>
 	      <select id="varnishtop-sel" onChange="updateTop()">
     	        <option value="TxURL">Cache misses</option>
 	        <option value="RxURL">Requested URLs</option>
