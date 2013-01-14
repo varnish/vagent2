@@ -621,7 +621,7 @@ function panicClear() {
 		},
 		error: function (jqXHR, textStatus, errorThrown) {
 			agent.out = "Failed to run panic.clear\n" + errorThrown;
-			if (jqXHR.responseText == "Child has not panicked or panic has been cleared")
+			if (jqXHR.responseText == "No panic to clear")
 				agent.out = jqXHR.responseText;
 			out_up();
 		}
