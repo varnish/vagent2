@@ -43,6 +43,7 @@ struct agent_config_t {
 	char *S_arg;
 	char *n_arg;
 
+	int d_arg; // 0 - fork. 1 - foreground.
 	char *c_arg; // Listening port for incoming requests
 	char *p_arg; // Persistence directory
 	char *H_arg; // HTML directory

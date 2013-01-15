@@ -39,13 +39,14 @@
 #include <assert.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <syslog.h>
 
 /*
  * TODO:
  *  - Write to something slightly more elaborate than stdout.
  */
 struct logd_priv_t {
-	FILE *out;
+	int debug;
 };
 
 static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
@@ -53,7 +54,10 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	struct logd_priv_t *log = (struct logd_priv_t *) private;
 	assert(log);
 
-	fprintf(log->out,"LOGGER: %s\n",msg);
+	if (log->debug)
+		printf("LOGGER: %s\n",msg);
+	else
+		syslog(LOG_INFO,"%s",msg);
 	
 	ret->status = 200;
 	ret->answer = strdup("OK");
@@ -64,10 +68,14 @@ void logd_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct logd_priv_t *priv = malloc(sizeof(struct logd_priv_t));
 	plug = plugin_find(core,"logd");
-	
-	priv->out = stdout;
+
+	if (core->config->d_arg)
+		priv->debug = 1;
+	else
+		priv->debug = 0;	
 	plug->ipc->cb = read_log;
 	plug->ipc->priv = priv;
 	plug->data = (void *)priv;
 	plug->start = ipc_start;
+	openlog("varnish-agent",LOG_PID,LOG_DAEMON);
 }

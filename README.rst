@@ -62,6 +62,8 @@ OPTIONS
 -c port     Port number to listen for incomming connections. Defaults to
             6085.
 
+-d          Run in foreground.
+
 -h          Print help.
 
 INSTALL

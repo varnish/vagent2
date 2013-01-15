@@ -42,7 +42,7 @@ static void usage(const char *argv0)
 	fprintf(stderr,
 	"Varnish Agent usage: \n"
 	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
-	"   [-T host:port] [-t timeout] [-c port] [-h]\n\n"
+	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n\n"
 	"-p directory        Persistence directory: where VCL and parameters\n"
 	"                    are stored. Default: " AGENT_PERSIST_DIR "\n"
 	"-H                  Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
@@ -51,6 +51,7 @@ static void usage(const char *argv0)
 	"-T host:port        Varnishd administrative interface.\n"
 	"-t timeout          timeout for talking to varnishd.\n"
 	"-c port             TCP port (default: 6085).\n"
+	"-d                  Debug. Runs in foreground.\n"
 	"-h                  Prints this.\n"
 	"\n"
 	"All arguments are optional.\n"
@@ -67,9 +68,10 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->T_arg = NULL;
 	core->config->c_arg = strdup("6085");
 	core->config->timeout = 5;
+	core->config->d_arg = 0;
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
-	while ((opt = getopt(argc, argv, "hp:H:n:S:T:t:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "hdp:H:n:S:T:t:c:")) != -1) {
 		switch (opt) {
 		case 'p':
 			core->config->p_arg = optarg;
@@ -91,6 +93,9 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'c':
 			core->config->c_arg = optarg;
+			break;
+		case 'd':
+			core->config->d_arg = 1;
 			break;
 		case 'h':
 			usage(argv0);
@@ -145,6 +150,7 @@ int main(int argc, char **argv)
 {
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;
+	int ret;
 	core.config = calloc(1,sizeof(struct agent_config_t));
 	assert(core.config);
 	core.plugins = NULL;
@@ -155,6 +161,13 @@ int main(int argc, char **argv)
 	 */
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
+	if (!core.config->d_arg) {
+		printf("Plugins initialized. Forking.\n");
+		ret = daemon(0,0);
+		assert(ret == 0);
+	} else {
+		printf("Plugins initialized. No -d argument so not forking.\n");
+	}
 	printf("Starting plugins: ");
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		printf("%s ", plug->name);
