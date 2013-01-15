@@ -30,16 +30,22 @@
       <div class="navbar-inner">
         <div class="container-fluid">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+	  <span class="icon-bar">
+		</span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="http://varnish-software.com/">Varnish Agent</a>
+	  <a href="http://varnish-software.com/" class="pull-left">
+	<svg version="1.2" baseProfile="tiny" id="Layer_1" style="margin-top: 2px; margin-right: 4px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="32px" height="32px" viewBox="0 0 512 512" xml:space="preserve" fill="white"><path d="M376.261,30.86c58.724,0,106.319,47.603,106.319,106.326c0,58.724-47.596,106.327-106.319,106.327S269.941,195.91,269.941,137.187C269.941,78.463,317.537,30.86,376.261,30.86z"/><path d="M207.796,329.471c42.405,0,76.782,34.377,76.782,76.782c0,42.404-34.377,76.796-76.782,76.796 s-76.782-34.392-76.782-76.796C131.015,363.848,165.392,329.471,207.796,329.471z"/><path d="M76.137,183.781c24.551,0,44.452,19.909,44.452,44.459s-19.901,44.452-44.452,44.452 s-44.459-19.901-44.459-44.452S51.586,183.781,76.137,183.781z"/></svg>
+		</a>
+          <a class="brand" href="http://varnish-software.com/">
+	  Varnish Agent</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-	      <li id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
+	      <li class="active"id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
 	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
-              <li class="active" id="nav-home"><a href="#home" onclick="showHome()">About</a></li>
+              <li id="nav-home"><a href="#home" onclick="showHome()">About</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -70,7 +76,7 @@
 	      <button class="btn" onclick="discardVCL()"><i class="icon-trash"></i> Discard VCL</button>
 	    </div>
           </div>
-	  <div id="params"style="DISPLAY: none">
+	  <div id="params">
 	    <div class="row-fluid span12">
 	    <div class="span6">
 	      <h1>Parameters</h1>
@@ -145,7 +151,7 @@
 	      </div>
 	    </div><!-- span -->
 	  </div><!-- params -->
-	  <div class="span9" id="home">
+	  <div class="span9" id="home" style="DISPLAY: none">
             <div class="hero-unit">
 	      <h1>Welcome to the Varnish Agent</h1>
 	      <p>This is the Varnish Agent's HTML interface. It is designed
