@@ -125,6 +125,25 @@ Development of the Varnish Agent version 2 begun in late 2012, with the
 first release in early 2013. Unlike the first version, it exposes a HTTP
 REST interface instead of trying to simulate a Varnish CLI session.
 
+BUGS
+====
+
+The ``vlog`` module is limited. First of all, the limit it provides only
+works on unfiltered commands, and it's disregarded for tags. Secondly, the
+limit is a "head"-type limit now. It will give you the FIRST log entries,
+not the last matching.
+
+Additionally it only lists the content of the shmlog from the beginning of
+the file running up to the "here"-marker. If ``varnishd`` just wrapped
+around you will get minimal amount of feedback, while you'll get a
+truckload of feedback if you query the module right before ``varnishd``
+wraps around.
+
+Oh, and also, you may want to add some firewall rules. In case you didn't
+notice, there is currently 0 authorization of requests.
+
+For more, see http://github.com/varnish/vagent2
+
 COPYRIGHT
 =========
 
