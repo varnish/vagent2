@@ -34,11 +34,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include "config.h"
-#ifdef HAVE_BSD_LIBUTIL_H
-#include <bsd/libutil.h>
-#else
-#include <libutil.h>
-#endif
+#include "pidfile.h"
 #include <err.h>
 #include <errno.h>
 

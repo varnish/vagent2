@@ -38,12 +38,31 @@ AC_SUBST(AGENT_PERSIST_DIR)
 AGENT_HTML_DIR='${datadir}/varnish-agent/html'
 AC_SUBST(AGENT_HTML_DIR)
 
+# Checks for library functions.
+AC_MSG_CHECKING([for program_invocation_short_name])
+AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([[#include <errno.h>]],
+	                 [[const char *p = program_invocation_short_name;]])],
+	[AC_DEFINE([HAVE_PROGRAM_INVOCATION_SHORT_NAME], [1],
+	           [Define to 1 if you have program_invocation_short_name])
+	 AC_MSG_RESULT([yes])],
+	[AC_MSG_RESULT([no])])
+
+AC_MSG_CHECKING([for __progname])
+AC_LINK_IFELSE(
+	[AC_LANG_PROGRAM([[]],
+	                 [[extern char *__progname;
+	                   const char *p = __progname;]])],
+	[AC_DEFINE([HAVE___PROGNAME], [1], [Define to 1 if you have __progname])
+	 AC_MSG_RESULT([yes])],
+	[AC_MSG_RESULT([no])])
+
+AC_CHECK_FUNCS([dirfd __fpurge getexecname getline sysconf])
 AC_CHECK_HEADERS([bsd/libutil.h])
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
 PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
-PKG_CHECK_MODULES([LIBBSD],[libbsd])
 
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
