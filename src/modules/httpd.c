@@ -265,8 +265,13 @@ static void *httpd_run(void *data)
                              &answer_to_connection, data,
                              MHD_OPTION_NOTIFY_COMPLETED, request_completed,
                              NULL, MHD_OPTION_END);
-	assert(d);
-	logger(http->logger,"HTTP started?");
+	if (!d) {
+		logger(http->logger, "HTTP failed to start on port %d. Agent already running?",port);
+		sleep(1);
+		exit(1);
+	} else {
+		logger(http->logger,"HTTP started");
+	}
 
 	/*
 	 * XXX: .....
