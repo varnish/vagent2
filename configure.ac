@@ -37,6 +37,8 @@ AGENT_PERSIST_DIR='${localstatedir}/varnish-agent'
 AC_SUBST(AGENT_PERSIST_DIR)
 AGENT_HTML_DIR='${datadir}/varnish-agent/html'
 AC_SUBST(AGENT_HTML_DIR)
+
+AC_CHECK_HEADERS([bsd/libutil.h])
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
