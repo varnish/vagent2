@@ -53,7 +53,7 @@ OPTIONS
             Path to the shared secret file, used to authenticate with
             varnishd.
 
--T host:port
+-T hostport
             Hostname and port number for the management interface of
             varnishd.
 
