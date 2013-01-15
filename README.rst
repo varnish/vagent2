@@ -1,55 +1,91 @@
 =============
-Varnish Agent
+varnish-agent
 =============
 
-``varnish-agent`` is a small daemon meant to communicate with Varnish and
-other varnish-related service to allow remote control and monitoring of
+-------------
+Varnish Agent
+-------------
+
+:Manual section: 1
+:Author: Kristian Lyngstøl
+:Date: 2013-01-15
+:Version: 2.0
+
+SYNOPSIS
+========
+
+::
+
+        varnish-agent [-p directory] [-H directory] [-n name] [-c port]
+                      [-S file] [-T host:port] [-t timeout] [-h]
+
+DESCRIPTION
+===========
+
+The ``varnish-agent`` is a small daemon meant to communicate with Varnish
+and other varnish-related service to allow remote control and monitoring of
 Varnish.
 
-In addition to many varnishadm-commands, it also persists configuration
-changes to disk. Uploading VCL will both load it in varnish and store it to
-disk (assuming varnish compiled the VCL OK). Deploying vcl (e.g: using it)
-will make sure ``/usr/lib/varnish-agent/boot.vcl`` points to the deployed
-VCL. Similar logic will be available for the parameters too, though it's
-not currently implemented.
+It listens to port 6085 by default. Try ``http://hostname:6085/html/`` for
+the HTML front-end. All arguments are optional. The Varnish Agent will read
+necessary options from the shm-log.
 
-It is mainly meant for the Varnish Administration Console, but also
-provides a fully functional "HTML" interface (Aka: web interface).
+The Varnish Agent persists VCL changes to ``/var/lib/varnish-agent/`` and
+maintains ``/var/lib/varnish-agent/boot.vcl``. 
 
-Installation and usage
-======================
+OPTIONS
+=======
+
+-p directory
+            Specify persistence directory. This is where VCL is stored. See
+            ``varnish-agent -h`` to see the compiled in default.
+
+-H directory
+            Specify where html files are found. This directory will be
+            accessible through ``/html/``. The default provides a proof of
+            concept front end.
+
+-n name     Specify the varnishd name. Should match the ``varnishd -n``
+            option. Amongst other things, this name is used to construct a
+            path to the SHM-log file.
+
+-S secretfile
+            Path to the shared secret file, used to authenticate with
+            varnishd.
+
+-T host:port
+            Hostname and port number for the management interface of
+            varnishd.
+
+-t timeout  Timeout in seconds for talking to varnishd.
+
+-c port     Port number to listen for incomming connections. Defaults to
+            6085.
+
+-h          Print help.
+
+INSTALL
+=======
 
 See INSTALL for generic details.
 
-In short:
+In short::
 
-- ``./autogen.sh``
-- ``./configure``
-- ``make``
-- ``make install``
-- ``varnish-agent``
+        ./autogen.sh
+        ./configure
+        make
+        make install
+        varnish-agent
 
 Requirements:
 
-- Varnish 3.0.3 (might work on other 3.0-versions too) with the api dev files 
+- Varnish 3.0 (might work on other 3.0-versions too) with the api dev files 
   (e.g: ``apt-get install libvarnish-dev``)
 - ``libmicrohttpd``
 - ``pkg-config``
 - ``pthreads``
 
-The agent will use the same -n argument as whatever Varnish it's built
-against. If you do not start ``varnishd`` with a ``-n`` argument, then the
-agent does not require it either - otherwise they much match. Your
-``varnishd`` should be running with a ``-T`` option. Otherwise you will
-miss a lot of functions.
-
-The agent normally runs on port 6085, but this can be configured with ``-c
-PORT``.
-
-For an introduction to using the agent, visit ``http://localhost:6085/``
-and/or ``http://localhost:6085/html/``.
-
-Design
+DESIGN
 ======
 
 Keep it simple.
@@ -62,46 +98,35 @@ Everything is written as a module, and the goal is:
 - Generic
 - Stateless
 
-Hacking
+SEE ALSO
+========
+
+* varnish-cli(7)
+* varnishd(1)
+* varnishadm(1)
+* varnishlog(1)
+* varnishstat(1)
+* vcl(7)
+
+HISTORY
 =======
 
-1. Read ``include/*.h``
-2. Read ``src/main.c`` to grasp the module init stuff
-3. Read some simple modules, e.g: ``src/modules/echo.c`` and
-   ``src/modules/status.c``
-4. Write a module.
+The first generic webui for Varnish was written by Petter Knudsen of Linpro
+AS in 2009. This led to the creation of the Varnish Administration Console,
+built to manage multiple Varnish instances. Until 2013, the Varnish
+Administration Console used a minimal wrapper around the Varnish CLI
+language, requiring that the Varnish Administration Console knew the CLI
+language. This wrapper was known as the Varnish-Agent version 1, written by
+Martin Blix Grydeland.
 
-Everything is done in threads, but we currently assume that individual
-modules are a single thread (sort of). That is to say: Until further
-notice, you will not have to deal with handling two requests to /foo at the
-same time, as they will come in sequence. This has two consequences:
+Development of the Varnish Agent version 2 begun in late 2012, with the
+first release in early 2013. Unlike the first version, it exposes a HTTP
+REST interface instead of trying to simulate a Varnish CLI session.
 
-1. It's easier to write modules
-2. If you freeze while handling a HTTP request, all HTTP requests freeze.
+COPYRIGHT
+=========
 
-You should anticipate that at some point we might want to re-factor this to
-actually be re-entrant, where possible.
+This document is licensed under the same license as the Varnish Agent
+itself. See LICENSE for details.
 
-Never turn off compiler warnings during development.
-
-Using assert() as much as you can. To (miss-)quote PHK (who possibly quoted
-someone else): The cost of adding assert() to your code is negative:
-whatever time you spend adding it and running it is made up for ten-fold
-once it reveals a bug.
-
-Document any API change thoroughly.
-
-If an API is causing you headache, don't be afraid to fix the API itself
-instead of working around it.
-
-Avoid printf(). Use logger() instead, as that's easy to redirect. We might
-want to extend the log logic. 
-
-While it has not been the rule thus far, try to write "unit tests" for the
-REST api as much as possible, see ``tests/*.sh``.
-
-Ensure that a GET request to / can provide enough help to explain the REST
-interface itself. Some modules provide additional help urls (e.g:
-``/help/param``). That is encouraged if the function of the interface isn't
-obvious (e.g: no point documenting ``/stop`` and ``/stats``).
-
+* Copyright 2012-2013 Varnish Software AS

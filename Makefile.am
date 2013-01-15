@@ -15,3 +15,15 @@ webrootimg_DATA = $(wildcard html/bootstrap/img/*.png)
 install-data-local:
 	$(install_sh) -d -m 0755 $(DESTDIR)$(localstatedir)/varnish-agent
 
+dist_man_MANS = varnish-agent.1
+MAINTAINERCLEANFILES = $(dist_man_MANS)
+
+varnish-agent.1: README.rst
+if HAVE_RST2MAN
+	${RST2MAN} README.rst $@
+else
+	@echo "========================================"
+	@echo "You need rst2man installed to make dist"
+	@echo "========================================"
+	@false
+endif

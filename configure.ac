@@ -9,6 +9,13 @@ AM_CONFIG_HEADER(config.h)
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 
+# Check for rst utilities
+AC_CHECK_PROGS(RST2MAN, [rst2man rst2man.py], "no")
+if test "x$RST2MAN" = "xno"; then
+	AC_MSG_WARN([rst2man not found - not building man pages])
+fi
+
+AM_CONDITIONAL(HAVE_RST2MAN, [test "x$RST2MAN" != "xno"])
 save_LIBS="${LIBS}"
 LIBS=""
 AC_SEARCH_LIBS(pthread_create, [thr pthread c_r])
