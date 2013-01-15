@@ -39,7 +39,6 @@
 #ifndef _PIDFILE_H_
 #define _PIDFILE_H_
 
-#include <features.h>
 #include <sys/types.h>
 #include <stdint.h>
 
