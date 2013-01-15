@@ -33,6 +33,7 @@
 #include <string.h>
 #include <assert.h>
 #include <pthread.h>
+#include "config.h"
 #ifdef HAVE_BSD_LIBUTIL_H
 #include <bsd/libutil.h>
 #else
