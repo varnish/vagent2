@@ -33,6 +33,9 @@
 #include <string.h>
 #include <assert.h>
 #include <pthread.h>
+#include <libutil.h>
+#include <err.h>
+#include <errno.h>
 
 #include "common.h"
 #include "plugins.h"
@@ -151,6 +154,9 @@ int main(int argc, char **argv)
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;
 	int ret;
+	struct pidfh *pfh;
+	pid_t otherpid;
+
 	core.config = calloc(1,sizeof(struct agent_config_t));
 	assert(core.config);
 	core.plugins = NULL;
@@ -161,14 +167,30 @@ int main(int argc, char **argv)
 	 */
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
+	pfh = pidfile_open("/var/run/varnish-agent.pid", 0600, &otherpid);
+	if (pfh == NULL) {
+		if (errno == EEXIST) {
+			errx(EXIT_FAILURE, "Daemon already running, pid: %jd.",
+			     (intmax_t)otherpid);
+		}
+		/* If we cannot create pidfile from other reasons, only warn. */
+		warn("Cannot open or create pidfile");
+	}
+
 	if (!core.config->d_arg) {
 		printf("Plugins initialized. Forking.\n");
 		ret = daemon(0,0);
+		if (ret == -1) {
+			warn("Cannot daemonize");
+			pidfile_remove(pfh);
+			exit(EXIT_FAILURE);
+		}
 		assert(ret == 0);
 	} else {
 		printf("Plugins initialized. No -d argument so not forking.\n");
 	}
 	printf("Starting plugins: ");
+	pidfile_write(pfh);
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		printf("%s ", plug->name);
 		if (plug->start != NULL)
@@ -180,5 +202,9 @@ int main(int argc, char **argv)
 			pthread_join(*plug->thread, NULL);
 		}
 	}
+	/*
+	 * XXX: Might want to do this on SIGTERM too I suppose.
+	 */
+	pidfile_remove(pfh);
 	return 0;
 }
