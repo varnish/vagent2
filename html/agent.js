@@ -388,7 +388,7 @@ function deployVCL() {
         },
         
         complete: function( jqXHR, textStatus) {
-	        if (jqXHR.status = "200") {
+	        if (jqXHR.status == "200") {
 				agent.activeVcl = id;
 				show_status("ok","VCL deployed");
 			} else {
