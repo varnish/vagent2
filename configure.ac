@@ -58,7 +58,6 @@ AC_LINK_IFELSE(
 	[AC_MSG_RESULT([no])])
 
 AC_CHECK_FUNCS([dirfd __fpurge getexecname getline sysconf])
-AC_CHECK_HEADERS([bsd/libutil.h])
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
