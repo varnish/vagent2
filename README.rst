@@ -92,6 +92,15 @@ Requirements:
 - ``pkg-config``
 - ``pthreads``
 
+VARNISH CONFIGURATION
+=====================
+
+The agent does not require Varnish configuration changes for most changes.
+However, if you wish to boot Varnish up with the last known VCL, you may
+tell Varnish to use ``/var/lib/varnish-agent/boot.vcl``. E.g by modifying
+``/etc/sysconfig/varnish`` or ``/etc/default/varnish`` and changing the
+``-f`` argument.
+
 DESIGN
 ======
 
@@ -133,16 +142,20 @@ REST interface instead of trying to simulate a Varnish CLI session.
 BUGS
 ====
 
+Trying to "use" the boot VCL will regularly cause a "VCL deployed OK but
+not persisted". This is because the agent can only persist VCL if the VCL
+was stored through the agent - the boot vcl was not stored through the
+agent so there is no matching auto-generated VCL for it on disk.
+Workaround: Don't re-use the boot VCL.
+
 The ``vlog`` module is limited. First of all, the limit it provides only
 works on unfiltered commands, and it's disregarded for tags. Secondly, the
 limit is a "head"-type limit now. It will give you the FIRST log entries,
-not the last matching.
-
-Additionally it only lists the content of the shmlog from the beginning of
-the file running up to the "here"-marker. If ``varnishd`` just wrapped
-around you will get minimal amount of feedback, while you'll get a
-truckload of feedback if you query the module right before ``varnishd``
-wraps around.
+not the last matching. Additionally it only lists the content of the shmlog
+from the beginning of the file running up to the "here"-marker. If
+``varnishd`` just wrapped around you will get minimal amount of feedback,
+while you'll get a truckload of feedback if you query the module right
+before ``varnishd`` wraps around.
 
 Oh, and also, you may want to add some firewall rules. In case you didn't
 notice, there is currently 0 authorization of requests.
