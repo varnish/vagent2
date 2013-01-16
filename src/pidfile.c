@@ -121,7 +121,7 @@ flopen(const char *path, int flags, ...)
 #if defined(HAVE_PROGRAM_INVOCATION_SHORT_NAME)
 #elif defined(HAVE_GETEXECNAME)
 static void
-setprogname(const char *progname)
+vsetprogname(const char *progname)
 {
 	const char *last_slash;
 
@@ -134,7 +134,7 @@ setprogname(const char *progname)
 #endif
 
 static const char *
-getprogname(void)
+vgetprogname(void)
 {
 #if defined(HAVE_PROGRAM_INVOCATION_SHORT_NAME)
 	if (__progname == NULL)
@@ -142,7 +142,7 @@ getprogname(void)
 #elif defined(HAVE_GETEXECNAME)
 	/* getexecname(3) returns an absolute pathname, normalize it. */
 	if (__progname == NULL)
-		setprogname(getexecname());
+		vsetprogname(getexecname());
 #endif
 
 	return __progname;
@@ -204,7 +204,7 @@ pidfile_open(const char *path, mode_t mode, pid_t *pidptr)
 		return (NULL);
 
 	if (path == NULL) {
-		len = asprintf(&pfh->pf_path, "/var/run/%s.pid", getprogname());
+		len = asprintf(&pfh->pf_path, "/var/run/%s.pid", vgetprogname());
 		if (len < 0) {
 			free(pfh);
 			return (NULL);
