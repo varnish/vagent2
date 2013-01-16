@@ -1,13 +1,29 @@
 var agent = {
+	/*
+	 * Keep 3 stats objects.
+	 */
 	stats:new Array(),
+	/*
+	 * Update them X times a second, useful to increase this during
+	 * debugging to avoid flooding yourself. Can't be reliably set at
+	 * run time since the timers will remain unchanged.
+	 */
+	statsInterval: 1,
 	params:null,
+	/*
+	 * Used to have a central way to transmit "output".
+	 * Use out_clear() when starting out, add stuff to agent.out, then
+	 * on completion use out_up() to show the message(s).
+	 */
 	out:"Initializing frontend",
-	setstate:false,
 	vcl:"",
 	vclId:"",
 	vclList:null,
 	activeVcl:"",
 	debug: true,
+	/*
+	 * Global AJAX timeout (in milliseconds)
+	 */
 	globaltimeout: 2000
 };
 
@@ -106,7 +122,6 @@ function reset_status()
 			} else {
 				but.className = "btn btn-danger btn-block disabled";
 			}
-			agent.setstate = false;
 		}
 	});
 }	
@@ -115,7 +130,6 @@ function show_status(state,message)
 {
 	assertText(state);
 	assertText(message);
-	agent.setstate = true;
 	but = document.getElementById("status-btn");
 	if (state == "ok")
 		but.className = "btn btn-success btn-block disabled";
@@ -491,7 +505,7 @@ function update_stats()
 				n_n_req++;
 			}
 			if (n_n_req>0)
-				d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";
+				d.innerHTML = Number((n_req/n_n_req/agent.statsInterval)).toFixed(0) + "req/s\n";
 		},
 		error: function( jqXHR, textStatus, errorThrown) {
 			d.innerHTML = "Couldn't get stats: " + err;
@@ -626,7 +640,7 @@ function panicClear()
 
 $('.btn').button();
 setInterval(function(){status()},10000);
-setInterval(function(){update_stats()},1000);
+setInterval(function(){update_stats()},agent.statsInterval * 1000);
 setInterval(function(){updateTop()},5000);
 updateTop();
 listVCL();
