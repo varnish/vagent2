@@ -1,5 +1,10 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
+# Set local state dir for FHS
+LOCAL_CONFIGURE_FLAGS = --localstatedir=/var/lib
+
+override_dh_auto_configure:
+	dh_auto_configure -- $(LOCAL_CONFIGURE_FLAGS)
 
 override_dh_install:
 	dh_install --fail-missing
