@@ -6,29 +6,17 @@ var agent = {
 	vcl:"",
 	vclId:"",
 	vclList:null,
-	activeVcl:""
+	activeVcl:"",
+	debug: true,
+	globaltimeout: 2000
 };
-
-/*
- * some global settings for client-side
-*/
-var globaltimeout = 2000; //2 sec timeout for ajax calls.
-var debug = true;	//global flag for debug
 
 function clog(text)
 {
-	if(debug) {
+	if(agent.debug) {
 		console.log(text);
 	}
 }
-
-/*
- * Old legacy variables. Remove "after a while".
- */
-var stats = null;
-var paramlist = null;
-var out = null;
-var setstate = null;
 
 function assert(val)
 {
@@ -99,7 +87,7 @@ function reset_status()
 		type: "GET",
 		url: "/status",
 		dataType: "text",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			stat = data;
 			assertText(stat);
@@ -149,7 +137,7 @@ function uploadVCL()
 	$.ajax({
 		type: "PUT",
 		url: "/vcl/" + id,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		contentType: "application/xml",
 		data: vcl,
 		success: function (data, textStatus, jqXHR) {
@@ -177,7 +165,7 @@ function loadVCL()
 	$.ajax({
 		type: "GET",
 		url: "/vcl/" + id,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) { },
 		error: function( jqXHR, textStatus, errorThrown) {
 			agent.out = "Com. errors with agent: \n" + errorThrown;
@@ -208,7 +196,7 @@ function listVCL()
 	$.ajax({
 		type: "GET",
 		url: "/vcljson/",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			var vclList = JSON.parse(data);
@@ -247,7 +235,7 @@ function list_params()
 	$.ajax({
 		type: "GET",
 		url: "/paramjson/",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			if( jqXHR.status == 200) {
@@ -346,7 +334,7 @@ function saveParam()
 	$.ajax({
 		type: "PUT",
 		url: "/param/"+pname,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		contentType: "application/xml",
 		data: pval,
 		complete: function( jqXHR, textStatus) {
@@ -379,7 +367,7 @@ function deployVCL()
 	$.ajax({
 		type: "PUT",
 		url: "/vcldeploy/" + id,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
 		},
@@ -417,7 +405,7 @@ function discardVCL()
 	$.ajax({
 		type: "DELETE",
 		url: "/vcl/" + id,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
 		},
@@ -445,7 +433,7 @@ function stop()
 	$.ajax({
 		type: "PUT",
 		url: "/stop/",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		complete: function( jqXHR, textStatus) {
 			var doc = jqXHR.responseText;
 			document.getElementById("out").innerHTML = doc;
@@ -459,7 +447,7 @@ function start()
 	$.ajax({
 		type: "PUT",
 		url: "/start",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		complete: function( jqXHR, textStatus) {
 			var doc = jqXHR.responseText;
 			document.getElementById("out").innerHTML = doc;
@@ -482,7 +470,7 @@ function update_stats()
 	$.ajax({
 		type: "GET",
 		url: "/stats",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			for (i = 0; i < 3; i++) {
@@ -521,7 +509,7 @@ function updateTop()
 	$.ajax({
 		type: "GET",
 		url: "/log/1/" + tag,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			agent.rxtop = JSON.parse(data);
@@ -560,7 +548,7 @@ function banSmart()
 	$.ajax({
 		type: "POST",
 		url: "/ban" + banUrl,
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			agent.out = "OK!"+  data;
@@ -579,7 +567,7 @@ function banList()
 	$.ajax({
 		type: "GET",
 		url: "/ban",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			agent.out = data;
@@ -597,7 +585,7 @@ function panicShow()
 	$.ajax({
 		type: "GET",
 		url: "/panic",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			agent.out = data;
@@ -621,7 +609,7 @@ function panicClear()
 	$.ajax({
 		type: "DELETE",
 		url: "/panic",
-		timeout: globaltimeout,
+		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
 			agent.out = data;
@@ -636,18 +624,9 @@ function panicClear()
 	});
 }
 
-function sanity()
-{
-	assert(stats == null);
-	assert(paramlist == null);
-	assert(out == null);
-	assert(setstate == null);
-}
-
 $('.btn').button();
 setInterval(function(){status()},10000);
 setInterval(function(){update_stats()},1000);
-setInterval(function(){sanity()},1000);
 setInterval(function(){updateTop()},5000);
 updateTop();
 listVCL();
