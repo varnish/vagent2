@@ -15,11 +15,13 @@ var agent = {
 var globaltimeout = 2000; //2 sec timeout for ajax calls.
 var debug = true;	//global flag for debug
 
-function clog(text) {
+function clog(text)
+{
 	if(debug) {
 		console.log(text);
 	}
 }
+
 /*
  * Old legacy variables. Remove "after a while".
  */
@@ -41,16 +43,19 @@ function assertText(val)
 	assert(val.length > 0);
 }
 
-function out_clear() {
+function out_clear()
+{
 	document.getElementById("out").innerHTML = "";
 	agent.out = "";
 }
 
-function out_up() {
+function out_up()
+{
 	document.getElementById("out").innerHTML = agent.out;
 }
 
-function topActive(head) {
+function topActive(head)
+{
 	var navs = new Array('nav-home', 'nav-vcl', 'nav-param');
 	assertText(head);
 
@@ -60,21 +65,24 @@ function topActive(head) {
 	document.getElementById("nav-" + head).className = "active";
 }
 
-function showVCL() {
+function showVCL()
+{
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
 	topActive("vcl");
 }
 
-function showHome() {
+function showHome()
+{
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
 	topActive("home");
 }
 
-function showParam() {
+function showParam()
+{
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
@@ -93,26 +101,25 @@ function reset_status()
 		dataType: "text",
 		timeout: globaltimeout,
 		success: function (data, textStatus, jqXHR) {
-			stat = data; 
-			clog(jqXHR);
+			stat = data;
 			assertText(stat);
 			but.textContent = stat;
-        },
-        error: function( jqXHR, textStatus, errorThrown) {
+		},
+		error: function( jqXHR, textStatus, errorThrown) {
 			stat = "Error communicating with agent. " + errorThrown;
 			clog("error: "+stat);
 			clog(textStatus);
 			clog(jqXHR);
-        },
-        complete: function( jqXHR, textStatus) {
+		},
+		complete: function( jqXHR, textStatus) {
    			but.textContent = stat;
-	        if (stat == "Child in state running") {
+			if (stat == "Child in state running") {
 				but.className = "btn btn-primary btn-block disabled";
 			} else {
 				but.className = "btn btn-danger btn-block disabled";
 			}
 			agent.setstate = false;
-        }
+		}
 	});
 }	
 
@@ -132,7 +139,8 @@ function show_status(state,message)
 	setTimeout(function() { reset_status(); }, 3000);
 }
 
-function uploadVCL() {
+function uploadVCL()
+{
 	var id = document.getElementById("vclID").value;
 	var vcl = document.getElementById("vcl-text").value;
 	assertText(vcl);
@@ -146,18 +154,18 @@ function uploadVCL() {
 		data: vcl,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
-        },
-        error: function( jqXHR, textStatus, errorThrown) {
-			agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
-        },
-        complete: function( jqXHR, textStatus) {
-        	out_up();
-   			if( jqXHR.status == 201) {
-	   			show_status("ok","VCL stored");
+		},
+		error: function( jqXHR, textStatus, errorThrown) {
+				agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+		},
+		complete: function( jqXHR, textStatus) {
+			out_up();
+			if( jqXHR.status == 201) {
+				show_status("ok","VCL stored");
 			} else {
 				show_status("warn", "VCL save failed");
 			}
-        }
+		}
 	});
 }
 
@@ -170,38 +178,33 @@ function loadVCL()
 		type: "GET",
 		url: "/vcl/" + id,
 		timeout: globaltimeout,
-		success: function (data, textStatus, jqXHR) {
-			clog("success");
-			clog(data);
-			clog(textStatus);
-			clog(jqXHR);
-        },
-        error: function( jqXHR, textStatus, errorThrown) {
+		success: function (data, textStatus, jqXHR) { },
+		error: function( jqXHR, textStatus, errorThrown) {
 			agent.out = "Com. errors with agent: \n" + errorThrown;
 			clog("error");
 			clog(errorThrown);
 			clog(textStatus);
 			clog(jqXHR);
-        },
-        complete: function( jqXHR, textStatus) {
-   			if( jqXHR.status == 200) {
-   				agent.vcl = jqXHR.responseText;
-   				agent.vclId = id;
-   				show_status("ok", "VCL loaded");
-	   			document.getElementById("vcl-text").value = agent.vcl;
-	   			document.getElementById("vclID").value = agent.vclId;
+		},
+		complete: function( jqXHR, textStatus) {
+			if( jqXHR.status == 200) {
+				agent.vcl = jqXHR.responseText;
+				agent.vclId = id;
+				show_status("ok", "VCL loaded");
+				document.getElementById("vcl-text").value = agent.vcl;
+				document.getElementById("vclID").value = agent.vclId;
 			} else {
 				agent.out = jqXHR.responseText;
 				show_status("warn","VCL load failed");
 			}
-        	out_up();
-        }
+			out_up();
+		}
 	});
-
 }
 
 
-function listVCL() {
+function listVCL()
+{
 	$.ajax({
 		type: "GET",
 		url: "/vcljson/",
@@ -229,23 +232,24 @@ function listVCL() {
 				document.getElementById("vclID").value = agent.activeVcl;
 				loadVCL();
 			}
-        },
-        error: function( jqXHR, textStatus, errorThrown) {
+		},
+		error: function( jqXHR, textStatus, errorThrown) {
 			agent.out = "Listing VCL failed.";
 			clog(jqXHR);
 			clog(textStatus);
 			clog(errorThrown);
-        }
+		}
 	});
 }
 
-function list_params() {
+function list_params()
+{
 	$.ajax({
 		type: "GET",
 		url: "/paramjson/",
 		timeout: globaltimeout,
 		dataType: "text",
-		success: function (data, textStatus, jqXHR) { 
+		success: function (data, textStatus, jqXHR) {
 			if( jqXHR.status == 200) {
 				var paramlist = JSON.parse(jqXHR.responseText);
 				agent.params = paramlist;
@@ -265,24 +269,23 @@ function list_params() {
 				paramChange();
 			}
 		},
-        error: function( jqXHR, textStatus, errorThrown) { 
-        	clog("error");
-        	clog(jqXHR);
-        	clog(textStatus);
-        	clog(errorThrown);
-        	out_clear();
+		error: function( jqXHR, textStatus, errorThrown) {
+			clog("error");
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);
+			out_clear();
 			agent.out = "Error listing parameters.\n";
 			agent.out += "Communication error with agent: \n";
 			agent.out += errorThrown;
-        },
-        
-        complete: function( jqXHR, textStatus) {
-        	if (jqXHR.status != 200) {
+		},
+		complete: function( jqXHR, textStatus) {
+			if (jqXHR.status != 200) {
 				agent.out += "Varnish-Agent returned " +
 					jqXHR.status + ":" + jqXHR.responseText;
 			}
 			out_up();
-        }
+		}
 	});
 	
 }
@@ -332,7 +335,8 @@ function paramListDiff()
 	out_up();
 }
 
-function saveParam() {
+function saveParam()
+{
 	var pname = document.getElementById("param-sel").value;
 	var pval = document.getElementById("param-val").value;
 	assertText(pname);
@@ -345,8 +349,8 @@ function saveParam() {
 		timeout: globaltimeout,
 		contentType: "application/xml",
 		data: pval,
-        complete: function( jqXHR, textStatus) {
-        	agent.out = jqXHR.responseText;
+		complete: function( jqXHR, textStatus) {
+			agent.out = jqXHR.responseText;
 			out_up();
 			if (jqXHR.status == 200) {
 				show_status("ok","Parameter saved");
@@ -354,7 +358,7 @@ function saveParam() {
 			} else {
 				show_status("warn","Couldn't save parameter");
 			}
-        }
+		}
 	});
 }
 
@@ -367,7 +371,8 @@ function setParamDef()
 	pval.value = agent.params[pname].default;
 }
 
-function deployVCL() {
+function deployVCL()
+{
 	out_clear();
 	var id = document.getElementById("loader").value;
 	assertText(id);
@@ -375,29 +380,26 @@ function deployVCL() {
 		type: "PUT",
 		url: "/vcldeploy/" + id,
 		timeout: globaltimeout,
-		success: function (data, textStatus, jqXHR) { 
+		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
 		},
-        
-        error: function( jqXHR, textStatus, errorThrown) { 
-        	agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
-        	clog("error");
-        	clog(jqXHR);
-        	clog(textStatus);
-        	clog(errorThrown);	
-        },
-        
-        complete: function( jqXHR, textStatus) {
-	        if (jqXHR.status == "200") {
+		error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+			clog("error");
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);	
+		},
+		complete: function( jqXHR, textStatus) {
+			if (jqXHR.status == "200") {
 				agent.activeVcl = id;
 				show_status("ok","VCL deployed");
 			} else {
 				show_status("warn","vcl deploy failed");
 			}
 			out_up();	
-        }
+		}
 	});
-
 }
 
 function clearID()
@@ -416,53 +418,53 @@ function discardVCL()
 		type: "DELETE",
 		url: "/vcl/" + id,
 		timeout: globaltimeout,
-		success: function (data, textStatus, jqXHR) { 
+		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
 		},
-        
-        error: function( jqXHR, textStatus, errorThrown) { 
-        	agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
-        	clog("error");
-        	clog(jqXHR);
-        	clog(textStatus);
-        	clog(errorThrown);
-        },
-        
-        complete: function( jqXHR, textStatus) {
-   			if (jqXHR.status = "200" && jqXHR.responseText == "") {
+		error: function( jqXHR, textStatus, errorThrown) {
+			agent.out = "Com. errors with agent: \n" + jqXHR.responseText;
+			clog("error");
+			clog(jqXHR);
+			clog(textStatus);
+			clog(errorThrown);
+		},
+		complete: function( jqXHR, textStatus) {
+			if (jqXHR.status = "200" && jqXHR.responseText == "") {
 				show_status("ok","VCL discarded");
-	   		} else {
-		   		show_status("warn","VCL discard failed. "+jqXHR.responseText);
-	   		} 
-   			out_up();
-        }
+			} else {
+				show_status("warn","VCL discard failed. "+jqXHR.responseText);
+			}
+			out_up();
+		}
 	});
 
 }
 
-function stop() {
+function stop()
+{
 	$.ajax({
 		type: "PUT",
 		url: "/stop/",
-		timeout: globaltimeout,   
-        complete: function( jqXHR, textStatus) {
-        	var doc = jqXHR.responseText;
-        	document.getElementById("out").innerHTML = doc;
-        	status();
-        }
+		timeout: globaltimeout,
+		complete: function( jqXHR, textStatus) {
+			var doc = jqXHR.responseText;
+			document.getElementById("out").innerHTML = doc;
+			status();
+		}
 	});
 }
 
-function start() {
+function start()
+{
 	$.ajax({
 		type: "PUT",
 		url: "/start",
-		timeout: globaltimeout,   
-        complete: function( jqXHR, textStatus) {
-        	var doc = jqXHR.responseText;
-        	document.getElementById("out").innerHTML = doc;
-        	status();
-        }
+		timeout: globaltimeout,
+		complete: function( jqXHR, textStatus) {
+			var doc = jqXHR.responseText;
+			document.getElementById("out").innerHTML = doc;
+			status();
+		}
 	});
 
 }
@@ -473,7 +475,8 @@ function status()
 	reset_status();
 }
 
-function update_stats() {
+function update_stats()
+{
 	var d = document.getElementById("stats-btn");
 	assert(d != null);
 	$.ajax({
@@ -489,29 +492,30 @@ function update_stats() {
 			var n_req = 0;
 			var n_n_req = 0;
 			for (i = 3; agent.stats[i-1] != null; i--) {
-				if (agent.stats[i] == null) 
+				if (agent.stats[i] == null)
 					break;
 				if (agent.stats[i].client_req == null)
 					break;
 				if (agent.stats[i-1] != null && agent.stats[i-1].client_req != null)
 					n_req += agent.stats[i].client_req.value - agent.stats[i-1].client_req.value;
-				else 
+				else
 					n_req += agent.stats[i].client_req.value;
 				n_n_req++;
 			}
 			if (n_n_req>0)
-				d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";        
+				d.innerHTML = Number(n_req/n_n_req).toFixed(0) + "req/s\n";
 		},
-        error: function( jqXHR, textStatus, errorThrown) {
+		error: function( jqXHR, textStatus, errorThrown) {
 			d.innerHTML = "Couldn't get stats: " + err;
 			clog(jqXHR);
 			clog(textStatus);
 			clog(errorThrown);
-        }
+		}
 	});
 }
 
-function updateTop() {
+function updateTop()
+{
 	var tag = document.getElementById("varnishtop-sel").value;
 	assertText(tag);
 	$.ajax({
@@ -540,16 +544,17 @@ function updateTop() {
 			var d = document.getElementById("varnishtop");
 			d.innerHTML = tmp;
 		},
-        error: function( jqXHR, textStatus, errorThrown) {
+		error: function( jqXHR, textStatus, errorThrown) {
 			d.innerHTML = "Couldn't get stats: " + err;
 			clog(jqXHR);
 			clog(textStatus);
 			clog(errorThrown);
-        }
+		}
 	});
 }
 
-function banSmart() {
+function banSmart()
+{
 	var banUrl = document.getElementById("smartBan").value;
 	assertText(banUrl);
 	$.ajax({
@@ -569,7 +574,8 @@ function banSmart() {
 	});
 }
 
-function banList() {
+function banList()
+{
 	$.ajax({
 		type: "GET",
 		url: "/ban",
@@ -586,7 +592,8 @@ function banList() {
 	});
 }
 
-function panicShow() {
+function panicShow()
+{
 	$.ajax({
 		type: "GET",
 		url: "/panic",
@@ -609,7 +616,8 @@ function panicShow() {
 	});
 }
 
-function panicClear() {
+function panicClear()
+{
 	$.ajax({
 		type: "DELETE",
 		url: "/panic",
@@ -628,7 +636,8 @@ function panicClear() {
 	});
 }
 
-function sanity() {
+function sanity()
+{
 	assert(stats == null);
 	assert(paramlist == null);
 	assert(out == null);
