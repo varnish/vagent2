@@ -31,7 +31,7 @@ the HTML front-end. All arguments are optional. The Varnish Agent will read
 necessary options from the shm-log.
 
 The Varnish Agent persists VCL changes to ``/var/lib/varnish-agent/`` and
-maintains ``/var/lib/varnish-agent/boot.vcl``. 
+maintains ``/var/lib/varnish-agent/boot.vcl``.
 
 OPTIONS
 =======
@@ -81,7 +81,7 @@ In short::
 
 Requirements:
 
-- Varnish 3.0 (might work on other 3.0-versions too) with the api dev files 
+- Varnish 3.0 with the api dev files
   (e.g: ``apt-get install libvarnish-dev``)
 - ``libmicrohttpd``
 - ``pkg-config``

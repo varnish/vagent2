@@ -47,7 +47,7 @@ struct ipc_ret_t {
 /*
  * IPC structure used to track IPC listeners etc.
  * All plugins have an ipc_t-structure associated with them, even if they
- * are unused. 
+ * are unused.
  *
  * Set the cb to the function that will be called when the IPC gets an
  * event. *priv will be passed to the cb.
@@ -66,7 +66,7 @@ struct ipc_t {
  * up the correct structure and do the rest. It returns a handle that will
  * later be used with ipc_run().
  */
-int ipc_register(struct agent_core_t *core, const char *name) ;
+int ipc_register(struct agent_core_t *core, const char *name);
 
 /*
  * Execute an IPC command. The handle is that returned from ipc_register().
