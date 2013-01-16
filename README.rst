@@ -18,7 +18,7 @@ SYNOPSIS
 
         varnish-agent [-p directory] [-H directory] [-n name] [-c port]
                       [-S file] [-T host:port] [-t timeout] [-h]
-                      [-P pidfile]
+                      [-P pidfile] [-V]
 
 DESCRIPTION
 ===========
@@ -66,6 +66,8 @@ OPTIONS
 -P pidfile  Write pidfile.
 
 -d          Run in foreground.
+
+-V          Print version.
 
 -h          Print help.
 

@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_COPYRIGHT([Copyright (c) 2012 Varnish Software])
-AC_INIT([varnish-agent], [0.1])
+AC_COPYRIGHT([Copyright (c) 2012-2013 Varnish Software])
+AC_INIT([varnish-agent], [2.0])
 AC_CONFIG_SRCDIR([src/main.c])
 AM_CONFIG_HEADER(config.h)
 
