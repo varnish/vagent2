@@ -47,6 +47,7 @@ struct agent_config_t {
 	char *c_arg; // Listening port for incoming requests
 	char *p_arg; // Persistence directory
 	char *H_arg; // HTML directory
+	char *P_arg; // Pid file
 };
 
 /*

@@ -18,6 +18,7 @@ SYNOPSIS
 
         varnish-agent [-p directory] [-H directory] [-n name] [-c port]
                       [-S file] [-T host:port] [-t timeout] [-h]
+                      [-P pidfile]
 
 DESCRIPTION
 ===========
@@ -61,6 +62,8 @@ OPTIONS
 
 -c port     Port number to listen for incomming connections. Defaults to
             6085.
+
+-P pidfile  Write pidfile.
 
 -d          Run in foreground.
 

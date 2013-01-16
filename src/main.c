@@ -78,6 +78,7 @@ static void usage(const char *argv0)
 	"-t timeout          timeout for talking to varnishd.\n"
 	"-c port             TCP port (default: 6085).\n"
 	"-d                  Debug. Runs in foreground.\n"
+	"-P pidfile          Write pidfile.\n"
 	"-h                  Prints this.\n"
 	"\n"
 	"All arguments are optional.\n"
@@ -97,7 +98,8 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->d_arg = 0;
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
-	while ((opt = getopt(argc, argv, "hdp:H:n:S:T:t:c:")) != -1) {
+	core->config->P_arg = NULL;
+	while ((opt = getopt(argc, argv, "hdP:p:H:n:S:T:t:c:")) != -1) {
 		switch (opt) {
 		case 'p':
 			core->config->p_arg = optarg;
@@ -122,6 +124,9 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'd':
 			core->config->d_arg = 1;
+			break;
+		case 'P':
+			core->config->P_arg = optarg;
 			break;
 		case 'h':
 			usage(argv0);
@@ -172,13 +177,26 @@ static int core_plugins(struct agent_core_t *core)
 	return 1;
 }
 
+static void p_open(struct pidfh **pfh, const char *p)
+{
+	pid_t otherpid;
+	*pfh = pidfile_open(p, 0600, &otherpid);
+	if (*pfh == NULL) {
+		if (errno == EEXIST) {
+			errx(EXIT_FAILURE, "Daemon already running, pid: %jd.",
+			     (intmax_t)otherpid);
+		}
+		/* If we cannot create pidfile from other reasons, only warn. */
+		warn("Cannot open or create pidfile");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;
 	int ret;
-	struct pidfh *pfh;
-	pid_t otherpid;
+	struct pidfh *pfh = NULL;
 
 	core.config = calloc(1,sizeof(struct agent_config_t));
 	assert(core.config);
@@ -190,25 +208,20 @@ int main(int argc, char **argv)
 	 */
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
-	pfh = pidfile_open("/var/run/varnish-agent.pid", 0600, &otherpid);
-	if (pfh == NULL) {
-		if (errno == EEXIST) {
-			errx(EXIT_FAILURE, "Daemon already running, pid: %jd.",
-			     (intmax_t)otherpid);
-		}
-		/* If we cannot create pidfile from other reasons, only warn. */
-		warn("Cannot open or create pidfile");
-	}
+	if (core.config->P_arg)
+		p_open(&pfh, core.config->P_arg);
 
 	if (!core.config->d_arg) {
 		printf("Plugins initialized. Forking.\n");
 #ifdef __APPLE__
 		printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
+		printf("Consider using -d to run in foreground instead.\n");
 #endif
 		ret = daemon(0,0);
 		if (ret == -1) {
 			warn("Cannot daemonize");
-			pidfile_remove(pfh);
+			if (pfh)
+				pidfile_remove(pfh);
 			exit(EXIT_FAILURE);
 		}
 		assert(ret == 0);
@@ -216,7 +229,8 @@ int main(int argc, char **argv)
 		printf("Plugins initialized. No -d argument so not forking.\n");
 	}
 	printf("Starting plugins: ");
-	pidfile_write(pfh);
+	if (pfh)
+		pidfile_write(pfh);
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		printf("%s ", plug->name);
 		if (plug->start != NULL)
@@ -231,6 +245,7 @@ int main(int argc, char **argv)
 	/*
 	 * XXX: Might want to do this on SIGTERM too I suppose.
 	 */
-	pidfile_remove(pfh);
+	if (pfh)
+		pidfile_remove(pfh);
 	return 0;
 }
