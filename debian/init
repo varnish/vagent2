@@ -18,8 +18,8 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin
 DESC="Varnish Agent"
 NAME=varnish-agent
 DAEMON=/usr/bin/$NAME
-DAEMON_ARGS="-P $PIDFILE"
 PIDFILE=/var/run/$NAME.pid
+DAEMON_ARGS="-P $PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed
