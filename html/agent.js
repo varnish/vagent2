@@ -644,3 +644,4 @@ setInterval(function(){update_stats()},agent.statsInterval * 1000);
 setInterval(function(){updateTop()},5000);
 updateTop();
 listVCL();
+list_params();
