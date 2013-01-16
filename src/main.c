@@ -26,6 +26,21 @@
  * SUCH DAMAGE.
  */
 
+#ifdef __APPLE__
+/*
+ * I HATE APPLE. YOU HATE APPLE. WE ALL HATE APPLE.
+ *
+ * Also: daemon() is seemingly "deprecated" on apple because blah blah
+ * blah, it wasn't written and approved by a guy with a turtleneck.
+ * (you're supposed to use launch(d?), which obviously is about as portable
+ * as anything prefixed with win32).
+ *
+ * So here's the deal: we define a fake macro for it, then manually define
+ * the prototype ourself. Oh joy.
+ */
+#define daemon I_hate_you_so_much_right_now
+#endif
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -41,6 +56,13 @@
 #include "common.h"
 #include "plugins.h"
 
+#ifdef __APPLE__
+#undef daemon
+/*
+ * Pray that the gods don't change this.
+ */
+extern int daemon(int, int);
+#endif
 static void usage(const char *argv0)
 {
 	fprintf(stderr,
@@ -180,6 +202,11 @@ int main(int argc, char **argv)
 
 	if (!core.config->d_arg) {
 		printf("Plugins initialized. Forking.\n");
+#ifdef __APPLE__
+		printf("Daemonizing is not guaranteed to not kill kittens on this buffoon-based os.\n");
+		printf("This Mac OS X workaround only cost me a day worth of hassle, but don't worry about it.\n");
+		printf("No really, it's ok. Since your OS has rounded corners.\n");
+#endif
 		ret = daemon(0,0);
 		if (ret == -1) {
 			warn("Cannot daemonize");
