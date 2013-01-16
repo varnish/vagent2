@@ -226,8 +226,12 @@ int main(int argc, char **argv)
 		}
 		assert(ret == 0);
 	} else {
-		printf("Plugins initialized. No -d argument so not forking.\n");
+		printf("Plugins initialized. -d argument given, so not forking.\n");
 	}
+	/*
+	 * XXX: This goes to /dev/null without -d... That's probably
+	 * acceptable.
+	 */
 	printf("Starting plugins: ");
 	if (pfh)
 		pidfile_write(pfh);
