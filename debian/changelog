@@ -1,5 +1,5 @@
-varnish-agent (2.0) unstable; urgency=low
+varnish-agent (2.0~rc1) unstable; urgency=low
 
-  * Release 2.0.
+  * Release 2.0rc1
 
- -- Kristian Lyngstol <kristian@bohemians.org>  Mon, 07 Jan 2013 13:32:03 +0100
+ -- Kristian Lyngstol <kristian@bohemians.org>  Wed, 16 Jan 2013 14:05:30 +0100
