@@ -195,56 +195,52 @@ static void p_open(struct pidfh **pfh, const char *p)
 	}
 }
 
+static void v_daemon(struct pidfh **pfh) 
+{
+	int ret;
+	printf("Plugins initialized. Forking.\n");
+#ifdef __APPLE__
+	printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
+	printf("Consider using -d to run in foreground instead.\n");
+#endif
+	ret = daemon(0,0);
+	if (ret == -1) {
+		warn("Cannot daemonize");
+		if (*pfh)
+			pidfile_remove(*pfh);
+		exit(EXIT_FAILURE);
+	}
+	assert(ret == 0);
+}
+
 int main(int argc, char **argv)
 {
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;
-	int ret;
 	struct pidfh *pfh = NULL;
 
 	core.config = calloc(1,sizeof(struct agent_config_t));
 	assert(core.config);
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
-	/*
-	 * XXX: A couple of modules use options here (vlog,vadmin,httpd)
-	 * Some order is unfortunately required....
-	 */
 	core_opt(&core, argc, argv);
 	core_plugins(&core);
+	
 	if (core.config->P_arg)
 		p_open(&pfh, core.config->P_arg);
 
-	if (!core.config->d_arg) {
-		printf("Plugins initialized. Forking.\n");
-#ifdef __APPLE__
-		printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
-		printf("Consider using -d to run in foreground instead.\n");
-#endif
-		ret = daemon(0,0);
-		if (ret == -1) {
-			warn("Cannot daemonize");
-			if (pfh)
-				pidfile_remove(pfh);
-			exit(EXIT_FAILURE);
-		}
-		assert(ret == 0);
-	} else {
+	if (core.config->d_arg)
 		printf("Plugins initialized. -d argument given, so not forking.\n");
-	}
-	/*
-	 * XXX: This goes to /dev/null without -d... That's probably
-	 * acceptable.
-	 */
-	printf("Starting plugins: ");
+	else
+		v_daemon(&pfh);
+	
 	if (pfh)
 		pidfile_write(pfh);
+	
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
-		printf("%s ", plug->name);
 		if (plug->start != NULL)
 			plug->start(&core, plug->name);
 	}
-	printf("\n");
 	for (plug = core.plugins; plug; plug = plug->next) {
 		if (plug->thread) {
 			pthread_join(*plug->thread, NULL);
