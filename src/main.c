@@ -203,9 +203,7 @@ int main(int argc, char **argv)
 	if (!core.config->d_arg) {
 		printf("Plugins initialized. Forking.\n");
 #ifdef __APPLE__
-		printf("Daemonizing is not guaranteed to not kill kittens on this buffoon-based os.\n");
-		printf("This Mac OS X workaround only cost me a day worth of hassle, but don't worry about it.\n");
-		printf("No really, it's ok. Since your OS has rounded corners.\n");
+		printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
 #endif
 		ret = daemon(0,0);
 		if (ret == -1) {
