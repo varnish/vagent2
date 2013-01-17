@@ -71,27 +71,6 @@ OPTIONS
 
 -h          Print help.
 
-INSTALL
-=======
-
-See INSTALL for generic details.
-
-In short::
-
-        ./autogen.sh
-        ./configure
-        make
-        make install
-        varnish-agent
-
-Requirements:
-
-- Varnish 3.0 with the api dev files
-  (e.g: ``apt-get install libvarnish-dev``)
-- ``libmicrohttpd``
-- ``pkg-config``
-- ``pthreads``
-
 VARNISH CONFIGURATION
 =====================
 
@@ -127,12 +106,12 @@ SEE ALSO
 HISTORY
 =======
 
-The first generic webui for Varnish was written by Petter Knudsen of Linpro
+The first generic WebUI for Varnish was written by Petter Knudsen of Linpro
 AS in 2009. This led to the creation of the Varnish Administration Console,
 built to manage multiple Varnish instances. Until 2013, the Varnish
 Administration Console used a minimal wrapper around the Varnish CLI
 language, requiring that the Varnish Administration Console knew the CLI
-language. This wrapper was known as the Varnish-Agent version 1, written by
+language. This wrapper was known as the Varnish Agent version 1, written by
 Martin Blix Grydeland.
 
 Development of the Varnish Agent version 2 begun in late 2012, with the
