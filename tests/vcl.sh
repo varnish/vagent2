@@ -18,12 +18,17 @@ function test_vcl()
 	inc
 	FOO=$(lwp-request -m DELETE http://localhost:6085/vcl/test3 || exit 1)
 	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; fi
+	inc
 }
 
 function inc()
 {
 	N=$(( ${N} + 1 ))
 }
+
+rm -r tmp
+mkdir -p tmp
+
 
 # Should fail
 FOO=$(lwp-request -m GET http://localhost:6085/vcl || exit 1)
@@ -39,3 +44,7 @@ VCL1=data/smallvcl
 test_vcl
 VCL1=data/longvcl
 test_vcl
+lwp-request -m POST http://localhost:6085/vcl/ <$VCL1 >/dev/null
+if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo $FOO; fi
+inc
+
