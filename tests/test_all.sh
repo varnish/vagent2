@@ -15,3 +15,6 @@ echo "Status:"
 
 echo "VCL:"
 ./vcl.sh
+
+echo "Json:"
+./json.sh
