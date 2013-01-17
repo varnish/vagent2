@@ -29,6 +29,8 @@ Common::
 You may also build a debian package for your system by using
 dpkg-buildpackage.
 
+On RHEL6 you need the EPEL package libmicrohttpd-devel.
+
 Running
 -------
 
