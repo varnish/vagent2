@@ -42,6 +42,8 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+#include <errno.h>
+#include "helpers.h"
 
 struct html_priv_t {
 	int logger;
@@ -49,11 +51,13 @@ struct html_priv_t {
 
 static unsigned int html_reply(struct httpd_request *request, void *data)
 {
-	int fd, ret;
-	char *path;
-	char *buffer;
+	int ret, fd=-1;
+	char *path = NULL;
+	char *buffer = NULL;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
+	struct html_priv_t *html;
+	GET_PRIV(data, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
 		send_response_fail(request->connection, "Invalid URL");
@@ -63,26 +67,32 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	assert(fd>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
+		logger(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
 		send_response_fail(request->connection, "stat() was not happy");
-		return 0;
+		goto out;
 	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		send_response_fail(request->connection, "open() was not happy");
-		return 0;
+		goto out;
 	}
 	if (!S_ISREG(sbuf.st_mode)) {
 		send_response_fail(request->connection, "not a file");
-		return 0;
+		goto out;
 	}
 	buffer = malloc(sbuf.st_size);
 	assert(buffer);
 	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret>0);
 	assert(ret==sbuf.st_size);
-	close(fd);
 	send_response(request->connection, 200, buffer, ret);
-	free(buffer);
+	out:
+	if (fd >= 0)
+		close(fd);
+	if (buffer)
+		free(buffer);
+	if (path)
+		free(path);
 	return 0;
 }
 
