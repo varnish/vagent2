@@ -1,11 +1,11 @@
 #!/bin/bash
 
-FOO=$(lwp-request -m GET http://localhost:6085/echo || exit 1)
-if [ "x$FOO" = "x" ]; then echo "Passed 1"; else echo "Failed 1"; fi
+if [ "$(basename $PWD)" != "tests" ]; then
+	echo "Must run tests from tests/ directory";
+	exit 1;
+fi
+. util.sh
 
-FOO=$(lwp-request -m POST http://localhost:6085/echo <<<"" || exit 1)
-if [ "x$FOO" = "x" ]; then echo "Passed 2"; else echo "Failed 2"; fi
-
-FOO=$(lwp-request -m POST http://localhost:6085/echo <<<"foobar" || exit 1)
-if [ "x$FOO" = "xfoobar" ]; then echo "Passed 3"; else echo "Failed 3"; fi
-
+test_it GET echo "" ""
+test_it POST echo "Foobar" "Foobar"
+test_it POST echo "" ""
