@@ -99,7 +99,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		}
 		fd = open(core->config->S_arg, O_RDONLY);
 		if (fd < 0) {
-			fprintf(stderr, "Cannot open \"%s\": %s\n",
+			logger(vadmin->logger, "Cannot open \"%s\": %s",
 			    core->config->S_arg, strerror(errno));
 			assert(close(vadmin->sock) == 0);
 			return (-1);
