@@ -1,5 +1,5 @@
 SUBDIRS = src include
-EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst
+EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst debian
 AUTOMAKE_OPTIONS=-Wno-portability
 
 # html/
