@@ -2,11 +2,11 @@ Source: varnish-agent
 Section: web
 Priority: optional
 Maintainer: Kristian Lyngstol <kristian@bohemians.org>
-Build-Depends: debhelper (>= 7), libvarnish-dev, pkg-config, libmicrohttpd-dev, python-docutils
+Build-Depends: debhelper (>= 7), libvarnish-dev (>= 3.0), pkg-config, libmicrohttpd-dev, python-docutils
 Standards-Version: 3.8.1
 
 Package: varnish-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends: ${shlibs:Depends}, ${misc:Depends}, libvarnish1 (>= 3.0)
 Description: Varnish Agent
 
