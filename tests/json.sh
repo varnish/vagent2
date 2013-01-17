@@ -8,7 +8,7 @@ function test_json()
 	lwp-request -m GET http://localhost:6085/$1 > $NAME
 	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo "$1 failed"; fi
 	inc
-	FOO=$(./jsonlint.py $NAME)
+	FOO=$(jsonlint $NAME)
 	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo "$1 failed: $FOO"; fi
 	inc
 
