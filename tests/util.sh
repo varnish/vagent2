@@ -4,13 +4,8 @@
 N=1
 ret=0
 
-if [ -z $AGENT_PORT ]; then
-	AGENT_PORT="6085"
-fi
-
-if [ -z $VARNISH_PORT ]; then
-	VARNISH_PORT="80"
-fi
+AGENT_PORT="${6085:-$AGENT_PORT}"
+VARNISH_PORT="${80:-$VARNISH_PORT}"
 
 function inc()
 {
