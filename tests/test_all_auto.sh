@@ -1,6 +1,10 @@
 #!/bin/bash
 
 DIR=$(mktemp -d $PWD/tmp/AUTO.XXX)
+echo "Killing varnishd instances and varnish-agent instances in 5 seconds"
+sleep 5
+pkill varnishd
+pkill varnish-agent
 echo DIR: ${DIR}
 mkdir -p ${DIR}/vcl
 touch ${DIR}/varnish.pid
