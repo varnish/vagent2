@@ -20,4 +20,5 @@ test_it_long GET panic "" "asked for it"
 test_it DELETE panic "" ""
 test_it_fail GET panic "" "Child has not panicked or panic has been cleared"
 test_it_fail DELETE panic "" "No panic to clear"
+test_it GET version "" "varnish-agent 2.0"
 exit $ret
