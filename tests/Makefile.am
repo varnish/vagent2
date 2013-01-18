@@ -1,4 +1,4 @@
-LOG_COMPILER = ./test-wrapper
+LOG_COMPILER = $(srcdir)/test-wrapper
 TESTS = ban.sh \
 	echo.sh \
 	json.sh \
