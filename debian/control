@@ -6,7 +6,8 @@ Build-Depends: debhelper (>= 7),
 	       libvarnishapi-dev (>= 3.0),
 	       pkg-config,
 	       libmicrohttpd-dev,
-	       python-docutils
+	       python-docutils,
+	       varnish (>= 3.0.2)
 Standards-Version: 3.8.1
 
 Package: varnish-agent
