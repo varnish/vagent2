@@ -23,7 +23,7 @@ trap 'cleanup' EXIT
 echo DIR: ${DIR}
 mkdir -p ${DIR}/vcl
 
-uuidgen > "$DIR/secret"
+head -c 16 /dev/urandom > "$DIR/secret"
 VARNISH_PID="${DIR}/varnish.pid"
 printf "Starting varnishd:\n\n"
 varnishd -f "${SRCDIR}/data/boot.vcl" \
