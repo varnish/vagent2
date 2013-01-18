@@ -5,11 +5,16 @@
 function test_json()
 {
 	NAME="${TMPDIR}/jsontest$N.json"
-	lwp-request -m GET http://localhost:6085/$1 > $NAME
+	lwp-request -m GET http://localhost:${AGENT_PORT}/$1 > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
 	FOO=$(jsonlint -v $NAME)
-	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed: $FOO"; fi
+	if [ "x$?" = "x0" ]; then
+	    pass
+	else
+	    fail "json failed: $1 failed: $FOO"
+	    cat "$NAME"
+	fi
 	inc
 
 }
