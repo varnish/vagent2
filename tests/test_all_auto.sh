@@ -21,6 +21,8 @@ touch ${DIR}/varnish.pid
 echo "Starting varnishd:"
 echo
 varnishd -f "${SRCDIR}/data/boot.vcl" -P "${DIR}/varnish.pid" -n "$DIR" -a localhost:8081 -T localhost:8082
+ls -l ${DIR}
+sleep 1
 echo "Starting agent:"
 echo
 ../src/varnish-agent -d -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid &
