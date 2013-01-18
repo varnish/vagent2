@@ -50,6 +50,6 @@ echo "  AGENT_PORT: $AGENT_PORT"
 echo
 echo Starting tests
 cd "$SRCDIR"
-$SRCDIR/$1
+./$1
 
 # cleanup handled by trap
