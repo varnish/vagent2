@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -x
 SRCDIR="$(dirname $0)"
 TMPDIR="$(mktemp -d)"
 DIR="${TMPDIR}"
@@ -10,7 +9,6 @@ PATH=/usr/sbin:/sbin:$PATH
 
 export TMPDIR TMP PATH
 
-netstat -nlpt
 echo "Killing varnishd instances and varnish-agent instances in 5 seconds"
 sleep 5
 pkill varnishd
@@ -21,13 +19,10 @@ touch ${DIR}/varnish.pid
 echo "Starting varnishd:"
 echo
 varnishd -f "${SRCDIR}/data/boot.vcl" -P "${DIR}/varnish.pid" -n "$DIR" -a localhost:8081 -T localhost:8082
-ls -l ${DIR}
-sleep 1
+sleep 2
 echo "Starting agent:"
 echo
-../src/varnish-agent -d -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid &
-ls -l ${DIR}
-varnishadm -n ${DIR} status
+../src/varnish-agent -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid
 
 export VARNISH_PORT=8081
 export VARNISHADM_PORT=8082

@@ -185,7 +185,6 @@ n_arg_sock(struct agent_core_t *core)
 
 	vsd = VSM_New();
 	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
-	printf("-n is: %s\n",core->config->n_arg);
 	if (VSM_Open(vsd, 1)) {
 		fprintf(stderr, "Couldn't open VSM\n");
 		return (-1);

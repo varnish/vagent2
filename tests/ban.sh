@@ -1,8 +1,5 @@
 #!/bin/bash
 
-set -x
-netstat -nlpt
-
 if [ "$(basename $PWD)" != "tests" ]; then
 	echo "Must run tests from tests/ directory";
 	exit 1;
@@ -10,7 +7,7 @@ fi
 . util.sh
 
 is_running
-test_it_long GET ban "" "Present bans"
+test_it_long GET ban "" ".*"
 GET http://localhost:${VARNISH_PORT}/meh > /dev/null
 sleep 1
 test_it_long_content_fail GET ban "" "/meh"
