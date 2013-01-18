@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 SRCDIR="$(dirname $0)"
 TMPDIR="$(mktemp -d)"
 DIR="${TMPDIR}"
@@ -9,6 +10,7 @@ PATH=/usr/sbin:/sbin:$PATH
 
 export TMPDIR TMP PATH
 
+netstat -nlpt
 echo "Killing varnishd instances and varnish-agent instances in 5 seconds"
 sleep 5
 pkill varnishd
