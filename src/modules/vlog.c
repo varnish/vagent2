@@ -314,6 +314,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	char *p;
 	char *tag = NULL;
 	char *itag = NULL;
+	struct agent_core_t *core = data;
 	GET_PRIV(data,vlog);
 	p = next_slash(request->url + 1);
 
@@ -348,6 +349,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	vlog->answer = VSB_new_auto();
 	assert(vlog->answer != NULL);
 	vlog->vd = VSM_New();
+	assert(VSL_Arg(vlog->vd, 'n', core->config->n_arg));
 	VSL_Setup(vlog->vd);
 	VSL_Arg(vlog->vd, 'd', "");
 	if (tag) {
