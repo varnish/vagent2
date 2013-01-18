@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -x
 if [ "$(basename $PWD)" != "tests" ]; then
 	echo "Must run tests from tests/ directory";
 	exit 1;
