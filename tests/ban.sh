@@ -1,6 +1,8 @@
 #!/bin/bash
 
 set -x
+netstat -nlpt
+
 if [ "$(basename $PWD)" != "tests" ]; then
 	echo "Must run tests from tests/ directory";
 	exit 1;

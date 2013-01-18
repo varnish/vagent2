@@ -21,7 +21,7 @@ echo
 varnishd -f "${SRCDIR}/data/boot.vcl" -P "${DIR}/varnish.pid" -n "$DIR" -a localhost:8081 -T localhost:8082
 echo "Starting agent:"
 echo
-../src/varnish-agent -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid
+../src/varnish-agent -d -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid &
 export VARNISH_PORT=8081
 export VARNISHADM_PORT=8082
 export N_ARG="-n ${DIR}"
