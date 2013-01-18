@@ -94,21 +94,6 @@ struct vlog_priv_t {
 /* Ordering-----------------------------------------------------------*/
 
 /*
- * Print to a vsb, but escape \ and ". Might want to escape more, I
- * suppose.
- */
-static void print_escaped(struct vsb *target, const char *string, int len)
-{
-	int i;
-	for (i=0; i<len; i++) {
-		if (string[i] == '\"' || string[i] == '\\') {
-			VSB_printf(target, "\\");
-		}
-		VSB_printf(target,"%c",string[i]);
-	}
-}
-
-/*
  * Print a single line of varnishlog as json, possibly adding a comma.
  *
  * XXX: This concept is slightly flawed. It is global, which means that the
@@ -125,10 +110,10 @@ static void print_entry(struct vlog_priv_t *vlog, int fd,
 	VSB_printf(vlog->answer,"\n");
 	VSB_printf(vlog->answer, "{ \"fd\": \"%d\","
 		   "\"tag\": \"%s\", \"type\":\"%c\","
-		   "\"value\":\"",
+		   "\"value\":",
 		   fd, VSL_tags[tag], type);
-	print_escaped(vlog->answer,ptr, len);
-	VSB_printf(vlog->answer,"\"}");
+	VSB_quote(vlog->answer, ptr, len, 0);
+	VSB_printf(vlog->answer,"}");
 	vlog->entries++;
 }
 
