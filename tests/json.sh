@@ -8,7 +8,7 @@ function test_json()
 	lwp-request -m GET http://localhost:6085/$1 > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
-	FOO=$(jsonlint $NAME)
+	FOO=$(jsonlint -v $NAME)
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed: $FOO"; fi
 	inc
 
