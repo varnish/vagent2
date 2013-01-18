@@ -42,6 +42,7 @@ export VARNISH_PORT AGENT_PORT
 
 printf "Starting agent:\n\n"
 ../src/varnish-agent -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid -c "$AGENT_PORT"
+agentpid=$(cat ${DIR}/agent.pid)
 export N_ARG="-n ${DIR}"
 echo "Settings: "
 echo "  VARNISH_PORT: $VARNISH_PORT"
