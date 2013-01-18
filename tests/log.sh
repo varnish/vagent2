@@ -13,3 +13,4 @@ test_it_long GET log/2 "" "\"tag\":"
 GET http://localhost:${VARNISH_PORT}/foobar > /dev/null
 test_it_long GET log/1/RxURL "" "\"tag\":"
 test_it_long GET log/1/RxURL/foobar "" "/foobar"
+exit $ret

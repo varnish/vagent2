@@ -65,5 +65,6 @@ PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
 
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
-                 src/Makefile])
+                 src/Makefile
+		 tests/Makefile])
 AC_OUTPUT

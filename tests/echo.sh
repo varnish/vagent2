@@ -9,3 +9,4 @@ fi
 test_it GET echo "" ""
 test_it POST echo "Foobar" "Foobar"
 test_it POST echo "" ""
+exit $ret

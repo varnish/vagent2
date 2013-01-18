@@ -21,3 +21,4 @@ test_it_long GET ban "" "/meh"
 GET http://localhost:${VARNISH_PORT}/meh > /dev/null
 sleep 1
 test_it_long_content_fail GET ban "" "/meh"
+exit $ret

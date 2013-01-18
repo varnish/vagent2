@@ -21,9 +21,12 @@ echo "  N_ARG: $N_ARG"
 echo "  AGENT_PORT: $AGENT_PORT"
 echo
 echo Starting tests
+ret=0
 ./test_all.sh
+ret=$?
 echo Stopping varnishd and the agent
 kill $(cat ${DIR}/varnish.pid)
 kill $(cat ${DIR}/agent.pid)
 echo Cleaning up
 rm -r ${DIR}
+exit $ret

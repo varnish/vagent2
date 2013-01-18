@@ -6,10 +6,10 @@ function test_json()
 {
 	NAME="tmp/jsontest$N.json"
 	lwp-request -m GET http://localhost:6085/$1 > $NAME
-	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo "$1 failed"; fi
+	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
 	FOO=$(jsonlint $NAME)
-	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo "$1 failed: $FOO"; fi
+	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed: $FOO"; fi
 	inc
 
 }
@@ -23,4 +23,7 @@ test_json log/100/RxURL
 # thereafter.
 # This is known to break, but should still be a test case.
 test_it_long GET vcl/ "" "active"
+KNOWN_FAIL=1
 test_json log/100/CLI
+KNOWN_FAIL=0
+exit $ret
