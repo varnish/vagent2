@@ -24,7 +24,8 @@ var agent = {
 	/*
 	 * Global AJAX timeout (in milliseconds)
 	 */
-	globaltimeout: 5000
+	globaltimeout: 5000,
+	version: ""
 };
 
 function clog(text)
@@ -638,6 +639,26 @@ function panicClear()
 	});
 }
 
+function getVersion()
+{
+	$.ajax({
+		type: "GET",
+		url: "/version",
+		timeout: agent.globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			agent.version = data;
+			document.getElementById("agentVersion").innerHTML = agent.version;
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			agent.out = "Failed to fetch agent version\n" + errorThrown + "\n" + textStatus + "\n" + jqXHR;
+			agent.out += jqXHR.responseText;
+			clog(jqXHR);
+			clog(errorThrown);
+			out_up();
+		}
+	});
+}
 $('.btn').button();
 setInterval(function(){status()},10000);
 setInterval(function(){update_stats()},agent.statsInterval * 1000);
@@ -645,3 +666,4 @@ setInterval(function(){updateTop()},5000);
 updateTop();
 listVCL();
 list_params();
+getVersion();

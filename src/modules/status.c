@@ -32,6 +32,7 @@
 #include "ipc.h"
 #include "httpd.h"
 #include "helpers.h"
+#include "config.h"
 
 #include <assert.h>
 #include <unistd.h>
@@ -111,6 +112,12 @@ static unsigned int status_panic_help(struct httpd_request *request, void *data)
 	return 0;
 }
 
+static unsigned int status_version(struct httpd_request *request, void *data)
+{
+	(void)data;
+	send_response_ok(request->connection, PACKAGE_STRING "\n");
+	return 0;
+}
 
 void
 status_init(struct agent_core_t *core)
@@ -128,6 +135,7 @@ status_init(struct agent_core_t *core)
 	httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
 	httpd_register_url(core, "/panic", M_GET | M_DELETE, status_panic, core);
 	httpd_register_url(core, "/help/panic", M_GET, status_panic_help, core);
+	httpd_register_url(core, "/version", M_GET, status_version, core);
 }
 
 
