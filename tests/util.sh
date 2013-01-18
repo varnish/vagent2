@@ -76,5 +76,3 @@ function is_running()
 {
 	test_it GET status "" "Child in state running"
 }
-
-mkdir -p tmp
