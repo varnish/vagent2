@@ -5,13 +5,16 @@ Build requirements
 ------------------
 
 * Varnish 3.0 (Preferred: 3.0.3). The varnishapi development files must be
-  available. E.g: apt-get install libvarnish-dev
+  available. E.g: apt-get install libvarnishapi-dev
 * libmicrohttpd (apt-get install libmicrohttpd-dev)
 * pkg-config
 * Common build environment (C compiler, make, etc).
 
 If you are building from the git repository, not a tar-ball, you will need
 automake, autoconf and others.
+
+It is strongly advised to use Varnish 3.0.2 or newer, as earlier versions
+may behave considerably different.
 
 Build instructions
 ------------------
