@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 if [ "$(basename $PWD)" != "tests" ]; then
 	echo "Must run tests from tests/ directory";
@@ -10,15 +10,15 @@ fi
 function test_vcl()
 {
 	OUT=tmp/$(basename $VCL1).tmp
-	lwp-request -m PUT http://localhost:6085/vcl/test3 <$VCL1 > /dev/null
-	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; echo $FOO; fi
+	lwp-request -m PUT http://localhost:${AGENT_PORT}/vcl/test3 <$VCL1 > /dev/null
+	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; fi
 	inc
-	lwp-request -m GET http://localhost:6085/vcl/test3 >$OUT
+	lwp-request -m GET http://localhost:${AGENT_PORT}/vcl/test3 >$OUT
 	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; fi
 	inc
 	if diff -q $VCL1 $OUT > /dev/null; then echo "Passed ${N}"; else echo "Failed ${N}"; fi
 	inc
-	FOO=$(lwp-request -m DELETE http://localhost:6085/vcl/test3 || exit 1)
+	FOO=$(lwp-request -m DELETE http://localhost:${AGENT_PORT}/vcl/test3 || exit 1)
 	if [ "x$?" = "x0" ]; then echo "Passed ${N}"; else echo "Failed ${N}"; fi
 	inc
 }
@@ -32,7 +32,7 @@ VCL1=data/smallvcl
 test_vcl
 VCL1=data/longvcl
 test_vcl
-test_it POST vcl/ "backend foo { .host =\"kly.no\"; }" "VCL compiled."
+test_it_long POST vcl/ "backend foo { .host =\"kly.no\"; }" "VCL compiled."
 sleep 1
-test_it POST vcl/ "backend foo { .host =\"kly.no\"; }" "VCL compiled."
+test_it_long POST vcl/ "backend foo { .host =\"kly.no\"; }" "VCL compiled."
 

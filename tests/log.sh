@@ -10,6 +10,6 @@ is_running
 test_it_long GET log "" "\"tag\":"
 test_it_fail GET log/0 "" "Not a number"
 test_it_long GET log/2 "" "\"tag\":"
-GET http://localhost/foobar > /dev/null
+GET http://localhost:${VARNISH_PORT}/foobar > /dev/null
 test_it_long GET log/1/RxURL "" "\"tag\":"
 test_it_long GET log/1/RxURL/foobar "" "/foobar"
