@@ -1,3 +1,7 @@
-check:
-	$(srcdir)/test_all_auto.sh
-
+LOG_COMPILER = ./test-wrapper
+TESTS = ban.sh \
+	echo.sh \
+	json.sh \
+	log.sh \
+	status.sh \
+	vcl.sh

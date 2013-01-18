@@ -7,7 +7,7 @@ AC_INIT([varnish-agent], [2.0])
 AC_CONFIG_SRCDIR([src/main.c])
 AM_CONFIG_HEADER(config.h)
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign parallel-tests])
 
 # Check for rst utilities
 AC_CHECK_PROGS(RST2MAN, [rst2man rst2man.py], "no")
