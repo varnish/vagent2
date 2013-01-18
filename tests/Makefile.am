@@ -1,3 +1,3 @@
 check:
-	./test_all_auto.sh
+	$(srcdir)/test_all_auto.sh
 
