@@ -24,7 +24,7 @@ var agent = {
 	/*
 	 * Global AJAX timeout (in milliseconds)
 	 */
-	globaltimeout: 2000
+	globaltimeout: 5000
 };
 
 function clog(text)
