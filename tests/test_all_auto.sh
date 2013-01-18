@@ -5,7 +5,9 @@ TMPDIR="$(mktemp -d)"
 DIR="${TMPDIR}"
 TMP="${TMPDIR}"
 
-export TMPDIR TMP
+PATH=/usr/sbin:/sbin:$PATH
+
+export TMPDIR TMP PATH
 
 echo "Killing varnishd instances and varnish-agent instances in 5 seconds"
 sleep 5
