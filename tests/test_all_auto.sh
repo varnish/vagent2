@@ -1,9 +1,12 @@
 #!/bin/bash
 
-set -x
-cd $(dirname $0)
+SRCDIR="$(dirname $0)"
+TMPDIR="$(mktemp -d)"
+DIR="${TMPDIR}"
+TMP="${TMPDIR}"
 
-DIR=$(mktemp -d $PWD/tmp/AUTO.XXX)
+export TMPDIR TMP
+
 echo "Killing varnishd instances and varnish-agent instances in 5 seconds"
 sleep 5
 pkill varnishd

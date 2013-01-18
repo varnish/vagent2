@@ -4,7 +4,7 @@
 
 function test_json()
 {
-	NAME="tmp/jsontest$N.json"
+	NAME="${TMPDIR}/jsontest$N.json"
 	lwp-request -m GET http://localhost:6085/$1 > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
