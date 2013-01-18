@@ -192,8 +192,13 @@ static struct vsb *vcl_list_json(char *raw)
 	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
 	do {
 		ret = sscanf(pos, "%10s %6s %s\n", tmp.available, tmp.ref, tmp.name);
-		if (ret == 0) {
+		if (ret <= 0) {
+			/*
+			 * FIXME: This should go into the logger
+			 */
 			printf("Confused! line: %s\n", pos);
+			VSB_clear(vsb);
+			return vsb;
 		}
 		assert(ret>0);
 		VSB_printf(vsb, "%s{\n"
