@@ -84,6 +84,10 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
+	if (core->config->T_arg == NULL) {
+		logger(vadmin->logger, "No T-arg (Administration port) available. Varnishadm-commands wont work.");
+		return (-1);
+	}
 	vadmin->sock = VSS_open(core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
 		logger(vadmin->logger, "Connection failed (%s)", core->config->T_arg);
