@@ -1,6 +1,7 @@
 #!/bin/bash
 
-
+SRCDIR=$(dirname $0)
+cd $SRCDIR
 ret=0
 echo "Echo:"
 ./echo.sh

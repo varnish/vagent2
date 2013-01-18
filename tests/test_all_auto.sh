@@ -16,7 +16,7 @@ mkdir -p ${DIR}/vcl
 touch ${DIR}/varnish.pid
 echo "Starting varnishd:"
 echo
-varnishd -f data/boot.vcl -P ${DIR}/varnish.pid -n $DIR -a localhost:8081 -T localhost:8082
+varnishd -f "${SRCDIR}/data/boot.vcl" -P "${DIR}/varnish.pid" -n "$DIR" -a localhost:8081 -T localhost:8082
 echo "Starting agent:"
 echo
 ../src/varnish-agent -n ${DIR} -p ${DIR}/vcl/ -P ${DIR}/agent.pid
@@ -31,8 +31,7 @@ echo "  N_ARG: $N_ARG"
 echo "  AGENT_PORT: $AGENT_PORT"
 echo
 echo Starting tests
-ret=0
-./test_all.sh
+$SRCDIR/test_all.sh
 ret=$?
 echo Stopping varnishd and the agent
 kill $(cat ${DIR}/varnish.pid)
