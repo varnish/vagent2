@@ -9,5 +9,8 @@ override_dh_auto_configure:
 override_dh_install:
 	dh_install --fail-missing
 
+override_dh_auto_test:
+	$(MAKE) check || ( tail -n +1 tests/*.log ; false )
+
 %:
 	dh $@
