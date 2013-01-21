@@ -8,7 +8,8 @@ Build-Depends: debhelper (>= 7),
 	       libmicrohttpd-dev,
 	       python-docutils,
 	       varnish (>= 3.0.2),
-	       libwww-perl
+	       libwww-perl,
+	       python-demjson
 Standards-Version: 3.8.1
 
 Package: varnish-agent
