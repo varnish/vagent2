@@ -32,6 +32,7 @@ varnishd -f "${SRCDIR}/data/boot.vcl" \
     -p auto_restart=off \
     -a 127.0.0.1:0 \
     -T 127.0.0.1:0 \
+    -s malloc,50m \
     -S "$DIR/secret"
 varnishpid="$(cat "$VARNISH_PID")"
 VARNISH_PORT=$(varnishadm -n "$DIR" debug.listen_address | cut -d\  -f 2)
