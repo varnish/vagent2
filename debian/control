@@ -14,6 +14,6 @@ Standards-Version: 3.8.1
 
 Package: varnish-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libvarnish1 (>= 3.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, libvarnishapi1 (>= 3.0)
 Description: Varnish Agent
 
