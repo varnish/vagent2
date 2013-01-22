@@ -6,7 +6,7 @@ ret=0
 
 AGENT_PORT="${AGENT_PORT:-6085}"
 VARNISH_PORT="${VARNISH_PORT:-80}"
-
+TMPDIR="${TMPDIR:-$(mktemp -d)}"
 function inc()
 {
 	N=$(( ${N} + 1 ))
