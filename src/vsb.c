@@ -568,10 +568,17 @@ VSB_quote(struct vsb *s, const char *p, int len, int how)
 			break;
 		}
 	}
-	if (!quote) {
-		(void)VSB_bcat(s, p, len);
-		return;
-	}
+	/*
+	 * XXX:
+	 * This is a varnish-agent hack, since we ALWAYS want "" around the
+	 * output for this.
+	 * This is in direct contradiction of the original VSB_quote, so we
+	 * should probably do some name-changing here.
+	 */
+	//if (!quote) {
+	//	(void)VSB_bcat(s, p, len);
+	//	return;
+	//}
 	(void)VSB_putc(s, '"');
 	for (q = p; q < p + len; q++) {
 		switch (*q) {
