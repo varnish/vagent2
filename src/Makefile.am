@@ -14,7 +14,7 @@ varnish_agent_SOURCES = \
 	vsb.c \
 	pidfile.c \
 	modules/varnishadm.c \
-	modules/pingd.c \
+	modules/vping.c \
 	modules/logger.c \
 	modules/httpd.c \
 	modules/echo.c \

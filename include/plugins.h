@@ -57,7 +57,7 @@ void plugin_alloc(const char *name, struct agent_core_t *core);
  * used to register ipc-interests, url-handlers, log-handlers etc.
  *
  */
-void pingd_init(struct agent_core_t *core);
+void vping_init(struct agent_core_t *core);
 void logger_init(struct agent_core_t *core);
 void httpd_init(struct agent_core_t *core);
 void echo_init(struct agent_core_t *core);

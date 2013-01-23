@@ -36,7 +36,7 @@
 #include <pthread.h>
 #include <string.h>
 
-struct pingd_priv_t {
+struct vping_priv_t {
 	int vadmin_sock;
 	int logger;
 };
@@ -45,15 +45,15 @@ struct pingd_priv_t {
  * Pings the varnish server every Nth second. First vadmin-plugin written,
  * not sure if it still has value.
  */
-static void *pingd_run(void *data)
+static void *vping_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct agent_plugin_t *plug;
-	struct pingd_priv_t *ping;
+	struct vping_priv_t *ping;
 	struct ipc_ret_t vret;
 	
-	plug = plugin_find(core,"pingd");
-	ping = (struct pingd_priv_t *) plug->data;
+	plug = plugin_find(core,"vping");
+	ping = (struct vping_priv_t *) plug->data;
 
 	logger(ping->logger, "Health check starting at 30 second intervals");
 	while (1) {
@@ -72,23 +72,23 @@ static void *pingd_run(void *data)
 }
 
 static pthread_t *
-pingd_start(struct agent_core_t *core, const char *name)
+vping_start(struct agent_core_t *core, const char *name)
 {
 	(void)name;
 	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*pingd_run),core);
+	pthread_create(thread,NULL,(*vping_run),core);
 	return thread;
 }
 
 void
-pingd_init(struct agent_core_t *core)
+vping_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct pingd_priv_t *priv = malloc(sizeof(struct pingd_priv_t));
-	plug = plugin_find(core,"pingd");
+	struct vping_priv_t *priv = malloc(sizeof(struct vping_priv_t));
+	plug = plugin_find(core,"vping");
 	
 	priv->vadmin_sock = ipc_register(core,"vadmin");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
-	plug->start = pingd_start;
+	plug->start = vping_start;
 }
