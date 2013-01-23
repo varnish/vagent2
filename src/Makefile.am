@@ -13,7 +13,7 @@ varnish_agent_SOURCES = \
 	helpers.c \
 	vsb.c \
 	pidfile.c \
-	modules/varnishadm.c \
+	modules/vadmin.c \
 	modules/vping.c \
 	modules/logger.c \
 	modules/httpd.c \
