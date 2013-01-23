@@ -237,7 +237,7 @@ vadmin_init(struct agent_core_t *core)
 		assert(core->config->T_arg != NULL);
 	}
 	vadmin->state = 0;
-	vadmin->logger = ipc_register(core, "logd");
+	vadmin->logger = ipc_register(core, "logger");
 	signal(SIGPIPE, SIG_IGN);
 	return ;
 }

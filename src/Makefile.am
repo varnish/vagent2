@@ -15,7 +15,7 @@ varnish_agent_SOURCES = \
 	pidfile.c \
 	modules/varnishadm.c \
 	modules/pingd.c \
-	modules/logd.c \
+	modules/logger.c \
 	modules/httpd.c \
 	modules/echo.c \
 	modules/status.c \

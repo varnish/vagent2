@@ -45,13 +45,13 @@
  * TODO:
  *  - Write to something slightly more elaborate than stdout.
  */
-struct logd_priv_t {
+struct logger_priv_t {
 	int debug;
 };
 
 static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
-	struct logd_priv_t *log = (struct logd_priv_t *) private;
+	struct logger_priv_t *log = (struct logger_priv_t *) private;
 	assert(log);
 
 	if (log->debug)
@@ -63,11 +63,11 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	ret->answer = strdup("OK");
 }
 
-void logd_init(struct agent_core_t *core)
+void logger_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct logd_priv_t *priv = malloc(sizeof(struct logd_priv_t));
-	plug = plugin_find(core,"logd");
+	struct logger_priv_t *priv = malloc(sizeof(struct logger_priv_t));
+	plug = plugin_find(core,"logger");
 
 	if (core->config->d_arg)
 		priv->debug = 1;

@@ -74,7 +74,7 @@ void echo_init(struct agent_core_t *core)
 	/*
 	 * Register with the logger.
 	 */	
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	
 	/*
 	 * Store our private data somewhere we can reach it, and set our

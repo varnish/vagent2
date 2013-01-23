@@ -334,7 +334,7 @@ void vcl_init(struct agent_core_t *core)
 	struct vcl_priv_t *priv = malloc(sizeof(struct vcl_priv_t));
 	plug = plugin_find(core,"vcl");
 	
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;

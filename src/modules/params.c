@@ -317,7 +317,7 @@ params_init(struct agent_core_t *core)
 	struct params_priv_t *priv = malloc(sizeof(struct params_priv_t));
 	plug = plugin_find(core,"params");
 	
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;

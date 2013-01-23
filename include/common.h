@@ -71,7 +71,7 @@ struct agent_core_t {
  * It is used to search for the plugin.
  * *data is a private data structure for the plugin.
  * the start-function is run to start the plugin. If the plugin only
- * listens to an IPC (e.g: varnishadm, logd, ...) this can be set to
+ * listens to an IPC (e.g: varnishadm, logger, ...) this can be set to
  * ipc_start. Otherwise a custom function needs to be provided, or NULL for
  * plugins that do not run in the background (e.g: they trigger in the
  * context of other plugins, like /html/).
@@ -91,7 +91,7 @@ struct agent_plugin_t {
 
 /*
  * Logger macro to include file, func, line etc.
- * Register with the logd-plugin and use that as the handle.
+ * Register with the logger-plugin and use that as the handle.
  */
 #define logger(l,fmt,...) do { \
 	struct ipc_ret_t logger_thing_int; \

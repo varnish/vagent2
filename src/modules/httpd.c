@@ -324,7 +324,7 @@ void httpd_init(struct agent_core_t *core)
 	assert(priv);
 	plug = plugin_find(core,"httpd");
 	assert(plug);
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = httpd_start;
 	priv->listener = NULL;

@@ -88,7 +88,7 @@ pingd_init(struct agent_core_t *core)
 	plug = plugin_find(core,"pingd");
 	
 	priv->vadmin_sock = ipc_register(core,"vadmin");
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = pingd_start;
 }

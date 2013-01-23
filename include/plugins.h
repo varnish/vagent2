@@ -58,7 +58,7 @@ void plugin_alloc(const char *name, struct agent_core_t *core);
  *
  */
 void pingd_init(struct agent_core_t *core);
-void logd_init(struct agent_core_t *core);
+void logger_init(struct agent_core_t *core);
 void httpd_init(struct agent_core_t *core);
 void echo_init(struct agent_core_t *core);
 void status_init(struct agent_core_t *core);

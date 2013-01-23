@@ -151,7 +151,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 static void core_alloc_plugins(struct agent_core_t *core)
 {
 	plugin_alloc("pingd",core);
-	plugin_alloc("logd",core);
+	plugin_alloc("logger",core);
 	plugin_alloc("vadmin",core);
 	plugin_alloc("httpd",core);
 	plugin_alloc("echo",core);
@@ -167,7 +167,7 @@ static void core_alloc_plugins(struct agent_core_t *core)
 static int core_plugins(struct agent_core_t *core)
 {
 	pingd_init(core);
-	logd_init(core);
+	logger_init(core);
 	vadmin_init(core);
 	httpd_init(core);
 	echo_init(core);

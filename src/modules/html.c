@@ -103,7 +103,7 @@ html_init(struct agent_core_t *core)
 	struct html_priv_t *priv = malloc(sizeof(struct html_priv_t));
 	plug = plugin_find(core,"html");
 	
-	priv->logger = ipc_register(core,"logd");
+	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/html/", M_GET, html_reply, core);
