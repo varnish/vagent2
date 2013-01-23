@@ -62,57 +62,57 @@
 	"Output from GET /panic can be used in bug reports or support tickets.\n" \
 	"Keep in mind that not all bugs will be logged here of course. Bugs are tricky.\n"
 
-struct status_priv_t {
+struct vstatus_priv_t {
 	int logger;
 	int vadmin;
 };
 
-static unsigned int status_reply(struct httpd_request *request, void *data)
+static unsigned int vstatus_reply(struct httpd_request *request, void *data)
 {
-	struct status_priv_t *status;
-	GET_PRIV(data, status);
-	run_and_respond(status->vadmin,request->connection,"status");
+	struct vstatus_priv_t *vstatus;
+	GET_PRIV(data, vstatus);
+	run_and_respond(vstatus->vadmin,request->connection,"status");
 	return 0;
 }
 
-static unsigned int status_stop(struct httpd_request *request, void *data)
+static unsigned int vstatus_stop(struct httpd_request *request, void *data)
 {
-	struct status_priv_t *status;
-	GET_PRIV(data, status);
-	run_and_respond(status->vadmin,request->connection,"stop");
+	struct vstatus_priv_t *vstatus;
+	GET_PRIV(data, vstatus);
+	run_and_respond(vstatus->vadmin,request->connection,"stop");
 	return 0;
 }
 
-static unsigned int status_start(struct httpd_request *request, void *data)
+static unsigned int vstatus_start(struct httpd_request *request, void *data)
 {
-	struct status_priv_t *status;
-	GET_PRIV(data, status);
-	run_and_respond(status->vadmin,request->connection,"start");
+	struct vstatus_priv_t *vstatus;
+	GET_PRIV(data, vstatus);
+	run_and_respond(vstatus->vadmin,request->connection,"start");
 	return 0;
 }
 
-static unsigned int status_panic(struct httpd_request *request, void *data)
+static unsigned int vstatus_panic(struct httpd_request *request, void *data)
 {
-	struct status_priv_t *status;
-	GET_PRIV(data, status);
+	struct vstatus_priv_t *vstatus;
+	GET_PRIV(data, vstatus);
 	if (request->method == M_GET)
-		run_and_respond(status->vadmin,request->connection,"panic.show");
+		run_and_respond(vstatus->vadmin,request->connection,"panic.show");
 	else if (request->method == M_DELETE)
-		run_and_respond(status->vadmin,request->connection,"panic.clear");
+		run_and_respond(vstatus->vadmin,request->connection,"panic.clear");
 	else
 		assert("Shouldn't happen");
 	return 0;
 }
 
 
-static unsigned int status_panic_help(struct httpd_request *request, void *data)
+static unsigned int vstatus_panic_help(struct httpd_request *request, void *data)
 {
 	(void)data;
 	send_response_ok(request->connection, PANIC_HELP);
 	return 0;
 }
 
-static unsigned int status_version(struct httpd_request *request, void *data)
+static unsigned int vstatus_version(struct httpd_request *request, void *data)
 {
 	(void)data;
 	send_response_ok(request->connection, PACKAGE_STRING "\n");
@@ -120,22 +120,22 @@ static unsigned int status_version(struct httpd_request *request, void *data)
 }
 
 void
-status_init(struct agent_core_t *core)
+vstatus_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct status_priv_t *priv = malloc(sizeof(struct status_priv_t));
-	plug = plugin_find(core,"status");
+	struct vstatus_priv_t *priv = malloc(sizeof(struct vstatus_priv_t));
+	plug = plugin_find(core,"vstatus");
 	
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/status", M_GET, status_reply, core);
-	httpd_register_url(core, "/stop", M_PUT | M_POST, status_stop, core);
-	httpd_register_url(core, "/start", M_PUT | M_POST, status_start, core);
-	httpd_register_url(core, "/panic", M_GET | M_DELETE, status_panic, core);
-	httpd_register_url(core, "/help/panic", M_GET, status_panic_help, core);
-	httpd_register_url(core, "/version", M_GET, status_version, core);
+	httpd_register_url(core, "/status", M_GET, vstatus_reply, core);
+	httpd_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
+	httpd_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
+	httpd_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
+	httpd_register_url(core, "/help/panic", M_GET, vstatus_panic_help, core);
+	httpd_register_url(core, "/version", M_GET, vstatus_version, core);
 }
 
 

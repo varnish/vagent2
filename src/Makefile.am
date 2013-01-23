@@ -18,7 +18,7 @@ varnish_agent_SOURCES = \
 	modules/logger.c \
 	modules/httpd.c \
 	modules/echo.c \
-	modules/status.c \
+	modules/vstatus.c \
 	modules/vparams.c \
 	modules/vcl.c \
 	modules/html.c \

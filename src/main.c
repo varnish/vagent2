@@ -155,7 +155,7 @@ static void core_alloc_plugins(struct agent_core_t *core)
 	plugin_alloc("vadmin",core);
 	plugin_alloc("httpd",core);
 	plugin_alloc("echo",core);
-	plugin_alloc("status",core);
+	plugin_alloc("vstatus",core);
 	plugin_alloc("vcl",core);
 	plugin_alloc("html",core);
 	plugin_alloc("vparams",core);
@@ -171,7 +171,7 @@ static int core_plugins(struct agent_core_t *core)
 	vadmin_init(core);
 	httpd_init(core);
 	echo_init(core);
-	status_init(core);
+	vstatus_init(core);
 	vcl_init(core);
 	html_init(core);
 	vparams_init(core);
