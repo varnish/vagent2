@@ -207,6 +207,7 @@ n_arg_sock(struct agent_core_t *core)
 	p = strchr(core->config->T_arg, '\n');
 	assert(p);
 	*p = '\0';
+	VSM_Delete(vsd);
 	return (1);
 }
 
