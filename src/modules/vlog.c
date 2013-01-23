@@ -370,7 +370,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	}
 	VSB_clear(vlog->answer);
 	VSB_delete(vlog->answer);
-	VSM_Close(vlog->vd);
+	VSM_Delete(vlog->vd);
 	vlog->answer = NULL;
 	vlog->entries = 0;
 	return 0;
