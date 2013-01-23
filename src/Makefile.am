@@ -9,10 +9,10 @@ varnish_agent_SOURCES = \
 	main.c \
 	plugins.c \
 	ipc.c \
-	vss.c \
 	helpers.c \
-	vsb.c \
-	pidfile.c \
+	foreign/vss.c \
+	foreign/vsb.c \
+	foreign/pidfile.c \
 	modules/vadmin.c \
 	modules/vping.c \
 	modules/logger.c \
