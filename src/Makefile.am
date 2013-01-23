@@ -24,7 +24,7 @@ varnish_agent_SOURCES = \
 	modules/html.c \
 	modules/vstat.c \
 	modules/vlog.c \
-	modules/ban.c
+	modules/vban.c
 
 varnish_agent_LDADD = \
 	@VARNISHAPI_LIBS@ \

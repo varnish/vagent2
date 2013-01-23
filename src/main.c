@@ -159,7 +159,7 @@ static void core_alloc_plugins(struct agent_core_t *core)
 	plugin_alloc("vcl",core);
 	plugin_alloc("html",core);
 	plugin_alloc("params",core);
-	plugin_alloc("ban", core);
+	plugin_alloc("vban", core);
 	plugin_alloc("vstat",core);
 	plugin_alloc("vlog", core);
 }
@@ -175,7 +175,7 @@ static int core_plugins(struct agent_core_t *core)
 	vcl_init(core);
 	html_init(core);
 	params_init(core);
-	ban_init(core);
+	vban_init(core);
 	vstat_init(core);
 	vlog_init(core);
 	return 1;

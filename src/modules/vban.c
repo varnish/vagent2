@@ -43,7 +43,7 @@
 
 /*
  * FIXME: Should be a compile-time option.
- * This is what we use when you do POST /ban/foo
+ * This is what we use when you do POST /vban/foo
  */
 #define BAN_SHORTHAND "req.url ~ "
 #define BAN_HELP_TEXT \
@@ -54,21 +54,21 @@
 	"                ban using " BAN_SHORTHAND " url. E.g: POST /ban/foo: \n" \
 	"                ban " BAN_SHORTHAND "/foo\n"
 
-struct ban_priv_t {
+struct vban_priv_t {
 	int logger;
 	int vadmin;
 };
 
-static unsigned int ban_reply(struct httpd_request *request, void *data)
+static unsigned int vban_reply(struct httpd_request *request, void *data)
 {
-	struct ban_priv_t *ban;
+	struct vban_priv_t *vban;
 	struct agent_plugin_t *plug;
 	char *body;
-	plug = plugin_find(data,"ban");
-	ban = plug->data;
+	plug = plugin_find(data,"vban");
+	vban = plug->data;
 
 	if (request->method == M_GET) {
-		run_and_respond(ban->vadmin, request->connection, "ban.list");
+		run_and_respond(vban->vadmin, request->connection, "ban.list");
 		return 0;
 	} else {
 		char *mark;
@@ -78,14 +78,14 @@ static unsigned int ban_reply(struct httpd_request *request, void *data)
 		if (mark)
 			*mark = '\0';
 		if (strlen(request->url) == strlen("/ban"))
-			run_and_respond(ban->vadmin, request->connection, "ban %s",body);
+			run_and_respond(vban->vadmin, request->connection, "ban %s",body);
 		else {
 			const char *path = request->url + strlen("/ban");
 			if (request->ndata != 0) {
 				send_response_fail(request->connection, "Banning with both a url and request body? Pick one or the other please.");
 			} else {
 				assert(request->ndata == 0);
-				run_and_respond(ban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
+				run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
 			}
 		}
 		free(body);
@@ -95,23 +95,23 @@ static unsigned int ban_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int ban_help(struct httpd_request *request, void *data)
+static unsigned int vban_help(struct httpd_request *request, void *data)
 {
 	(void)data;
 	send_response_ok(request->connection, BAN_HELP_TEXT);
 	return 0;
 }
 
-void ban_init(struct agent_core_t *core)
+void vban_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct ban_priv_t *priv = malloc(sizeof(struct ban_priv_t));
-	plug = plugin_find(core,"ban");
+	struct vban_priv_t *priv = malloc(sizeof(struct vban_priv_t));
+	plug = plugin_find(core,"vban");
 	
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/ban", M_GET | M_POST, ban_reply, core);
-	httpd_register_url(core, "/help/ban", M_GET, ban_help, core);
+	httpd_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
+	httpd_register_url(core, "/help/ban", M_GET, vban_help, core);
 }
