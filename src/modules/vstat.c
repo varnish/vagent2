@@ -52,7 +52,7 @@
 #include "helpers.h"
 
 
-struct varnishstat_priv_t {
+struct vstat_priv_t {
 	struct VSM_data *vd;
 	int jp;
 	const struct VSC_C_main *VSC_C_main;
@@ -63,61 +63,61 @@ static int
 do_json_cb(void *priv, const struct VSC_point * const pt)
 {
 	uint64_t val;
-	struct varnishstat_priv_t *varnishstat = priv;
+	struct vstat_priv_t *vstat = priv;
 	assert(!strcmp(pt->fmt, "uint64_t"));
 	val = *(const volatile uint64_t*)pt->ptr;
 	assert(sizeof(uint64_t) == sizeof(uintmax_t));
 
-	VSB_printf(varnishstat->vsb, ",\n\t\"");
+	VSB_printf(vstat->vsb, ",\n\t\"");
 	/* build the JSON key name.  */
 	if (pt->class[0])
-		VSB_printf(varnishstat->vsb,"%s.",pt->class);
+		VSB_printf(vstat->vsb,"%s.",pt->class);
 	if (pt->ident[0])
-		VSB_printf(varnishstat->vsb,"%s.",pt->ident);
-	VSB_printf(varnishstat->vsb,"%s\": {", pt->name);
+		VSB_printf(vstat->vsb,"%s.",pt->ident);
+	VSB_printf(vstat->vsb,"%s\": {", pt->name);
 
 	if (strcmp(pt->class, ""))
-		VSB_printf(varnishstat->vsb,"\"type\": \"%s\", ", pt->class);
+		VSB_printf(vstat->vsb,"\"type\": \"%s\", ", pt->class);
 	if (strcmp(pt->ident, ""))
-		VSB_printf(varnishstat->vsb,"\"ident\": \"%s\", ", pt->ident);
+		VSB_printf(vstat->vsb,"\"ident\": \"%s\", ", pt->ident);
 
-	VSB_printf(varnishstat->vsb, "\"value\": %ju, ", (uintmax_t)val);
-	VSB_printf(varnishstat->vsb, "\"flag\": \"%c\",", pt->flag);
-	VSB_printf(varnishstat->vsb, "\"description\": \"%s\" }", pt->desc);
+	VSB_printf(vstat->vsb, "\"value\": %ju, ", (uintmax_t)val);
+	VSB_printf(vstat->vsb, "\"flag\": \"%c\",", pt->flag);
+	VSB_printf(vstat->vsb, "\"description\": \"%s\" }", pt->desc);
 	return (0);
 }
 
 static void
-do_json(struct varnishstat_priv_t *varnishstat)
+do_json(struct vstat_priv_t *vstat)
 {
 	char time_stamp[20];
 	time_t now;
 	now = time(NULL);
 
-	assert(varnishstat->vsb);
+	assert(vstat->vsb);
 	(void)strftime(time_stamp, 20, "%Y-%m-%dT%H:%M:%S", localtime(&now));
-	VSB_printf(varnishstat->vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
-	(void)VSC_Iter(varnishstat->vd, do_json_cb, varnishstat);
-	VSB_printf(varnishstat->vsb, "\n}\n");
+	VSB_printf(vstat->vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
+	(void)VSC_Iter(vstat->vd, do_json_cb, vstat);
+	VSB_printf(vstat->vsb, "\n}\n");
 }
 
-static unsigned int varnishstat_reply(struct httpd_request *request, void *data)
+static unsigned int vstat_reply(struct httpd_request *request, void *data)
 {
-	struct varnishstat_priv_t *varnishstat;
-	GET_PRIV(data,varnishstat);
-	do_json(varnishstat);
-	assert(VSB_finish(varnishstat->vsb) == 0);
-	send_response(request->connection, 200, VSB_data(varnishstat->vsb), VSB_len(varnishstat->vsb));
-	VSB_clear(varnishstat->vsb);
+	struct vstat_priv_t *vstat;
+	GET_PRIV(data,vstat);
+	do_json(vstat);
+	assert(VSB_finish(vstat->vsb) == 0);
+	send_response(request->connection, 200, VSB_data(vstat->vsb), VSB_len(vstat->vsb));
+	VSB_clear(vstat->vsb);
 	return 0;
 }
 void
-varnishstat_init(struct agent_core_t *core)
+vstat_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct varnishstat_priv_t *priv = malloc(sizeof(struct varnishstat_priv_t));
+	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
 	int ret;
-	plug = plugin_find(core,"varnishstat");
+	plug = plugin_find(core,"vstat");
 	assert(plug);
 	
 	priv->vd = VSM_New();
@@ -136,6 +136,6 @@ varnishstat_init(struct agent_core_t *core)
 	priv->VSC_C_main = VSC_Main(priv->vd);
 	assert(priv->VSC_C_main);
 
-	httpd_register_url(core, "/stats", M_GET, varnishstat_reply, core);
+	httpd_register_url(core, "/stats", M_GET, vstat_reply, core);
 	return;
 }

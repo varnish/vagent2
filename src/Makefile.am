@@ -22,7 +22,7 @@ varnish_agent_SOURCES = \
 	modules/params.c \
 	modules/vcl.c \
 	modules/html.c \
-	modules/varnishstat.c \
+	modules/vstat.c \
 	modules/vlog.c \
 	modules/ban.c
 
