@@ -48,7 +48,7 @@
 "PUT /param/ - takes a single key=value input (e.g: session_max=1000)\n" \
 "PUT /param/foo - Takes a single value as input (e.g: 1000)\n"
 
-struct params_priv_t {
+struct vparams_priv_t {
 	int logger;
 	int vadmin;
 };
@@ -101,7 +101,7 @@ static struct param_opt *param_free(struct param_opt *p)
  * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
-static char *params_show_json(char *raw)
+static char *vparams_show_json(char *raw)
 {
 	char word[2048];
 	struct param_opt *tmp, *top;
@@ -233,13 +233,13 @@ static char *params_show_json(char *raw)
 	return out2;
 }
 
-static void param_json(struct httpd_request *request, struct params_priv_t *params)
+static void param_json(struct httpd_request *request, struct vparams_priv_t *vparams)
 {
 	struct ipc_ret_t vret;
 	char *tmp;
-	ipc_run(params->vadmin, &vret, "param.show -l");
+	ipc_run(vparams->vadmin, &vret, "param.show -l");
 	if (vret.status == 200) {
-		tmp = params_show_json(vret.answer);
+		tmp = vparams_show_json(vret.answer);
 		assert(tmp);
 		send_response_ok(request->connection, tmp);
 		free(tmp);
@@ -252,34 +252,34 @@ static void param_json(struct httpd_request *request, struct params_priv_t *para
 /*
  * FIXME: Should be simplified/split up.
  */
-static unsigned int params_reply(struct httpd_request *request, void *data)
+static unsigned int vparams_reply(struct httpd_request *request, void *data)
 {
 	const char *arg;
 	struct agent_core_t *core = data;
 	struct agent_plugin_t *plug;
-	struct params_priv_t *params;
+	struct vparams_priv_t *vparams;
 	char *body;
-	plug = plugin_find(core,"params");
-	params = plug->data;
+	plug = plugin_find(core,"vparams");
+	vparams = plug->data;
 
 	if (!strcmp(request->url,"/help/param")) {
 		send_response_ok(request->connection, PARAM_HELP);
 		return 1;
 	}
 	if (!strcmp(request->url, "/paramjson/") && request->method == M_GET) {
-		param_json(request, params);
+		param_json(request, vparams);
 		return 1;
 	}
 	if (request->method == M_GET) {
 		if (!strcmp(request->url,"/param/")) {
-			run_and_respond(params->vadmin,
+			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.show");
 			return 1;
 		} else {
 			arg = request->url + strlen("/param/");
 			assert(arg && *arg);
-			run_and_respond(params->vadmin,
+			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.show %s", arg);
 			return 1;
@@ -292,13 +292,13 @@ static unsigned int params_reply(struct httpd_request *request, void *data)
 		if (mark)
 			*mark = '\0';
 		if (!strcmp(request->url, "/param/")) {
-			run_and_respond(params->vadmin,
+			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.set %s",body);
 		} else {
 			arg = request->url + strlen("/param/");
 			assert(arg && *arg);
-			run_and_respond(params->vadmin,
+			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.set %s %s",arg, body);
 		}
@@ -311,17 +311,17 @@ static unsigned int params_reply(struct httpd_request *request, void *data)
 }
 
 void
-params_init(struct agent_core_t *core)
+vparams_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct params_priv_t *priv = malloc(sizeof(struct params_priv_t));
-	plug = plugin_find(core,"params");
+	struct vparams_priv_t *priv = malloc(sizeof(struct vparams_priv_t));
+	plug = plugin_find(core,"vparams");
 	
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/param/", M_PUT | M_GET, params_reply, core);
-	httpd_register_url(core, "/paramjson/", M_GET, params_reply, core);
-	httpd_register_url(core, "/help/param", M_GET, params_reply, core);
+	httpd_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
+	httpd_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
+	httpd_register_url(core, "/help/param", M_GET, vparams_reply, core);
 }
