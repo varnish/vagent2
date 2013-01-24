@@ -44,6 +44,8 @@
 #include <unistd.h>
 #include <varnishapi.h>
 #include <assert.h>
+#include <time.h>
+#include <vsc.h>
 #include "vsb.h"
 #include "common.h"
 #include "httpd.h"
@@ -55,8 +57,11 @@
 struct vstat_priv_t {
 	struct VSM_data *vd;
 	int jp;
+	int open;
 	const struct VSC_C_main *VSC_C_main;
 	struct vsb *vsb;
+	time_t now;
+	int last_uptime;
 };
 
 static int
@@ -101,26 +106,70 @@ do_json(struct vstat_priv_t *vstat)
 	VSB_printf(vstat->vsb, "\n}\n");
 }
 
+static void vstat_open(struct vstat_priv_t *vstat)
+{
+	assert(vstat->open == 0);
+	vstat->open = VSC_Open(vstat->vd, 1) == 0 ? 1 : 0;
+	if (vstat->open) {
+		vstat->VSC_C_main = VSC_Main(vstat->vd);
+		assert(vstat->VSC_C_main);
+	}
+}
+
+static int check_reopen(struct vstat_priv_t *vstat)
+{
+	size_t now = time(NULL);
+	if (!vstat->open)
+		return 0;
+	if (now == vstat->now)
+		return 0;
+	if (vstat->last_uptime == vstat->VSC_C_main->uptime)
+		return 1;
+	vstat->last_uptime = vstat->VSC_C_main->uptime;
+	vstat->now = now;
+	return 0;
+}
+
 static unsigned int vstat_reply(struct httpd_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
+	if (!vstat->open) {
+		vstat_open(vstat);
+	}
+
+	if (check_reopen(vstat)) {
+		if (vstat->open) {
+			VSM_Close(vstat->vd);
+			vstat->open = 0;
+		}
+		vstat_open(vstat);
+	}
+
+	if (!vstat->open) {
+		send_response_fail(request->connection, "Couldn't open shmlog");
+		return 0;
+	}
+
+
 	do_json(vstat);
 	assert(VSB_finish(vstat->vsb) == 0);
 	send_response(request->connection, 200, VSB_data(vstat->vsb), VSB_len(vstat->vsb));
 	VSB_clear(vstat->vsb);
 	return 0;
 }
+
+
 void
 vstat_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
-	int ret;
 	plug = plugin_find(core,"vstat");
 	assert(plug);
 	
 	priv->vd = VSM_New();
+	priv->open = 0;
 	assert(priv->vd);
 	VSC_Setup(priv->vd);
 	priv->jp = 0;
@@ -130,11 +179,6 @@ vstat_init(struct agent_core_t *core)
 
 	if (core->config->n_arg)
 		VSC_Arg(priv->vd, 'n', core->config->n_arg);
-
-	ret = VSC_Open(priv->vd, 1);
-	assert(ret == 0);
-	priv->VSC_C_main = VSC_Main(priv->vd);
-	assert(priv->VSC_C_main);
 
 	httpd_register_url(core, "/stats", M_GET, vstat_reply, core);
 	return;
