@@ -44,6 +44,28 @@
 #include "helpers.h"
 #include "httpd.h"
 
+void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
+			 int min, int max, const char *fmt, ...)
+{
+	struct ipc_ret_t vret;
+	va_list ap;
+	char *buffer;
+	int iret;
+
+	va_start(ap, fmt);
+	iret = vasprintf(&buffer, fmt, ap);
+	assert(iret>0);
+	va_end(ap);
+	ipc_run(vadmin, &vret, buffer);
+	free(buffer);
+
+	if (vret.status >= min && vret.status <= max)
+		send_response_ok(conn, vret.answer);
+	else
+		send_response_fail(conn, vret.answer);
+	free(vret.answer);
+}
+
 /*
  * Run a varnishadm-command and send the result of that command back to the
  * http connection. If varnishd returns 200, then so do we. Otherwise: 500.

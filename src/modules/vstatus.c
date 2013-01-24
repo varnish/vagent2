@@ -96,9 +96,11 @@ static unsigned int vstatus_panic(struct httpd_request *request, void *data)
 	struct vstatus_priv_t *vstatus;
 	GET_PRIV(data, vstatus);
 	if (request->method == M_GET)
-		run_and_respond(vstatus->vadmin,request->connection,"panic.show");
+		run_and_respond_eok(vstatus->vadmin,request->connection,
+			200,301,"panic.show");
 	else if (request->method == M_DELETE)
-		run_and_respond(vstatus->vadmin,request->connection,"panic.clear");
+		run_and_respond_eok(vstatus->vadmin,request->connection,
+			200,301,"panic.clear");
 	else
 		assert("Shouldn't happen");
 	return 0;
