@@ -52,6 +52,9 @@
 #include "pidfile.h"
 #include <err.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include "common.h"
 #include "plugins.h"
@@ -81,6 +84,8 @@ static void usage(const char *argv0)
 	"-P pidfile          Write pidfile.\n"
 	"-V                  Print version.\n"
 	"-h                  Prints this.\n"
+	"-u user             User to run as(default: nobody)\n"
+	"-g group            Group to run as (default: user's primary or nogroup)\n"
 	"\n"
 	"All arguments are optional.\n"
 	, argv0);
@@ -94,6 +99,8 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
 	core->config->T_arg = NULL;
+	core->config->g_arg = NULL;
+	core->config->u_arg = NULL;
 	core->config->T_arg_orig = NULL;
 	core->config->c_arg = strdup("6085");
 	core->config->timeout = 5;
@@ -101,10 +108,16 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
 	core->config->P_arg = NULL;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:")) != -1) {
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:")) != -1) {
 		switch (opt) {
 		case 'p':
 			core->config->p_arg = optarg;
+			break;
+		case 'u':
+			core->config->u_arg = optarg;
+			break;
+		case 'g':
+			core->config->g_arg = optarg;
 			break;
 		case 'H':
 			core->config->H_arg = optarg;
@@ -214,6 +227,40 @@ static void v_daemon(struct pidfh **pfh)
 	assert(ret == 0);
 }
 
+/*
+ * Change user/group if we can.
+ */
+static void sandbox(struct agent_core_t *core)
+{
+	int ret;
+	struct passwd *pw;
+	if (geteuid() == 0) {
+		pw = getpwnam(core->config->u_arg ? core->config->u_arg : "nobody");
+		if (pw == NULL) {
+			printf("%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "nobody");
+			exit(1);
+		}
+
+		if (!core->config->g_arg) {
+			ret = setgid(pw->pw_gid);
+			assert(ret == 0);
+		} else {
+			struct group *gr;
+			gr = getgrnam(core->config->g_arg);
+			if (gr == NULL) {
+				printf("%s is not a valid group\n", core->config->g_arg);
+				exit(1);
+			}
+			ret = setgid(gr->gr_gid);
+			assert(ret == 0);
+		}
+		ret = setuid(pw->pw_uid);
+		assert(ret == 0);
+	} else {
+		printf("Not running as root, no priv-sep\n");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	struct agent_core_t core;
@@ -230,6 +277,7 @@ int main(int argc, char **argv)
 	if (core.config->P_arg)
 		p_open(&pfh, core.config->P_arg);
 
+	sandbox(&core);
 	if (core.config->d_arg)
 		printf("Plugins initialized. -d argument given, so not forking.\n");
 	else

@@ -18,7 +18,7 @@ SYNOPSIS
 
         varnish-agent [-p directory] [-H directory] [-n name] [-c port]
                       [-S file] [-T host:port] [-t timeout] [-h]
-                      [-P pidfile] [-V]
+                      [-P pidfile] [-V] [-u user] [-g group]
 
 DESCRIPTION
 ===========
@@ -70,6 +70,10 @@ OPTIONS
 -V          Print version.
 
 -h          Print help.
+
+-u user     User to run as. Defaults to nobody.
+
+-g group    Group to run as. Defaults to the primary group of the user.
 
 VARNISH CONFIGURATION
 =====================
