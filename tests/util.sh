@@ -74,5 +74,25 @@ function test_it_long_content_fail()
 
 function is_running()
 {
+	if [ "x$NOSTATUS" = "x1" ]; then
+		return;
+	fi
 	test_it GET status "" "Child in state running"
+}
+
+function test_json()
+{
+	NAME="${TMPDIR}/jsontest$N.json"
+	lwp-request -m GET http://localhost:${AGENT_PORT}/$1 > $NAME
+	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
+	inc
+	FOO=$(jsonlint -v $NAME)
+	if [ "x$?" = "x0" ]; then
+	    pass
+	else
+	    fail "json failed: $1 failed: $FOO"
+	    cat "$NAME"
+	fi
+	inc
+
 }
