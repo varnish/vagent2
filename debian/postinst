@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+
+case ${1:-} in
+       configure)
+       install -o nobody -g nogroup -d /var/lib/varnish-agent
+       ;;
+esac
+
+
