@@ -40,6 +40,7 @@ struct agent_config_t {
 	 */
 	double timeout;
 	char *T_arg;
+	char *T_arg_orig;
 	char *S_arg;
 	char *n_arg;
 

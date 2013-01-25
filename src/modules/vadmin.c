@@ -50,6 +50,8 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "vss-hack.h"
+#include "httpd.h"
+#include "helpers.h"
 
 struct vadmin_config_t {
 	int sock;
@@ -72,6 +74,70 @@ cli_write(int sock, const char *s)
 }
 
 /*
+ * Parse the -n argument and populate -T if necessary.
+ *
+ * Run on every connect, must do some cleanup.
+ *
+ * XXX: It writes to stdout in addition to the logger because the logger
+ * may not be operational yet. Not sure if this makes sense... At any rate,
+ * the required bit is to write to the logger.
+ */
+static int
+n_arg_sock(struct agent_core_t *core)
+{
+	struct VSM_data *vsd;
+	struct vadmin_config_t *vadmin;
+	char *p;
+	GET_PRIV(core, vadmin);
+
+	vsd = VSM_New();
+	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
+	if (VSM_Open(vsd, 1)) {
+		logger(vadmin->logger,"Couldn't open VSM");
+		fprintf(stderr, "Couldn't open VSM\n");
+		VSM_Delete(vsd);
+		vsd = NULL;
+	}
+
+	if (core->config->T_arg_orig) {
+		if (core->config->T_arg)
+			free(core->config->T_arg);
+		core->config->T_arg = strdup(core->config->T_arg_orig);
+	} else {		
+		if (vsd == NULL) {
+			logger(vadmin->logger,"No -T arg and no shmlog readable.");
+			return -1;
+		}
+		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
+		if (p == NULL)  {
+			fprintf(stderr, "No -T arg in shared memory\n");
+			logger(vadmin->logger, "No -T arg in shared memory.");
+			return (-1);
+		}
+		core->config->T_arg = strdup(p);
+	}
+
+	if (core->config->S_arg == NULL && !vsd) {
+		logger(vadmin->logger, "No shmlog and no -S arg. Unknown if authentication will work.");
+	}
+	if (vsd && core->config->S_arg == NULL) {
+		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
+		if (p != NULL)
+			core->config->S_arg = strdup(p);
+	}
+
+	p = strchr(core->config->T_arg, '\n');
+	if (p) {
+		assert(p);
+		*p = '\0';
+	}
+	if (vsd)
+		VSM_Delete(vsd);
+	logger(vadmin->logger, "-T argument computed to: %s", core->config->T_arg ? core->config->T_arg : "(null)");
+	return (1);
+}
+
+/*
  * This function establishes a connection to the specified ip and port and
  * sends a command to varnishd. If varnishd returns an OK status, the result
  * is printed and 0 returned. Else, an error message is printed and 1 is
@@ -84,6 +150,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
+	n_arg_sock(core);
 	if (core->config->T_arg == NULL) {
 		logger(vadmin->logger, "No T-arg (Administration port) available. Varnishadm-commands wont work.");
 		return (-1);
@@ -177,39 +244,6 @@ read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 	vadmin_run(vadmin, msg, ret);
 }
 
-static int
-n_arg_sock(struct agent_core_t *core)
-{
-	struct VSM_data *vsd;
-	char *p;
-
-	vsd = VSM_New();
-	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
-	if (VSM_Open(vsd, 1)) {
-		fprintf(stderr, "Couldn't open VSM\n");
-		return (-1);
-	}
-
-	if (core->config->T_arg == NULL) {
-		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
-		if (p == NULL)  {
-			fprintf(stderr, "No -T arg in shared memory\n");
-			return (-1);
-		}
-		core->config->T_arg = strdup(p);
-	}
-	if (core->config->S_arg == NULL) {
-		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
-		if (p != NULL)
-			core->config->S_arg = strdup(p);
-	}
-
-	p = strchr(core->config->T_arg, '\n');
-	assert(p);
-	*p = '\0';
-	VSM_Delete(vsd);
-	return (1);
-}
 
 void
 vadmin_init(struct agent_core_t *core)
@@ -224,6 +258,8 @@ vadmin_init(struct agent_core_t *core)
 	v->ipc->priv = core;
 	v->start = ipc_start;
 	vadmin->sock = -1;
+	vadmin->state = 0;
+	vadmin->logger = ipc_register(core, "logger");
 
 	if (core->config->n_arg != NULL) {
 		if (core->config->T_arg != NULL || core->config->S_arg != NULL) {
@@ -236,8 +272,6 @@ vadmin_init(struct agent_core_t *core)
 	} else {
 		assert(core->config->T_arg != NULL);
 	}
-	vadmin->state = 0;
-	vadmin->logger = ipc_register(core, "logger");
 	signal(SIGPIPE, SIG_IGN);
 	return ;
 }

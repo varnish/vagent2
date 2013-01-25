@@ -94,6 +94,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
 	core->config->T_arg = NULL;
+	core->config->T_arg_orig = NULL;
 	core->config->c_arg = strdup("6085");
 	core->config->timeout = 5;
 	core->config->d_arg = 0;
@@ -115,7 +116,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			core->config->S_arg = optarg;
 			break;
 		case 'T':
-			core->config->T_arg = optarg;
+			core->config->T_arg_orig = optarg;
 			break;
 		case 't':
 			core->config->timeout = strtod(optarg, NULL);

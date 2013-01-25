@@ -78,5 +78,46 @@ echo "Testing survival (echo test 4):"
 ./echo.sh
 ret=$(( ${ret} + $? ))
 kill $varnishpid
+echo "Stopping varnish, starting with new -T arg"
+sleep 2
+varnishd -f "${SRCDIR}/data/boot.vcl" \
+    -P "$VARNISH_PID" \
+    -n "$TMPDIR" \
+    -p auto_restart=off \
+    -a 127.0.0.1:8090 \
+    -T 127.0.0.1:0 \
+    -s malloc,50m
+
+varnishpid="$(cat "$VARNISH_PID")"
+
+echo "Waiting, then testing state"
+sleep 5
+NOSTATUS=0
+is_running
+test_it GET status "" "Child in state running"
+echo "And again"
+kill $varnishpid
+sleep 3
+varnishd -f "${SRCDIR}/data/boot.vcl" \
+    -P "$VARNISH_PID" \
+    -n "$TMPDIR" \
+    -p auto_restart=off \
+    -a 127.0.0.1:8090 \
+    -T 127.0.0.1:0 \
+    -s malloc,50m
+
+varnishpid="$(cat "$VARNISH_PID")"
+
+echo "Waiting, then testing state"
+sleep 5
+NOSTATUS=0
+# First will fail, as that's what tells us to re-read the shmlog.
+test_it_fail GET status "" "Varnishd disconnected"
+is_running
+test_it PUT stop "" ""
+test_it GET status "" "Child in state stopped"
+
+
 kill $(cat ${TMPDIR}/agent.pid)
+kill $varnishpid
 exit $ret
