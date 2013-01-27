@@ -1,0 +1,27 @@
+
+Some of the many people to thank:
+
+* Poul-Henning Kamp, for showing me countless smart tricks to employ, and
+  also a little bit for writing Vanrish Cache.
+* Martin Blix Grydeland, for the original varnish-agent and words of wisdom
+  when it comes to varnishapi usage.
+* Tollef Fog Heen, for poking automake-stuff and jenkins and whatnot until
+  things worked.
+* Lasse Karstensen, for early testing and bug reports.
+* Yves Hwang/Per Buer, for testing on Mac OS X. Not sure you actually
+  deserve a thanks for that though... !@#!@# mac.
+
+src/foreign/
+============
+
+A number of external components are included in src/foreign/, all under the
+FreeBSD License.
+
+The following deserve special thanks for said code:
+
+* Poul-Henning Kamp, for vsb.c and vss.c
+* Dag-Erling Smørgrav, for vsb.c and contributions to pretty much all
+  the other parts I borrowed in src/foreign
+* Pawel Jakub Dawidek <pjd@FreeBSD.org>, for pidfile logic.
+* Robert Millan and Guillem Jover <guillem@hadrons.org>, for various
+  setname/getname now stuck in logics in pidfile.c.
