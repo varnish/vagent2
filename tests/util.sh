@@ -8,6 +8,7 @@ AGENT_PORT="${AGENT_PORT:-6085}"
 VARNISH_PORT="${VARNISH_PORT:-80}"
 TMPDIR="${TMPDIR:-$(mktemp -d)}"
 SRCDIR="${SRCDIR:-"."}"
+ORIGPWD="${ORIGPWD:-"."}"
 
 function inc()
 {
@@ -69,7 +70,7 @@ function start_varnish()
 function start_agent()
 {
 	printf "Starting agent:\n\n"
-	../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
+	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	export agentpid
 }
@@ -80,6 +81,7 @@ function init_all()
 	start_varnish
 	start_agent
 }
+
 function test_it()
 {
 	FOO=$(lwp-request -m $1 http://localhost:$AGENT_PORT/$2 <<<"$3")

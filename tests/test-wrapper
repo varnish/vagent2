@@ -6,7 +6,9 @@ SRCDIR="$(dirname $0)/"
 
 PATH=/usr/sbin:/sbin:$PATH
 
-export TMPDIR PATH SRCDIR
+ORIGPWD=$PWD
+
+export TMPDIR PATH SRCDIR ORIGPWD
 
 cd "$SRCDIR"
 ./$1
