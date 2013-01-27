@@ -19,7 +19,7 @@ echo DIR: $TMPDIR
 
 VARNISH_PORT=8090
 AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
-../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
+${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 
 NOSTATUS=1
 export VARNISH_PORT AGENT_PORT NOSTATUS
@@ -67,7 +67,7 @@ inc
 rm $TMPDIR/_.vsm
 kill $(cat ${TMPDIR}/agent.pid)
 sleep 1
-../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
+${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 sleep 2
 echo "Echo test 3:"
 ./echo.sh
@@ -91,7 +91,7 @@ varnishd -f "${SRCDIR}/data/boot.vcl" \
 varnishpid="$(cat "$VARNISH_PID")"
 
 echo "Waiting, then testing state"
-sleep 5
+sleep 3
 NOSTATUS=0
 is_running
 test_it GET status "" "Child in state running"
@@ -109,7 +109,7 @@ varnishd -f "${SRCDIR}/data/boot.vcl" \
 varnishpid="$(cat "$VARNISH_PID")"
 
 echo "Waiting, then testing state"
-sleep 5
+sleep 3
 NOSTATUS=0
 # First will fail, as that's what tells us to re-read the shmlog.
 test_it_fail GET status "" "Varnishd disconnected"

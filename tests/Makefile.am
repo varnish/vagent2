@@ -1,7 +1,8 @@
 LOG_COMPILER = $(srcdir)/test-wrapper
 TESTS = ban.sh \
-	echo.sh \
+	badvarnishd.sh \
 	json.sh \
 	log.sh \
 	status.sh \
-	vcl.sh
+	vcl.sh \
+	echo.sh
