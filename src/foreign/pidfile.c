@@ -1,5 +1,9 @@
 /*-
  * Copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
+ * Copyright © 2006 Robert Millan
+ * Copyright (c) 2007 Dag-Erling Coïdan Smørgrav
+ * Copyright © 2010-2012 Guillem Jover <guillem@hadrons.org>
+ *
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -22,6 +26,15 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ */
+
+/*
+ * flopen() by des.
+ * pidfile-stuff by pjd.
+ * vsetprogname/vgetprogname from libbsd's progname.c, copyright Robert
+ * Millan and Guillem Jover.
+ *
+ * All under BSD license.
  */
 
 #define _GNU_SOURCE
