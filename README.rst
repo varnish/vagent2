@@ -8,8 +8,8 @@ Varnish Agent
 
 :Manual section: 1
 :Author: Kristian Lyngstøl
-:Date: 2013-01-15
-:Version: 2.0
+:Date: 2013-01-27
+:Version: 2.1
 
 SYNOPSIS
 ========
@@ -24,8 +24,8 @@ DESCRIPTION
 ===========
 
 The ``varnish-agent`` is a small daemon meant to communicate with Varnish
-and other varnish-related service to allow remote control and monitoring of
-Varnish.
+and other varnish-related services to allow remote control and monitoring
+of Varnish.
 
 It listens to port 6085 by default. Try ``http://hostname:6085/html/`` for
 the HTML front-end. All arguments are optional. The Varnish Agent will read
