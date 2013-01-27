@@ -6,6 +6,8 @@ if [ "$(basename $PWD)" != "tests" ]; then
 fi
 . util.sh
 
+init_all
+
 test_it GET echo "" ""
 test_it POST echo "Foobar" "Foobar"
 test_it POST echo "" ""

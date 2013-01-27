@@ -5,6 +5,7 @@ if [ "$(basename $PWD)" != "tests" ]; then
 	exit 1;
 fi
 . util.sh
+init_all
 
 is_running
 test_it_long GET ban "" ".*"

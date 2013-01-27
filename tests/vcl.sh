@@ -6,6 +6,8 @@ if [ "$(basename $PWD)" != "tests" ]; then
 fi
 
 . util.sh
+init_all
+
 
 function test_vcl()
 {

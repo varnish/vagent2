@@ -5,6 +5,7 @@ if [ "$(basename $PWD)" != "tests" ]; then
 	exit 1;
 fi
 . util.sh
+init_all
 
 test_it GET status "" "Child in state running"
 test_it PUT stop "" ""

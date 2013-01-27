@@ -2,6 +2,7 @@
 
 . util.sh
 
+init_all
 
 test_json vcljson/
 test_json paramjson/

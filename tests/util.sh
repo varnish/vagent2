@@ -7,6 +7,8 @@ ret=0
 AGENT_PORT="${AGENT_PORT:-6085}"
 VARNISH_PORT="${VARNISH_PORT:-80}"
 TMPDIR="${TMPDIR:-$(mktemp -d)}"
+SRCDIR="${SRCDIR:-"."}"
+
 function inc()
 {
 	N=$(( ${N} + 1 ))
@@ -27,6 +29,57 @@ function pass()
 	echo "Passed ${N} $*"
 }
 
+function cleanup()
+{
+    echo Stopping varnishd and the agent
+    [ -z "$varnishpid" ] || kill "$varnishpid" || true
+    [ -z "$agentpid" ] || kill "$agentpid" || true
+    echo Cleaning up
+    rm -rf ${TMPDIR}
+}
+
+function init_misc()
+{
+	trap 'cleanup' EXIT
+	mkdir -p ${TMPDIR}/vcl
+}
+
+function start_varnish()
+{
+	head -c 16 /dev/urandom > "$TMPDIR/secret"
+	VARNISH_PID="${TMPDIR}/varnish.pid"
+	printf "Starting varnishd:\n\n"
+	varnishd -f "${SRCDIR}/data/boot.vcl" \
+	    -P "$VARNISH_PID" \
+	    -n "$TMPDIR" \
+	    -p auto_restart=off \
+	    -a 127.0.0.1:0 \
+	    -T 127.0.0.1:0 \
+	    -s malloc,50m \
+	    -S "$TMPDIR/secret"
+	varnishpid="$(cat "$VARNISH_PID")"
+	VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
+	# XXX fix to find a free, not just a random port
+	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
+	sleep 1
+	export VARNISH_PORT AGENT_PORT
+	export N_ARG="-n ${TMPDIR}"
+}
+
+function start_agent()
+{
+	printf "Starting agent:\n\n"
+	../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
+	agentpid=$(cat ${TMPDIR}/agent.pid)
+	export agentpid
+}
+
+function init_all()
+{
+	init_misc
+	start_varnish
+	start_agent
+}
 function test_it()
 {
 	FOO=$(lwp-request -m $1 http://localhost:$AGENT_PORT/$2 <<<"$3")
