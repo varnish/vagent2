@@ -13,7 +13,7 @@ webrootimgdir = $(pkgdatadir)/html/bootstrap/img
 webrootimg_DATA = $(wildcard html/bootstrap/img/*.png)
 
 install-data-local:
-	$(install_sh) -o nobody -g nogroup -d -m 0755 $(DESTDIR)$(localstatedir)/varnish-agent
+	$(install_sh) -d -m 0755 $(DESTDIR)$(localstatedir)/varnish-agent
 
 dist_man_MANS = varnish-agent.1
 MAINTAINERCLEANFILES = $(dist_man_MANS)
