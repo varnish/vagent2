@@ -24,4 +24,4 @@ The following deserve special thanks for said code:
   the other parts I borrowed in src/foreign
 * Pawel Jakub Dawidek <pjd@FreeBSD.org>, for pidfile logic.
 * Robert Millan and Guillem Jover <guillem@hadrons.org>, for various
-  setname/getname now stuck in logics in pidfile.c.
+  setname/getname bits now stuck in pidfile.c.
