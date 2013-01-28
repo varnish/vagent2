@@ -102,7 +102,7 @@ static unsigned int vstatus_panic(struct httpd_request *request, void *data)
 		run_and_respond_eok(vstatus->vadmin,request->connection,
 			200,301,"panic.clear");
 	else
-		assert("Shouldn't happen");
+		assert("Shouldn't happen" == NULL);
 	return 0;
 }
 
