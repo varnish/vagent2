@@ -1,6 +1,6 @@
 SUBDIRS = include src tests
 EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst debian tests redhat
-AUTOMAKE_OPTIONS=-Wno-portability
+AUTOMAKE_OPTIONS=-Wno-portability -Wno-override
 
 # html/
 webrootdir = $(pkgdatadir)/html
@@ -27,3 +27,7 @@ else
 	@echo "========================================"
 	@false
 endif
+
+distcleancheck_listfiles = \
+  find . -type f -exec sh -c 'test -f $(srcdir)/$$1 || echo $$1' \
+       sh '{}' ';'
