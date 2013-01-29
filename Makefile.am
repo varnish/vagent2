@@ -1,4 +1,4 @@
-SUBDIRS = src include tests
+SUBDIRS = include src tests
 EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst debian tests redhat
 AUTOMAKE_OPTIONS=-Wno-portability
 
