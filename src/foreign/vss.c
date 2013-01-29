@@ -54,9 +54,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <assert.h>
-
 #include "vss-hack.h"
+#include "common.h"
 
 /* lightweight addrinfo */
 struct vss_addr {
