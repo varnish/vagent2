@@ -17,6 +17,7 @@ echo PORT: $VARNISH_PORT
 echo pid: $varnishpid
 echo DIR: $TMPDIR
 
+echo "Starting agent"
 VARNISH_PORT=8090
 AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 ${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
@@ -32,9 +33,12 @@ ret=$(( ${ret} + $? ))
 echo "Bad varnish stats/log: "
 test_json stats
 test_json log/100/RxURL
-
+echo "Getting uptime"
 OUT=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+echo "Killing varnish"
 kill $varnishpid
+sleep 4
+echo "Starting varnishd"
 
 varnishd -f "${SRCDIR}/data/boot.vcl" \
     -P "$VARNISH_PID" \
@@ -57,16 +61,23 @@ echo "Bad varnish2, stats:"
 
 test_json stats
 
+echo "json done, next:"
+
 OUT2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+
+echo "Comparing uptime"
 
 if [ "x$?" != "x0" ]; then fail; else pass; fi
 inc
-if [ "x$OUT" != "x$OUT2" ]; then pass; else fail; fi
+if [ "x$OUT" != "x$OUT2" ]; then pass; else fail "$OUT vs $OUT2"; fi
 inc
 
+echo "removing shmlog"
 rm $TMPDIR/_.vsm
+echo "Stopping agent"
 kill $(cat ${TMPDIR}/agent.pid)
 sleep 1
+echo "Starting agent"
 ${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 sleep 2
 echo "Echo test 3:"
