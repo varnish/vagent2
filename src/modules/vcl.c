@@ -272,6 +272,9 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			}
 			free(vret.answer);
 			return 0;
+		} else {
+			send_response_fail(request->connection, "Invalid VCL-url.");
+			return 0;
 		}
 	} else if (request->method == M_POST) {
 		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));

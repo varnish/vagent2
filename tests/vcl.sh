@@ -31,6 +31,8 @@ test_it_fail GET vcl "" "Failed"
 test_it_long GET vcl/ "" "active"
 test_it_long GET vcl/boot "" "backend"
 
+test_it_fail GET vcljson/foo "" "Invalid VCL-url."
+
 test_vcl data/smallvcl
 test_vcl data/longvcl
 test_it_long POST vcl/ "backend foo { .host =\"kly.no\"; }" "VCL compiled."
