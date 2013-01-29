@@ -28,7 +28,7 @@ function start_varnish_no_t()
 	    -a 127.0.0.1:$VARNISH_PORT \
 	    -s malloc,50m
 	varnishpid="$(cat "$VARNISH_PID")"
-	sleep 1
+	sleep 2
 	echo -e "\tStarted varnish. Pid $varnishpid"
 	if [ -z "$varnishpid" ]; then
 		fail "NO VARNISHPID? Bad stuff..."
