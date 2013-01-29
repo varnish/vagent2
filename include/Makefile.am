@@ -1,10 +1,11 @@
 nobase_noinst_HEADERS = common.h helpers.h plugins.h ipc.h httpd.h vss-hack.h vcs_version.h
 BUILT_SOURCES = vcs_version.h
-MAINTAINERCLEANFILES = vcs_version.h 
+MAINTAINERCLEANFILES = vcs_version.h
 vcs_version.h: FORCE
-	@if [ -d "$(top_srcdir)/.git" ]; then \
+	if [ -d "$(top_srcdir)/.git" ]; then \
 		V="$$(git describe --always --dirty)" \
 		H="$$(head -n 1 vcs_version.h 2>/dev/null || true)"; \
+		echo "V: $$V"; \
 		if [ "/* $$V */" != "$$H" ]; then \
 		( \
 		  echo "/* $$V */" ;\
