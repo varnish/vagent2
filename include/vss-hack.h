@@ -34,5 +34,5 @@
 
 #ifndef VSS_HACK_H
 #define VSS_HACK_H
-int VSS_open(const char *str, double tmo);
+int VSS_open(int logfd, const char *str, double tmo);
 #endif

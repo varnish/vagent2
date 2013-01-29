@@ -56,6 +56,7 @@
 
 #include "vss-hack.h"
 #include "common.h"
+#include "ipc.h"
 
 /* lightweight addrinfo */
 struct vss_addr {
@@ -203,20 +204,20 @@ VSS_resolve(const char *addr, const char *port, struct vss_addr ***vap)
  * XXX: since it was not used. -Kristian
  */
 static int
-VSS_connect(const struct vss_addr *va)
+VSS_connect(int logfd, const struct vss_addr *va)
 {
 	int sd, i;
 
 	sd = socket(va->va_family, va->va_socktype, va->va_protocol);
 	if (sd < 0) {
 		if (errno != EPROTONOSUPPORT)
-			perror("socket()");
+			logger(logfd, "socket(): %s", strerror(errno));
 		return (-1);
 	}
 	i = connect(sd, (const void *)&va->va_addr, va->va_addrlen);
 	if (i == 0)
 		return (sd);
-	perror("connect()");
+	logger(logfd, "connect(): %s", strerror(errno));
 	(void)close(sd);
 	return (-1);
 }
@@ -225,7 +226,7 @@ VSS_connect(const struct vss_addr *va)
  * And the totally brutal version: Give me connection to this address
  */
 int
-VSS_open(const char *str, double tmo)
+VSS_open(int logfd, const char *str, double tmo)
 {
 	int retval = -1;
 	int nvaddr, n, i;
@@ -234,7 +235,7 @@ VSS_open(const char *str, double tmo)
 
 	nvaddr = VSS_resolve(str, NULL, &vaddr);
 	for (n = 0; n < nvaddr; n++) {
-		retval = VSS_connect(vaddr[n]);
+		retval = VSS_connect(logfd, vaddr[n]);
 		if (retval >= 0 && tmo != 0.0) {
 			pfd.fd = retval;
 			pfd.events = POLLOUT;
