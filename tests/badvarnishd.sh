@@ -3,121 +3,159 @@
 . util.sh
 SRCDIR=${SRCDIR:-"."}
 VARNISH_PID=$TMPDIR/varnish.pid
-varnishd -f "${SRCDIR}/data/boot.vcl" \
-    -P "$VARNISH_PID" \
-    -n "$TMPDIR" \
-    -p auto_restart=off \
-    -a 127.0.0.1:8090 \
-    -s malloc,50m
+PHASE=1
+VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 
-varnishpid="$(cat "$VARNISH_PID")"
+function phase()
+{
+	now=$(date +%s)
+	echo
+	echo "$now Phase $PHASE: $*"
+	PHASE=$(( $PHASE + 1 ))
+}
 
 
-echo PORT: $VARNISH_PORT
-echo pid: $varnishpid
-echo DIR: $TMPDIR
+function start_varnish_no_t()
+{
+	echo -e "\tStarting varnish with no -T"
+	sleep 1
+	VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
+	echo -e "\tVarnish port: $VARNISH_PORT"
+	varnishd -f "${SRCDIR}/data/boot.vcl" \
+	    -P "$VARNISH_PID" \
+	    -n "$TMPDIR" \
+	    -p auto_restart=off \
+	    -a 127.0.0.1:$VARNISH_PORT \
+	    -s malloc,50m
+	varnishpid="$(cat "$VARNISH_PID")"
+	sleep 1
+	echo -e "\tStarted varnish. Pid $varnishpid"
+	if [ -z "$varnishpid" ]; then
+		fail "NO VARNISHPID? Bad stuff..."
+		exit 1;
+	fi
+	sleep 1
+	if kill -0 $varnishpid; then
+		echo -e "\tVarnish started ok, we think.";
+	else
+		fail "Varnish not started correctly? FAIL";
+		exit 1;
+	fi
+}
 
-echo "Starting agent"
-VARNISH_PORT=8090
-AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
-${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
+function stop_varnish()
+{
+	echo -e "\tStopping varnish($varnishpid)"
+	kill $varnishpid
+	sleep 5
+}
+
+function start_agent()
+{
+	echo -e "\tStarting varnish-agent"
+	sleep 1
+	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
+	echo -e "\tAgent port: $AGENT_PORT"
+	OUTPUT="$( ${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" 2>&1)"
+	echo -en "\t\t"
+	echo $OUTPUT
+	sleep 1
+}
+	
+function stop_agent()
+{
+	echo -e "\tStopping agent"
+	agentpid=$(cat ${TMPDIR}/agent.pid)
+	if [ -z $agentpid ]; then
+		fail "Stopping agent but no agent pid found. BORK"
+		exit 1;
+	fi
+	kill $agentpid
+	sleep 1
+}
+
+
+function do_echo_test()
+{
+	INDENT="\t\t"
+	export VARNISH_PORT AGENT_PORT NOSTATUS
+	echo -e "\tEcho tests:"
+	test_it GET echo "" ""
+	test_it POST echo "Foobar" "Foobar"
+	test_it POST echo "" ""
+}
+
+function do_vlog_test()
+{
+	INDENT="\t\t"
+	test_it_long GET log "" "\"tag\":"
+	test_it_fail GET log/0 "" "Not a number"
+	test_it_long GET log/2 "" "\"tag\":"
+	GET http://localhost:${VARNISH_PORT}/foobar > /dev/null
+	test_it_long GET log/1/RxURL "" "\"tag\":"
+	test_it_long GET log/1/RxURL/foobar "" "/foobar"
+	test_json stats
+	test_json log/100/RxURL
+}
+
+function uptime_1()
+{
+	UPTIME1=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+	echo -e "\tUptime string: $UPTIME1"
+}
+function uptime_2()
+{
+	echo -e "\tComparing uptime"
+	UPTIME2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+	if [ "x$?" != "x0" ]; then fail; else pass; fi
+	inc
+	echo -e "\tUptime2: $UPTIME2"
+	if [ "x$UPTIME" != "x$UPTIME2" ]; then pass; else fail "$OUT vs $OUT2"; fi
+	inc
+}
+
+phase "No -T"
+start_varnish_no_t
+start_agent
 
 NOSTATUS=1
-export VARNISH_PORT AGENT_PORT NOSTATUS
-echo "Bad varnish, echo:"
-./echo.sh
-ret=$(( ${ret} + $? ))
-echo "Bad varnish log:"
-./log.sh
-ret=$(( ${ret} + $? ))
-echo "Bad varnish stats/log: "
-test_json stats
-test_json log/100/RxURL
-echo "Getting uptime"
-OUT=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
-echo "Killing varnish"
-kill $varnishpid
-sleep 4
-echo "Starting varnishd"
+do_echo_test
+do_vlog_test
+uptime_1
 
-varnishd -f "${SRCDIR}/data/boot.vcl" \
-    -P "$VARNISH_PID" \
-    -n "$TMPDIR" \
-    -p auto_restart=off \
-    -a 127.0.0.1:8090 \
-    -s malloc,50m
+phase "No -T, varnishd restart"
+stop_varnish
+start_varnish_no_t
 
-varnishpid="$(cat "$VARNISH_PID")"
+do_echo_test
+do_vlog_test
 
-sleep 5
+uptime_2
+phase "Agent with no shmlog"
 
-echo "new pid: $varnishpid"
-
-echo "Bad varnish 2, echo:"
-./echo.sh
-ret=$(( ${ret} + $? ))
-
-echo "Bad varnish2, stats:"
-
-test_json stats
-
-echo "json done, next:"
-
-OUT2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
-
-echo "Comparing uptime"
-
-if [ "x$?" != "x0" ]; then fail; else pass; fi
-inc
-if [ "x$OUT" != "x$OUT2" ]; then pass; else fail "$OUT vs $OUT2"; fi
-inc
-
-echo "removing shmlog"
+echo -e "\tRemoving shmlog"
 rm $TMPDIR/_.vsm
-echo "Stopping agent"
-kill $(cat ${TMPDIR}/agent.pid)
-sleep 1
-echo "Starting agent"
-${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
-sleep 2
-echo "Echo test 3:"
-./echo.sh
-ret=$(( ${ret} + $? ))
-echo "Testing shmlogfailure:"
+stop_agent
+start_agent
+
+do_echo_test
+
+echo -e "\tTesting shmlogfailure:"
 test_it_fail GET stats "" "Couldn't open shmlog"
-echo "Testing survival (echo test 4):"
-./echo.sh
-ret=$(( ${ret} + $? ))
-kill $varnishpid
-echo "Stopping varnish, starting with new -T arg"
-sleep 2
-varnishd -f "${SRCDIR}/data/boot.vcl" \
-    -P "$VARNISH_PID" \
-    -n "$TMPDIR" \
-    -p auto_restart=off \
-    -a 127.0.0.1:8090 \
-    -T 127.0.0.1:0 \
-    -s malloc,50m
+do_echo_test
 
-varnishpid="$(cat "$VARNISH_PID")"
+phase "Shmlog suddenly re-appears"
+stop_varnish
+start_varnish
 
-echo "Waiting, then testing state"
+echo -e "\tWaiting, then testing state"
 sleep 3
 NOSTATUS=0
 is_running
 test_it GET status "" "Child in state running"
-echo "And again"
-kill $varnishpid
-sleep 3
-varnishd -f "${SRCDIR}/data/boot.vcl" \
-    -P "$VARNISH_PID" \
-    -n "$TMPDIR" \
-    -p auto_restart=off \
-    -a 127.0.0.1:8090 \
-    -T 127.0.0.1:0 \
-    -s malloc,50m
-
-varnishpid="$(cat "$VARNISH_PID")"
+echo -e "\tAnd again"
+stop_varnish
+start_varnish
 
 echo "Waiting, then testing state"
 sleep 3
@@ -129,6 +167,7 @@ test_it PUT stop "" ""
 test_it GET status "" "Child in state stopped"
 
 
-kill $(cat ${TMPDIR}/agent.pid)
-kill $varnishpid
+phase "Cleanup"
+stop_agent
+stop_varnish
 exit $ret

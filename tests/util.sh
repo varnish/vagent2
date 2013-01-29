@@ -17,7 +17,8 @@ function inc()
 
 function fail()
 {
-	echo "Failed ${N}: $*"
+	echo -en "${INDENT}Failed ${N}:"
+	echo " $*"
 	if [ "x$KNOWN_FAIL" = "x1" ]; then
 		echo "Known failure. Ignoring.";
 	else
@@ -27,7 +28,8 @@ function fail()
 
 function pass()
 {
-	echo "Passed ${N} $*"
+	echo -en "${INDENT}Passed ${N} "
+	echo "$*"
 }
 
 function cleanup()
@@ -60,8 +62,6 @@ function start_varnish()
 	    -S "$TMPDIR/secret"
 	varnishpid="$(cat "$VARNISH_PID")"
 	VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
-	# XXX fix to find a free, not just a random port
-	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	sleep 1
 	export VARNISH_PORT AGENT_PORT
 	export N_ARG="-n ${TMPDIR}"
@@ -70,6 +70,8 @@ function start_varnish()
 function start_agent()
 {
 	printf "Starting agent:\n\n"
+	# XXX fix to find a free, not just a random port
+	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	export agentpid
