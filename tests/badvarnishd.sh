@@ -45,6 +45,11 @@ function start_varnish_no_t()
 
 function stop_varnish()
 {
+	varnishpid="$(cat "$VARNISH_PID")"
+	if [ -z "$varnishpid" ]; then
+		fail "NO VARNISHPID? Bad stuff..."
+		exit 1;
+	fi
 	echo -e "\tStopping varnish($varnishpid)"
 	kill $varnishpid
 	sleep 5
@@ -64,12 +69,12 @@ function start_agent()
 	
 function stop_agent()
 {
-	echo -e "\tStopping agent"
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	if [ -z $agentpid ]; then
 		fail "Stopping agent but no agent pid found. BORK"
 		exit 1;
 	fi
+	echo -e "\tStopping agent($agentpid)"
 	kill $agentpid
 	sleep 1
 }
@@ -157,7 +162,7 @@ echo -e "\tAnd again"
 stop_varnish
 start_varnish
 
-echo "Waiting, then testing state"
+echo -e "\tWaiting, then testing state"
 sleep 3
 NOSTATUS=0
 # First will fail, as that's what tells us to re-read the shmlog.

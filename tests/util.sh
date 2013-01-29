@@ -9,6 +9,7 @@ VARNISH_PORT="${VARNISH_PORT:-80}"
 TMPDIR="${TMPDIR:-$(mktemp -d)}"
 SRCDIR="${SRCDIR:-"."}"
 ORIGPWD="${ORIGPWD:-"."}"
+VARNISH_PID="${TMPDIR}/varnish.pid"
 
 function inc()
 {
@@ -50,8 +51,7 @@ function init_misc()
 function start_varnish()
 {
 	head -c 16 /dev/urandom > "$TMPDIR/secret"
-	VARNISH_PID="${TMPDIR}/varnish.pid"
-	printf "Starting varnishd:\n\n"
+	printf "${INDENT}Starting varnishd\n\n"
 	varnishd -f "${SRCDIR}/data/boot.vcl" \
 	    -P "$VARNISH_PID" \
 	    -n "$TMPDIR" \
