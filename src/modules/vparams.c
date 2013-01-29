@@ -34,7 +34,6 @@
 #include "helpers.h"
 
 #include <ctype.h>
-#include <assert.h>
 #include <stdarg.h>
 #include <unistd.h>
 #include <stdlib.h>

@@ -34,7 +34,6 @@
 #include "httpd.h"
 #include "helpers.h"
 
-#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>

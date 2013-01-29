@@ -71,7 +71,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <varnishapi.h>
-#include <assert.h>
 #include "common.h"
 #include "httpd.h"
 #include "ipc.h"

@@ -26,6 +26,8 @@
  * SUCH DAMAGE.
  */
 
+#define _GNU_SOURCE
+
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -36,7 +38,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
-#include <assert.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <syslog.h>
@@ -48,6 +49,11 @@
 struct logger_priv_t {
 	int debug;
 };
+
+/*
+ * XXX: Needed for handling assert() failures.
+ */
+static int logger_open=0;
 
 static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
@@ -63,19 +69,39 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	ret->answer = strdup("OK");
 }
 
+void assert_fail(const char *expr, const char *file, int line, const char *func)
+{
+	char *string;
+	int ret;
+	ret = asprintf(&string, "%s:%d: %s: Assertion `%s' failed. Aborting.", file, line, func, expr);
+	if (ret < 10) {
+		fprintf(stderr, "Assert, then asprintf failure. ABANDON SHIP.\n");
+		abort();
+	}
+	if (logger_open) {
+		syslog(LOG_CRIT, "%s", string);
+		closelog();
+	} else
+		fprintf(stderr,"%s\n",string);
+	abort();
+}
+
 void logger_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct logger_priv_t *priv = malloc(sizeof(struct logger_priv_t));
 	plug = plugin_find(core,"logger");
 
-	if (core->config->d_arg)
+	if (core->config->d_arg) {
 		priv->debug = 1;
-	else
-		priv->debug = 0;	
+		logger_open = 0;
+	} else {
+		priv->debug = 0;
+		openlog("varnish-agent",LOG_PID,LOG_DAEMON);
+		logger_open = 1;
+	}
 	plug->ipc->cb = read_log;
 	plug->ipc->priv = priv;
 	plug->data = (void *)priv;
 	plug->start = ipc_start;
-	openlog("varnish-agent",LOG_PID,LOG_DAEMON);
 }

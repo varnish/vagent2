@@ -33,7 +33,6 @@
 #include <pthread.h>
 
 #include <signal.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>

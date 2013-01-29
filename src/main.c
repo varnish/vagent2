@@ -46,7 +46,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <pthread.h>
 #include "config.h"
 #include "pidfile.h"
@@ -282,10 +281,9 @@ int main(int argc, char **argv)
 		printf("Plugins initialized. -d argument given, so not forking.\n");
 	else
 		v_daemon(&pfh);
-	
+		
 	if (pfh)
 		pidfile_write(pfh);
-	
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		if (plug->start != NULL)
 			plug->start(&core, plug->name);

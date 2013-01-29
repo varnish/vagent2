@@ -33,7 +33,6 @@
 #define _GNU_SOURCE
 #include <unistd.h>
 #include <stdarg.h>
-#include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>

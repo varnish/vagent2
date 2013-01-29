@@ -101,4 +101,9 @@ struct agent_plugin_t {
 	ipc_run(l, &logger_thing_int, "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	free(logger_thing_int.answer); \
 } while(0)
+void assert_fail(const char *expr, const char *file, int line, const char *func);
+
+#define assert(expr) \
+  	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
+
 #endif

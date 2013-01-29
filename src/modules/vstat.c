@@ -43,7 +43,6 @@
 #include <time.h>
 #include <unistd.h>
 #include <varnishapi.h>
-#include <assert.h>
 #include <time.h>
 #include <vsc.h>
 #include "vsb.h"

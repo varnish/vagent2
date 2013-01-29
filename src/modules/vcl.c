@@ -32,7 +32,6 @@
 #include "ipc.h"
 #include "httpd.h"
 #include "vsb.h"
-#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
