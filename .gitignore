@@ -24,3 +24,4 @@ compile
 tests/tmp
 varnish-agent.1
 tests/*.log
+include/vcs_version.h

@@ -33,6 +33,7 @@
 #include "httpd.h"
 #include "helpers.h"
 #include "config.h"
+#include "vcs_version.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -116,6 +117,13 @@ static unsigned int vstatus_panic_help(struct httpd_request *request, void *data
 static unsigned int vstatus_version(struct httpd_request *request, void *data)
 {
 	(void)data;
+	send_response_ok(request->connection, VCS_Version "\n");
+	return 0;
+}
+
+static unsigned int vstatus_package_string(struct httpd_request *request, void *data)
+{
+	(void)data;
 	send_response_ok(request->connection, PACKAGE_STRING "\n");
 	return 0;
 }
@@ -137,6 +145,7 @@ vstatus_init(struct agent_core_t *core)
 	httpd_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
 	httpd_register_url(core, "/help/panic", M_GET, vstatus_panic_help, core);
 	httpd_register_url(core, "/version", M_GET, vstatus_version, core);
+	httpd_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
 }
 
 
