@@ -9,8 +9,7 @@ fi
 init_all
 
 
-function test_vcl()
-{
+test_vcl() {
 	VCL="$1"
 	OUT="${TMPDIR}/$(basename $VCL).tmp"
 	lwp-request -m PUT http://localhost:${AGENT_PORT}/vcl/test3 <$VCL > /dev/null
