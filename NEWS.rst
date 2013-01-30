@@ -12,6 +12,11 @@ Released: Unreleased.
 * Re-read the shmlog on varnishadm reconnect, in case of -T change
 * Fix and issue with /vcljson/ where adding anything to the url would
   trigger an assert.
+* Add "site specific" javascript to the default index.html: /html/user.js
+  is included and used if present.
+* Logg assert()-messages to syslog
+* Several stability, reliability and resilience fixes. The agent should be
+  much better at handling odd setups and situations now.
 
 Version 2.0
 ===========
