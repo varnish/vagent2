@@ -21,7 +21,7 @@ function fail()
 	echo -en "${INDENT}Failed ${N}:"
 	echo " $*"
 	if [ "x$KNOWN_FAIL" = "x1" ]; then
-		echo "Known failure. Ignoring.";
+		echo "Known failure. Ignoring."
 	else
 		ret=$(( ${ret} + 1 ))
 	fi
@@ -132,7 +132,7 @@ function test_it_long_content_fail()
 function is_running()
 {
 	if [ "x$NOSTATUS" = "x1" ]; then
-		return;
+		return
 	fi
 	test_it GET status "" "Child in state running"
 }

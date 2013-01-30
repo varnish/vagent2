@@ -32,14 +32,14 @@ function start_varnish_no_t()
 	echo -e "\tStarted varnish. Pid $varnishpid"
 	if [ -z "$varnishpid" ]; then
 		fail "NO VARNISHPID? Bad stuff..."
-		exit 1;
+		exit 1
 	fi
 	sleep 1
 	if kill -0 $varnishpid; then
-		echo -e "\tVarnish started ok, we think.";
+		echo -e "\tVarnish started ok, we think."
 	else
-		fail "Varnish not started correctly? FAIL";
-		exit 1;
+		fail "Varnish not started correctly? FAIL"
+		exit 1
 	fi
 }
 
@@ -48,7 +48,7 @@ function stop_varnish()
 	varnishpid="$(cat "$VARNISH_PID")"
 	if [ -z "$varnishpid" ]; then
 		fail "NO VARNISHPID? Bad stuff..."
-		exit 1;
+		exit 1
 	fi
 	echo -e "\tStopping varnish($varnishpid)"
 	kill $varnishpid
@@ -72,7 +72,7 @@ function stop_agent()
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	if [ -z $agentpid ]; then
 		fail "Stopping agent but no agent pid found. BORK"
-		exit 1;
+		exit 1
 	fi
 	echo -e "\tStopping agent($agentpid)"
 	kill $agentpid
