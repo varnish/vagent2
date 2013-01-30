@@ -1,16 +1,15 @@
 #!/bin/bash 
 
 if [ "$(basename $PWD)" != "tests" ]; then
-	echo "Must run tests from tests/ directory";
-	exit 1;
+	echo "Must run tests from tests/ directory"
+	exit 1
 fi
 
 . util.sh
 init_all
 
 
-function test_vcl()
-{
+test_vcl() {
 	VCL="$1"
 	OUT="${TMPDIR}/$(basename $VCL).tmp"
 	lwp-request -m PUT http://localhost:${AGENT_PORT}/vcl/test3 <$VCL > /dev/null

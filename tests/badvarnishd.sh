@@ -6,8 +6,7 @@ VARNISH_PID=$TMPDIR/varnish.pid
 PHASE=1
 VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 
-function phase()
-{
+phase() {
 	now=$(date +%s)
 	echo
 	echo "$now Phase $PHASE: $*"
@@ -15,8 +14,7 @@ function phase()
 }
 
 
-function start_varnish_no_t()
-{
+start_varnish_no_t() {
 	echo -e "\tStarting varnish with no -T"
 	sleep 1
 	VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
@@ -32,31 +30,29 @@ function start_varnish_no_t()
 	echo -e "\tStarted varnish. Pid $varnishpid"
 	if [ -z "$varnishpid" ]; then
 		fail "NO VARNISHPID? Bad stuff..."
-		exit 1;
+		exit 1
 	fi
 	sleep 1
 	if kill -0 $varnishpid; then
-		echo -e "\tVarnish started ok, we think.";
+		echo -e "\tVarnish started ok, we think."
 	else
-		fail "Varnish not started correctly? FAIL";
-		exit 1;
+		fail "Varnish not started correctly? FAIL"
+		exit 1
 	fi
 }
 
-function stop_varnish()
-{
+stop_varnish() {
 	varnishpid="$(cat "$VARNISH_PID")"
 	if [ -z "$varnishpid" ]; then
 		fail "NO VARNISHPID? Bad stuff..."
-		exit 1;
+		exit 1
 	fi
 	echo -e "\tStopping varnish($varnishpid)"
 	kill $varnishpid
 	sleep 5
 }
 
-function start_agent()
-{
+start_agent() {
 	echo -e "\tStarting varnish-agent"
 	sleep 1
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
@@ -67,12 +63,11 @@ function start_agent()
 	sleep 1
 }
 	
-function stop_agent()
-{
+stop_agent() {
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	if [ -z $agentpid ]; then
 		fail "Stopping agent but no agent pid found. BORK"
-		exit 1;
+		exit 1
 	fi
 	echo -e "\tStopping agent($agentpid)"
 	kill $agentpid
@@ -80,8 +75,7 @@ function stop_agent()
 }
 
 
-function do_echo_test()
-{
+do_echo_test() {
 	INDENT="\t\t"
 	export VARNISH_PORT AGENT_PORT NOSTATUS
 	echo -e "\tEcho tests:"
@@ -90,8 +84,7 @@ function do_echo_test()
 	test_it POST echo "" ""
 }
 
-function do_vlog_test()
-{
+do_vlog_test() {
 	INDENT="\t\t"
 	test_it_long GET log "" "\"tag\":"
 	test_it_fail GET log/0 "" "Not a number"
@@ -103,13 +96,11 @@ function do_vlog_test()
 	test_json log/100/RxURL
 }
 
-function uptime_1()
-{
+uptime_1() {
 	UPTIME1=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
 	echo -e "\tUptime string: $UPTIME1"
 }
-function uptime_2()
-{
+uptime_2() {
 	echo -e "\tComparing uptime"
 	UPTIME2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
 	if [ "x$?" != "x0" ]; then fail; else pass; fi

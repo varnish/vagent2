@@ -11,30 +11,26 @@ SRCDIR="${SRCDIR:-"."}"
 ORIGPWD="${ORIGPWD:-"."}"
 VARNISH_PID="${TMPDIR}/varnish.pid"
 
-function inc()
-{
+inc() {
 	N=$(( ${N} + 1 ))
 }
 
-function fail()
-{
+fail() {
 	echo -en "${INDENT}Failed ${N}:"
 	echo " $*"
 	if [ "x$KNOWN_FAIL" = "x1" ]; then
-		echo "Known failure. Ignoring.";
+		echo "Known failure. Ignoring."
 	else
 		ret=$(( ${ret} + 1 ))
 	fi
 }
 
-function pass()
-{
+pass() {
 	echo -en "${INDENT}Passed ${N} "
 	echo "$*"
 }
 
-function cleanup()
-{
+cleanup() {
     echo Stopping varnishd and the agent
     [ -z "$varnishpid" ] || kill "$varnishpid" || true
     [ -z "$agentpid" ] || kill "$agentpid" || true
@@ -42,14 +38,12 @@ function cleanup()
     rm -rf ${TMPDIR}
 }
 
-function init_misc()
-{
+init_misc() {
 	trap 'cleanup' EXIT
 	mkdir -p ${TMPDIR}/vcl
 }
 
-function start_varnish()
-{
+start_varnish() {
 	head -c 16 /dev/urandom > "$TMPDIR/secret"
 	printf "${INDENT}Starting varnishd\n\n"
 	varnishd -f "${SRCDIR}/data/boot.vcl" \
@@ -67,8 +61,7 @@ function start_varnish()
 	export N_ARG="-n ${TMPDIR}"
 }
 
-function start_agent()
-{
+start_agent() {
 	printf "Starting agent:\n\n"
 	# XXX fix to find a free, not just a random port
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
@@ -77,15 +70,13 @@ function start_agent()
 	export agentpid
 }
 
-function init_all()
-{
+init_all() {
 	init_misc
 	start_varnish
 	start_agent
 }
 
-function test_it()
-{
+test_it() {
 	FOO=$(lwp-request -m $1 http://localhost:$AGENT_PORT/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
@@ -93,8 +84,7 @@ function test_it()
 	inc
 }
 
-function test_it_no_content()
-{
+test_it_no_content() {
 	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 </dev/null)
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
@@ -102,8 +92,7 @@ function test_it_no_content()
 	inc
 }
 
-function test_it_fail()
-{
+test_it_fail() {
 	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
@@ -111,8 +100,7 @@ function test_it_fail()
 	inc
 }
 
-function test_it_long()
-{
+test_it_long() {
 	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
@@ -120,8 +108,7 @@ function test_it_long()
 	inc
 }
 
-function test_it_long_content_fail()
-{
+test_it_long_content_fail() {
 	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
@@ -129,16 +116,14 @@ function test_it_long_content_fail()
 	inc
 }
 
-function is_running()
-{
+is_running() {
 	if [ "x$NOSTATUS" = "x1" ]; then
-		return;
+		return
 	fi
 	test_it GET status "" "Child in state running"
 }
 
-function test_json()
-{
+test_json() {
 	NAME="${TMPDIR}/jsontest$N.json"
 	lwp-request -m GET http://localhost:${AGENT_PORT}/$1 > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi

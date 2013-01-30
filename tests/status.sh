@@ -1,8 +1,8 @@
 #!/bin/bash
 
 if [ "$(basename $PWD)" != "tests" ]; then
-	echo "Must run tests from tests/ directory";
-	exit 1;
+	echo "Must run tests from tests/ directory"
+	exit 1
 fi
 . util.sh
 init_all
