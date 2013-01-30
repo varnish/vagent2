@@ -21,6 +21,6 @@ test_it_long GET panic "" "asked for it"
 test_it DELETE panic "" ""
 test_it GET panic "" "Child has not panicked or panic has been cleared"
 test_it DELETE panic "" "No panic to clear"
-test_it GET package_string "" "varnish-agent 2.1-dev"
+test_it GET package_string "" "varnish-agent 2.1"
 test_it_long GET version "" "2.0"
 exit $ret

@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 2.1-dev
+Version: 2.1
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
