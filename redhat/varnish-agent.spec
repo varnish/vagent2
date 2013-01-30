@@ -47,7 +47,7 @@ rm -rf %{buildroot}
 #fi
 
 %changelog
-* Fri Jan 18 2013 Lasse Karstensen <lkarsten@varnish-software.com> - 2.0-1
-- Initial version.
 * Wed Jan 30 2013 Kristian Lyngstol <kristian@bohemians.org> - 2.1-1
 - 2.1 dev version
+* Fri Jan 18 2013 Lasse Karstensen <lkarsten@varnish-software.com> - 2.0-1
+- Initial version.
