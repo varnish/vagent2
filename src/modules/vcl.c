@@ -81,37 +81,65 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 
 /*
  * Store VCL to disk if possible. Returns bytes written.
+ *
+ * XXX: The moving-into-place is a best effort thing.
  */
-static int vcl_persist(const char *id, const char *vcl, struct agent_core_t *core) {
+static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
 	int fd, ret;
-	char *path;
+	char *path, *path2;
 	struct stat sbuf;
-	fd = asprintf(&path, "%s/%s.auto.vcl", core->config->p_arg, id);
+	fd = asprintf(&path, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
 	assert(fd>0);
 	fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	if (fd < 0) {
-		ret = -1;
-		goto out;
+		logger(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
+		free(path);
+		return -1;
 	}
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
-		ret = -1;
-		goto out;
+		logger(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
+		free(path);
+		close(fd);
+		return -1;
 	}
 	if (!(S_ISREG(sbuf.st_mode))) {
-		ret = -1;
-		goto out;
+		logger(logfd, "\"%s\" is not a regular file.", path);
+		free(path);
+		close(fd);
+		return -1;
 	}
 	ret = write(fd, (const void *)vcl, strlen(vcl));
 	assert(ret>0);
 	ret = 0;
-	out:
+	fsync(fd);
 	close(fd);
+	fd = asprintf(&path2, "%s/%s.auto.vcl", core->config->p_arg, id);
+	assert(fd>0);
+	ret = unlink(path2);
+	if (ret && errno != ENOENT) {
+		logger(logfd, "unlink of %s failed, leaving temp file %s in place. Dunno quite what to do. errno: %d(%s)", path2, path, errno, strerror(errno));
+		free(path);
+		free(path2);
+		return -1;
+	}
+	ret = rename(path, path2);
+	if (ret) {
+		logger(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", path, path2, errno, strerror(errno));
+		free(path);
+		free(path2);
+		return -1;
+	}
 	free(path);
-	return ret;
+	free(path2);
+	return 0;
 }
 
-static int vcl_persist_active(const char *id, struct agent_core_t *core)
+/*
+ * XXX: This logic does not cover what happens if we freeze/crash/burn/etc
+ * between unlink() and link()...
+ */
+static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 {
 	int ret;
 	char buf[1024];
@@ -125,14 +153,25 @@ static int vcl_persist_active(const char *id, struct agent_core_t *core)
 	sprintf(active, "%s/boot.vcl", core->config->p_arg);
 	
 	ret = stat(buf, &sbuf);
-	if (ret < 0)
+	if (ret < 0) {
+		logger(logfd, "Failed to stat() %s: %s", active, strerror(errno));
 		return -1;
-	if (!(S_ISREG(sbuf.st_mode)))
+	}
+	if (!(S_ISREG(sbuf.st_mode))) {
+		logger(logfd, "%s is not a regular file?", active);
 		return -1;
-	unlink(active);
+	}
+	ret = unlink(active);
+	if (ret && errno != ENOENT) {
+		logger(logfd, "Failed to unlink %s: %s", active, strerror(errno));
+		return -1;
+	}
+
 	ret = link(buf, active);
-	if (ret!=0)
+	if (ret!=0) {
+		logger(logfd, "Failed to link %s->%s: %s", buf, active, strerror(errno));
 		return -1;
+	}
 	return 0;
 }
 
@@ -162,7 +201,7 @@ static int vcl_store(struct httpd_request *request,
 		id,id,(char *)request->data,end,id);
 	if (vret->status == 200) {
 		logger(vcl->logger, "VCL stored OK");
-		ret = vcl_persist(id, request->data, core);
+		ret = vcl_persist(vcl->logger, id, request->data, core);
 		if (ret) {
 			logger(vcl->logger, "vcl.inline OK, but persisting to disk failed. Errno: %d", errno);
 			free(vret->answer);
@@ -300,7 +339,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
 				request->url + strlen("/vcldeploy/"));
 			if (vret.status == 200) {
-				ret = vcl_persist_active(request->url + strlen("/vcldeploy/"), core);
+				ret = vcl_persist_active(vcl->logger, request->url + strlen("/vcldeploy/"), core);
 			}
 			if (vret.status == 200 && ret)
 				send_response_fail(request->connection, "Deployed ok, but NOT PERSISTED.");
