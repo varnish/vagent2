@@ -39,6 +39,8 @@ start_varnish_no_t() {
 		fail "Varnish not started correctly? FAIL"
 		exit 1
 	fi
+	N_ARG="-n $TMPDIR"
+	export N_ARG
 }
 
 stop_varnish() {
@@ -52,17 +54,6 @@ stop_varnish() {
 	sleep 5
 }
 
-start_agent() {
-	echo -e "\tStarting varnish-agent"
-	sleep 1
-	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
-	echo -e "\tAgent port: $AGENT_PORT"
-	OUTPUT="$( ${ORIGPWD}/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR} -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" 2>&1)"
-	echo -en "\t\t"
-	echo $OUTPUT
-	sleep 1
-}
-	
 stop_agent() {
 	agentpid=$(cat ${TMPDIR}/agent.pid)
 	if [ -z $agentpid ]; then

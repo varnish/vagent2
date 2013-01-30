@@ -63,10 +63,11 @@ start_varnish() {
 
 start_agent() {
 	printf "Starting agent:\n\n"
-	# XXX fix to find a free, not just a random port
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
+	echo -e "\tAgent port: $AGENT_PORT"
 	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
 	agentpid=$(cat ${TMPDIR}/agent.pid)
+	echo "Agent started($agentpid)"
 	export agentpid
 }
 
