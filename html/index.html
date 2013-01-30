@@ -108,12 +108,12 @@
 	      <p>For information about panics, see <a
 	      href="/help/panic">/help/panic</a>. The links below just use
 	      this API.</p>
-              <ul class="nav nav-list">
-	        <li><a onclick="stop()">Stop Varnish</a></li>
-                <li><a onclick="start()">Start Varnish</a></li>
-		<li><a onclick="panicShow()">Show panics</a></li>
-		<li><a onclick="panicClear()">Clear panics</a></li>
-              </ul>
+	      <div class="btn-group">
+                <button class="btn btn-primary" onclick="start()">Start Varnish</button>
+	        <button class="btn" onclick="stop()">Stop Varnish</button>
+		<button class="btn" onclick="panicShow()">Show panics</button>
+		<button class="btn" onclick="panicClear()">Clear panics</button>
+              </div>
 	    </div>
 	    </div>
 	    <div class="row-fluid">
