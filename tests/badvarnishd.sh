@@ -175,4 +175,5 @@ test_it GET status "" "Child in state stopped"
 phase "Cleanup"
 stop_agent
 stop_varnish
+rm -fr $TMPDIR
 exit $ret
