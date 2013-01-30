@@ -30,10 +30,30 @@ pass() {
 	echo "$*"
 }
 
+stop_varnish() {
+	varnishpid="$(cat "$VARNISH_PID")"
+	if [ -z "$varnishpid" ]; then
+		fail "NO VARNISHPID? Bad stuff..."
+	fi
+	echo -e "\tStopping varnish($varnishpid)"
+	kill $varnishpid
+}
+
+stop_agent() {
+	agentpid=$(cat ${TMPDIR}/agent.pid)
+	if [ -z $agentpid ]; then
+		fail "Stopping agent but no agent pid found. BORK"
+	fi
+	echo -e "\tStopping agent($agentpid)"
+	kill $agentpid
+}
+
 cleanup() {
     echo Stopping varnishd and the agent
     [ -z "$varnishpid" ] || kill "$varnishpid" || true
     [ -z "$agentpid" ] || kill "$agentpid" || true
+    stop_varnish
+    stop_agent
     echo Cleaning up
     rm -rf ${TMPDIR}
 }
@@ -41,6 +61,31 @@ cleanup() {
 init_misc() {
 	trap 'cleanup' EXIT
 	mkdir -p ${TMPDIR}/vcl
+}
+
+
+pidwait() {
+	I=1
+	for a in $(seq 1 5); do
+		pid="$(cat "${TMPDIR}/${1}.pid")"
+		if [ ! -z "$pid" ]; then
+			break
+		fi
+		sleep 0.5
+		I=$(( $I + 1 ))
+	done
+	echo -e "\tPidwait took $I iterations"
+	echo -e "\tStarted $1. Pid $pid"
+	if [ -z "$pid" ]; then
+		fail "No $1 pid? Bad stuff..."
+		exit 1
+	fi
+	if kill -0 $pid; then
+		echo -e "\t$1 started ok, we think."
+	else
+		fail "$1 not started correctly? FAIL"
+		exit 1
+	fi
 }
 
 start_varnish() {
@@ -54,9 +99,8 @@ start_varnish() {
 	    -T 127.0.0.1:0 \
 	    -s malloc,50m \
 	    -S "$TMPDIR/secret"
-	varnishpid="$(cat "$VARNISH_PID")"
+	pidwait varnish
 	VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
-	sleep 1
 	export VARNISH_PORT AGENT_PORT
 	export N_ARG="-n ${TMPDIR}"
 }
@@ -66,9 +110,7 @@ start_agent() {
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	echo -e "\tAgent port: $AGENT_PORT"
 	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT"
-	agentpid=$(cat ${TMPDIR}/agent.pid)
-	echo "Agent started($agentpid)"
-	export agentpid
+	pidwait agent
 }
 
 init_all() {

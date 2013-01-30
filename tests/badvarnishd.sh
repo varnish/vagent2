@@ -13,10 +13,8 @@ phase() {
 	PHASE=$(( $PHASE + 1 ))
 }
 
-
 start_varnish_no_t() {
 	echo -e "\tStarting varnish with no -T"
-	sleep 1
 	VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	echo -e "\tVarnish port: $VARNISH_PORT"
 	varnishd -f "${SRCDIR}/data/boot.vcl" \
@@ -25,46 +23,11 @@ start_varnish_no_t() {
 	    -p auto_restart=off \
 	    -a 127.0.0.1:$VARNISH_PORT \
 	    -s malloc,50m
-	sleep 5
-	varnishpid="$(cat "$VARNISH_PID")"
-	echo -e "\tStarted varnish. Pid $varnishpid"
-	if [ -z "$varnishpid" ]; then
-		fail "NO VARNISHPID? Bad stuff..."
-		exit 1
-	fi
-	sleep 1
-	if kill -0 $varnishpid; then
-		echo -e "\tVarnish started ok, we think."
-	else
-		fail "Varnish not started correctly? FAIL"
-		exit 1
-	fi
+	
+	pidwait varnish
 	N_ARG="-n $TMPDIR"
 	export N_ARG
 }
-
-stop_varnish() {
-	varnishpid="$(cat "$VARNISH_PID")"
-	if [ -z "$varnishpid" ]; then
-		fail "NO VARNISHPID? Bad stuff..."
-		exit 1
-	fi
-	echo -e "\tStopping varnish($varnishpid)"
-	kill $varnishpid
-	sleep 5
-}
-
-stop_agent() {
-	agentpid=$(cat ${TMPDIR}/agent.pid)
-	if [ -z $agentpid ]; then
-		fail "Stopping agent but no agent pid found. BORK"
-		exit 1
-	fi
-	echo -e "\tStopping agent($agentpid)"
-	kill $agentpid
-	sleep 1
-}
-
 
 do_echo_test() {
 	INDENT="\t\t"
@@ -96,7 +59,6 @@ uptime_2() {
 	UPTIME2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
 	if [ "x$?" != "x0" ]; then fail; else pass; fi
 	inc
-	echo -e "\tUptime2: $UPTIME2"
 	if [ "x$UPTIME" != "x$UPTIME2" ]; then pass; else fail "$OUT vs $OUT2"; fi
 	inc
 }
@@ -133,19 +95,21 @@ do_echo_test
 
 phase "Shmlog suddenly re-appears"
 stop_varnish
+sleep 1 # Varnish can take a moment to die. Give it time.
 start_varnish
 
 echo -e "\tWaiting, then testing state"
-sleep 3
+sleep 1
 NOSTATUS=0
 is_running
 test_it GET status "" "Child in state running"
 echo -e "\tAnd again"
 stop_varnish
+sleep 1 # Varnish can take a moment to die. Give it time.
 start_varnish
 
 echo -e "\tWaiting, then testing state"
-sleep 3
+sleep 1
 NOSTATUS=0
 # First will fail, as that's what tells us to re-read the shmlog.
 test_it_fail GET status "" "Varnishd disconnected"
