@@ -168,6 +168,7 @@ function uploadVCL()
 			} else {
 				show_status("warn", "VCL save failed");
 			}
+			listVCL();
 		}
 	});
 }
