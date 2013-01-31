@@ -151,6 +151,14 @@ test_it_long() {
 	inc
 }
 
+test_it_long_fail() {
+	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
+	if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
+	inc
+	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
+	inc
+}
+
 test_it_long_content_fail() {
 	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi

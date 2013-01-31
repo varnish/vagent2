@@ -354,7 +354,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
 				request->url + strlen("/vcl/"));
-			if (vret.status == 400) {
+			if (vret.status == 400 || vret.status == 106) {
 				send_response_fail(request->connection, vret.answer);
 			} else {
 				send_response_ok(request->connection, vret.answer);
