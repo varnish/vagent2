@@ -2,7 +2,7 @@
 Version 2.1
 ===========
 
-Released: Unreleased.
+Released: 2013-01-31
 
 * Fix memory leaks in vlog module
 * Fix vlog json formatting
