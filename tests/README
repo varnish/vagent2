@@ -1,6 +1,0 @@
-All tests require that you have varnish running and functional on
-localhost:80, and the agent running and functional on port 6085.
-
-JSON tests require the demjson-package (apt-get install python-demjson).
-
-
