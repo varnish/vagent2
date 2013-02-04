@@ -79,13 +79,12 @@
  * Write text to a socket. Close it if we fail.
  * Returns true on success.
  */
-static int ipc_write(int sock, const char *s)
+static int ipc_write(int sock, const char *s, int len)
 {
-	int i, l;
+	int l;
 
-	i = strlen(s);
-	l = write (sock, s, i);
-	if (i == l)
+	l = write (sock, s, len);
+	if (len == l)
 		return 1;
 	perror("Write error CLI socket");
 	assert(close(sock));
@@ -95,14 +94,17 @@ static int ipc_write(int sock, const char *s)
 /*
  * Write the command, read the result.
  * XXX: VCLI_ReadResult will allocate ret->answer. Caller MUST free it.
- * XXX: Note the \n is added. Do not add your own, or you wont get a reply.
  */
-static void ipc_run_real(int handle, char *cmd, struct ipc_ret_t *ret)
+static void ipc_run_real(int handle, char *cmd, int len, struct ipc_ret_t *ret)
 {
 	assert(cmd);
 	assert (*cmd);
-	ipc_write(handle, cmd);
-	ipc_write(handle, "\n");
+	char buffer[12];
+	assert(len < 1000000000);
+	assert(len > 0);
+	snprintf(buffer,11,"%09d ",len);
+	ipc_write(handle, buffer, 10);
+	ipc_write(handle, cmd, len);
 
 	VCLI_ReadResult(handle, &ret->status, &ret->answer, 2.0);
 }
@@ -121,7 +123,7 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	assert(iret>0);
 	va_end(ap);
 	assert(buffer);
-	ipc_run_real(handle, buffer, ret);
+	ipc_run_real(handle, buffer, strlen(buffer),ret);
 	free(buffer);
 }
 
@@ -150,73 +152,35 @@ int ipc_register(struct agent_core_t *core, const char *name)
  */
 
 /*
- * Read everything up to the first new line.
- * FIXME: The 1024-limit here is a bit weird. Should probably use VSB
- * instead.
- * FIXME: read() has no timeout. We will block forever. FOREVER. Causes
- * havoc if a plugin is bugged, as it blocks other plugins.
- */
-static int ipc_read_line(int fd, char **line)
-{
-	char *buf = *line;
-	int i;
-	int iret;
-	char c;
-
-	for (i=0; i<1024; i++) {
-		iret = read(fd, &c, 1);
-		assert (iret == 1);
-		buf[i] = c;
-		if (c == '\n')
-			break;
-	}
-	assert (i < 1024);
-	buf[i] = '\0';
-	return i;
-}
-
-/*
- * A command was apparently issued. Read the data, including any here-doc
- * stuff, then execute the command.
+ * A command was apparently issued.
+ *
+ * Commands now have 16 bytes of decimal-encoded size.
+ *
  * Note that &ret must be populated with something we can free().
  */
 static int ipc_cmd(int fd, struct ipc_t *ipc)
 {
-	char *buffer = malloc(1024);
+	char buffer[11];
 	struct ipc_ret_t ret;
-	assert(buffer);
 	int length = 0;
-	char *here = NULL;
+	char *data;
+	int i;
 
-	length = ipc_read_line(fd, &buffer);
-	if (strstr(buffer,"<< ")) {
-		char *line;
-		here = strdup(strstr(buffer, "<< ") + 3);
-		buffer[length] = '\n';
-		while (1) {
-			buffer = realloc(buffer,length + 1024);
-			assert(buffer);
-			line = buffer+length+1;
-			length += ipc_read_line(fd, &line);
-			length++;
-			if (!strcmp(line,here))
-				break;
-			buffer[length] = '\n';
-		}
-		buffer[length] = '\0';
-	}
-	if (here)
-		free(here);
-	/*
-	 * XXX: Typically hit if you throw in an empty newline at ipc_run,
-	 * e.g: ipc_run(...,"param.set foo bar\n");
-	 * Tends to cause havoc since varnish doesn't resond at all and we
-	 * block.
-	 */
-	assert(*buffer);
-	ipc->cb(ipc->priv, buffer, &ret);
+	i = read(fd, buffer, 10);
+	assert(i == 10);
+	assert(buffer[9] == ' ');
+	length = atoi(buffer);
+	assert(length > 0);
+	
+	data = malloc(length+1);
+	assert(data);
+	i = read(fd, data, length);
+	assert(i == length);
+	data[length] = '\0';
+	ipc->cb(ipc->priv, data, &ret);
+
 	VCLI_WriteResult(fd, ret.status, ret.answer);
-	free(buffer);
+	free(data);
 	if (ret.answer)
 		free(ret.answer);
 	return 1;
