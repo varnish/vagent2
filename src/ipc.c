@@ -234,3 +234,23 @@ pthread_t *ipc_start(struct agent_core_t *core, const char *name)
 	plug->thread = thread;
 	return thread;
 }
+
+/*
+ * Sanity.
+ */
+
+void ipc_sanity(struct agent_core_t *core)
+{
+	struct agent_plugin_t *plug;
+	for (plug = core->plugins; plug != NULL; plug = plug->next) {
+		if (plug->ipc->cb)
+			if (!plug->start) {
+				fprintf(stderr, "Plugin %s defines a callback for the IPC,"
+						" but does not have a start function.\n"
+						"Consider setting plug->start to ipc_start in "
+						"the init-function of the plugin.\n",
+						plug->name);
+				assert((plug->ipc->cb == NULL) || (plug->start != NULL));
+			}
+	}
+}

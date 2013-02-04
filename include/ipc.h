@@ -88,5 +88,11 @@ void ipc_init(struct ipc_t *ipc);
  */
 pthread_t *ipc_start(struct agent_core_t *core, const char *name);
 
+/*
+ * Sanity function run by main() to verify that all plugins that seemingly
+ * use a callback also provide a start function. Not doing so means you
+ * have a broken IPC.
+ */
+void ipc_sanity(struct agent_core_t *core);
 #endif
 

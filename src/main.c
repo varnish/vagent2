@@ -57,6 +57,7 @@
 
 #include "common.h"
 #include "plugins.h"
+#include "ipc.h"
 
 #ifdef __APPLE__
 #undef daemon
@@ -288,6 +289,7 @@ int main(int argc, char **argv)
 		
 	if (pfh)
 		pidfile_write(pfh);
+	ipc_sanity(&core);
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		if (plug->start != NULL)
 			plug->start(&core, plug->name);
