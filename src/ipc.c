@@ -95,16 +95,15 @@ static int ipc_write(int sock, const char *s, int len)
  * Write the command, read the result.
  * XXX: VCLI_ReadResult will allocate ret->answer. Caller MUST free it.
  */
-static void ipc_run_real(int handle, char *cmd, int len, struct ipc_ret_t *ret)
+void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 {
-	assert(cmd);
-	assert (*cmd);
+	assert(data);
 	char buffer[12];
 	assert(len < 1000000000);
 	assert(len > 0);
 	snprintf(buffer,11,"%09d ",len);
 	ipc_write(handle, buffer, 10);
-	ipc_write(handle, cmd, len);
+	ipc_write(handle, data, len);
 
 	VCLI_ReadResult(handle, &ret->status, &ret->answer, 2.0);
 }
@@ -123,7 +122,8 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	assert(iret>0);
 	va_end(ap);
 	assert(buffer);
-	ipc_run_real(handle, buffer, strlen(buffer),ret);
+	assert(*buffer);
+	ipc_send(handle, buffer, strlen(buffer),ret);
 	free(buffer);
 }
 

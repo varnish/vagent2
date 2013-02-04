@@ -76,6 +76,14 @@ int ipc_register(struct agent_core_t *core, const char *name);
 void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...);
 
 /*
+ * Send an IPC message.
+ *
+ * Same as ipc_run, but allows sending arbitrary data (e.g: Binary).
+ * ipc_run() uses ipc_send() under the hood.
+ */
+void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret);
+
+/*
  * Inits the ipc structure. E.g: making sure everything is 0.
  *
  * XXX: Possibly redundant.
