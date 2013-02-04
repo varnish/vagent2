@@ -76,7 +76,7 @@ void vcurl_init( struct agent_core_t *core) {
 	
 	private->logger = ipc_register(core, "logger");
 	plug->data = (void *) private;
-	plug->start  = NULL;
+	plug->start  = ipc_start;
 	plug->ipc->priv = private;
 	plug->ipc->cb = issue_curl;
 }
