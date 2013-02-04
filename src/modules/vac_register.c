@@ -42,54 +42,30 @@
 #include <string.h>
 #include <curl/curl.h>
 
-enum reg_status_t {
-	INIT = 0,
-	OK = 1,
-	NOK= 2
-};
-
 struct vac_register_priv_t {
 	int logger;
-	enum reg_status_t status;
-	int http_response;
-	char* response_mesg;
+	int vcurl;
 	//vac specific stuff
 	char* vac_url;
 };
 
-static char* curl_vac(char* vac_url) {
-	CURL *curl;
-	CURLcode res;
-	curl = curl_easy_init(); 	
-	if(curl) {
-    		curl_easy_setopt(curl, CURLOPT_URL, vac_url);
-    		curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
- 
-		/* Perform the request, res will get the return code */ 
-    		res = curl_easy_perform(curl);
-		/* Check for errors */ 
-    		if(res != CURLE_OK) {
-			return strdup("Bugger that.");
-		}
-		/* always cleanup */ 
-		curl_easy_cleanup(curl);
-		return strdup("Happy days.");
-	} 
-	return strdup("Bad form mate.");
+static struct ipc_ret_t *send_vcurl( struct vac_register_priv_t *private) {
+	struct ipc_ret_t *vret = malloc( sizeof(struct ipc_ret_t ) );
+	logger( private->logger, "content: %d %s", private->vcurl, private->vac_url);
+	ipc_run(private->vcurl, vret, private->vac_url);
+	return vret;	
 }
+ 
 
 static unsigned int vac_register_reply(struct httpd_request *request, void *data) {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	logger( vdata->logger, "Registering with the VAC.");
 	logger( vdata->logger, "Request type is: %d.", request->method);
-	//dont forget to free the char* before reassigning it
-
-	//curl it back to the vac
-	
-	free(vdata->response_mesg) ;
-	vdata->response_mesg = curl_vac( vdata->vac_url);
-	send_response(request->connection, vdata->http_response, vdata->response_mesg, strlen(vdata->response_mesg) );
+		
+	struct ipc_ret_t *vret = send_vcurl( vdata); 
+	send_response(request->connection, vret->status, vret->answer, strlen(vret->answer) );
+	free(vret);
 	return 0;	
 }
 
@@ -100,13 +76,11 @@ static void *vac_register( void* data) {
 	plug = plugin_find(core,"vac_register");
 	assert(plug);
 	private = plug->data;
-	
+	logger(private->logger, "Starting");	
 	//make the curl call
-	char* response = curl_vac( private->vac_url) ;
-	free( private->response_mesg);
-	private->response_mesg = response;
-
-	logger( private->logger, "Response received from curl: %s.", private->response_mesg) ;
+	struct ipc_ret_t *vret = send_vcurl( private); 
+	logger( private->logger, "Response received from curl: status=%d answer=%s", vret->status, vret->answer);
+	free(vret);
 	return NULL;
 }
 
@@ -126,12 +100,9 @@ void vac_register_init( struct agent_core_t *core) {
 
 	//initialise the private data structure
 	private->logger = ipc_register(core, "logger");
-	private->status = INIT;
-	private->http_response = 200;
-	char* init_message = strdup("Happy bunnies.");
-	private->response_mesg = init_message;
-	private->vac_url = strdup("http://localhost:8080/api/rest/cache/addCache?ip=172.16.108.128&port=6082&cliPort=6083&secret=test123&agentId=VAGENT2");
-
+	private->vcurl = ipc_register(core, "vcurl");
+	//private->vac_url = strdup("http://localhost:8080/api/rest/cache/addCache?ip=localhost&port=6080&cliPort=6081&secret=test123&agentId=VAGENT2");
+	private->vac_url = strdup("http://localhost:8080/");
 	//chuck the private ds to the plugin so it lives on
 	plug->data = (void *) private;
 

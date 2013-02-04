@@ -2,7 +2,7 @@
  * Copyright (c) 2012-2013 Varnish Software AS
  * All rights reserved.
  *
- * Author: Kristian Lyngstøl <kristian@bohemians.org>
+ * Author: Yves Hwang <yveshwang@gmail.com>
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,50 +26,57 @@
  * SUCH DAMAGE.
  */
 
-#ifndef PLUGINS_H
-#define PLUGINS_H
-
 #include "common.h"
+#include "plugins.h"
+#include "ipc.h"
+#include "httpd.h"
 
-/*
- * Basic plugin functions.
- *
- * All plugins are first allocated with plugin_alloc, then some
- * configuration is done, then initialization.
- */
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <string.h>
+#include <curl/curl.h>
 
-/*
- * Search for a plugin.
- */
-struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name);
+struct vcurl_priv_t {
+	int logger;
+};
 
-/*
- * Allocate a plugin and IPC. Does NOT init the plugin.
- */
-void plugin_alloc(const char *name, struct agent_core_t *core);
+static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
+	struct vcurl_priv_t *private = priv;
+	CURL *curl;
+	CURLcode res;
+	logger( private->logger, "issuing curl command with url=%s", url);
+	curl = curl_easy_init();
+	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_URL, url);
+		res = curl_easy_perform(curl);
+		if(res != CURLE_OK) {
+			ret->answer = strdup("Bugger that.");
+			ret->status = 500;
+			logger( private->logger, "Bugger! res!= CURL_OK");
+		}
+		curl_easy_cleanup(curl);
+		ret->status = 200;
+		ret->answer = strdup("OK");
 
-/*
- * Init functions for said plugins.
- *
- * Should eventually be dealt with by dlopen etc.
- *
- * These are all run in the context of the main thread. These functions are
- * used to register ipc-interests, url-handlers, log-handlers etc.
- *
- */
-void vping_init(struct agent_core_t *core);
-void logger_init(struct agent_core_t *core);
-void httpd_init(struct agent_core_t *core);
-void echo_init(struct agent_core_t *core);
-void vstatus_init(struct agent_core_t *core);
-void vcl_init(struct agent_core_t *core);
-void html_init(struct agent_core_t *core);
-void vadmin_init(struct agent_core_t *core);
-void vparams_init(struct agent_core_t *core);
-void vban_init(struct agent_core_t *core);
-void vstat_init(struct agent_core_t *core);
-void vlog_init(struct agent_core_t *core);
-void vcurl_init(struct agent_core_t *core);
-void vac_register_init( struct agent_core_t *core);
-#endif
+	}
+	else {
+		ret->answer = strdup("Bad form mate.");
+		ret->status = 500;
+		logger( private->logger, "Bad form mate. Unable to instantiate libcurl.");
+	}
+}
 
+void vcurl_init( struct agent_core_t *core) {
+	struct vcurl_priv_t *private  =  malloc( sizeof(struct vcurl_priv_t) ) ;	
+	struct agent_plugin_t *plug;
+	plug = plugin_find( core, "vcurl");
+	assert(plug);
+	
+	private->logger = ipc_register(core, "logger");
+	plug->data = (void *) private;
+	plug->start  = NULL;
+	plug->ipc->priv = private;
+	plug->ipc->cb = issue_curl;
+}
