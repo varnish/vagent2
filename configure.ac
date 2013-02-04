@@ -62,6 +62,7 @@ m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-c
 PKG_PROG_PKG_CONFIG
 PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
 PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
+PKG_CHECK_MODULES([LIBCURL],[libcurl])
 
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
