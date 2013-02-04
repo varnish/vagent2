@@ -24,9 +24,11 @@ varnish_agent_SOURCES = \
 	modules/html.c \
 	modules/vstat.c \
 	modules/vlog.c \
-	modules/vban.c
+	modules/vban.c \
+	modules/vac_register.c
 
 varnish_agent_LDADD = \
 	@VARNISHAPI_LIBS@ \
 	@MICROHTTPD_LIBS@ \
-	${PTHREAD_LIBS} ${NET_LIBS}
+	${PTHREAD_LIBS} ${NET_LIBS} \
+	-lcurl
