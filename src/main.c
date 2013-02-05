@@ -71,21 +71,23 @@ static void usage(const char *argv0)
 	fprintf(stderr,
 	"Varnish Agent usage: \n"
 	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
-	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n\n"
-	"-p directory        Persistence directory: where VCL and parameters\n"
-	"                    are stored. Default: " AGENT_PERSIST_DIR "\n"
-	"-H                  Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
-	"-n name             Name. Should match varnishd -n option.\n"
-	"-S secretfile       location of the varnishd secret file.\n"
-	"-T host:port        Varnishd administrative interface.\n"
-	"-t timeout          timeout for talking to varnishd.\n"
-	"-c port             TCP port (default: 6085).\n"
-	"-d                  Debug. Runs in foreground.\n"
-	"-P pidfile          Write pidfile.\n"
-	"-V                  Print version.\n"
-	"-h                  Prints this.\n"
-	"-u user             User to run as(default: nobody)\n"
-	"-g group            Group to run as (default: user's primary or nogroup)\n"
+	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n"
+	"   [-z http://host:port]\n\n"
+	"-p directory          Persistence directory: where VCL and parameters\n"
+	"                      are stored. Default: " AGENT_PERSIST_DIR "\n"
+	"-H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
+	"-n name               Name. Should match varnishd -n option.\n"
+	"-S secretfile         location of the varnishd secret file.\n"
+	"-T host:port          Varnishd administrative interface.\n"
+	"-t timeout            timeout for talking to varnishd.\n"
+	"-c port               TCP port (default: 6085).\n"
+	"-d                    Debug. Runs in foreground.\n"
+	"-P pidfile            Write pidfile.\n"
+	"-V                    Print version.\n"
+	"-h                    Prints this.\n"
+	"-u user               User to run as(default: nobody)\n"
+	"-g group              Group to run as (default: user's primary or nogroup)\n"
+	"-z http://host:port   VAC interface.\n"
 	"\n"
 	"All arguments are optional.\n"
 	, argv0);
@@ -108,7 +110,8 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
 	core->config->P_arg = NULL;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:")) != -1) {
+	core->config->vac_arg= NULL;
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:")) != -1) {
 		switch (opt) {
 		case 'p':
 			core->config->p_arg = optarg;
@@ -149,6 +152,9 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 		case 'V':
 			fprintf(stderr, PACKAGE_STRING "\nCopyright (c) 2012-2013 Varnish Software AS\n");
 			exit(1);
+			break;
+		case 'z':
+			core->config->vac_arg = optarg;
 			break;
 		}
 	}

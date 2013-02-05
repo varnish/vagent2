@@ -51,7 +51,7 @@ struct vac_register_priv_t {
 
 static struct ipc_ret_t *send_vcurl( struct vac_register_priv_t *private) {
 	struct ipc_ret_t *vret = malloc( sizeof(struct ipc_ret_t ) );
-	logger( private->logger, "content: %d %s", private->vcurl, private->vac_url);
+	logger( private->logger, "registering with the vac: %s", private->vac_url);
 	ipc_run(private->vcurl, vret, "%s", private->vac_url);
 	return vret;	
 }
@@ -60,10 +60,8 @@ static struct ipc_ret_t *send_vcurl( struct vac_register_priv_t *private) {
 static unsigned int vac_register_reply(struct httpd_request *request, void *data) {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
-	logger( vdata->logger, "Registering with the VAC.");
-	logger( vdata->logger, "Request type is: %d.", request->method);
-		
-	struct ipc_ret_t *vret = send_vcurl( vdata); 
+	struct ipc_ret_t *vret = send_vcurl( vdata);
+	logger( vdata->logger, "vcurl response: status=%d answer=%s", vret->status, vret->answer); 
 	send_response(request->connection, vret->status, vret->answer, strlen(vret->answer) );
 	free(vret);
 	return 0;	
@@ -76,7 +74,6 @@ static void *vac_register( void* data) {
 	plug = plugin_find(core,"vac_register");
 	assert(plug);
 	private = plug->data;
-	logger(private->logger, "Starting");	
 	//make the curl call
 	struct ipc_ret_t *vret = send_vcurl( private); 
 	logger( private->logger, "Response received from curl: status=%d answer=%s", vret->status, vret->answer);
@@ -101,8 +98,14 @@ void vac_register_init( struct agent_core_t *core) {
 	//initialise the private data structure
 	private->logger = ipc_register(core, "logger");
 	private->vcurl = ipc_register(core, "vcurl");
-	//private->vac_url = strdup("http://localhost:8080/api/rest/cache/addCache?ip=localhost&port=6080&cliPort=6081&secret=test123&agentId=VAGENT2");
-	private->vac_url = strdup("http://localhost:8080/");
+	
+	/**
+	 * XXX: construct the URL based on varnish name, cli setup and vagent's own api location.
+         *	pending vac api changes.
+	 *	
+	 *	T_arg or T_arg_orig resides in core-config->T_arg for example. name is n_arg 
+         */
+	private->vac_url = core->config->vac_arg;
 	//chuck the private ds to the plugin so it lives on
 	plug->data = (void *) private;
 

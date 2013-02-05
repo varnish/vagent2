@@ -50,21 +50,23 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 1); //does a HEAD for now
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK) {
-			ret->answer = strdup("Bugger that.");
+			ret->answer = strdup("Something went wrong. Incorrect URL?");
 			ret->status = 500;
-			logger( private->logger, "Bugger! res!= CURL_OK");
+			logger( private->logger, "%s", ret->answer);
+		} else {
+			curl_easy_cleanup(curl);
+			ret->status = 200;
+			ret->answer = strdup("OK");
 		}
-		curl_easy_cleanup(curl);
-		ret->status = 200;
-		ret->answer = strdup("OK");
-
 	}
 	else {
-		ret->answer = strdup("Bad form mate.");
+		ret->answer = strdup("Unable to instantiate libcurl.");
 		ret->status = 500;
-		logger( private->logger, "Bad form mate. Unable to instantiate libcurl.");
+		logger( private->logger, "%s", ret->answer);
 	}
 }
 

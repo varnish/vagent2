@@ -51,6 +51,7 @@ struct agent_config_t {
 	char *p_arg; // Persistence directory
 	char *H_arg; // HTML directory
 	char *P_arg; // Pid file
+	char *vac_arg;
 };
 
 /*
