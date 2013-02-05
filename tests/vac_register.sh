@@ -35,3 +35,11 @@ stop_agent
 export ARGS="-z abcde"
 start_agent
 test_it_fail GET vac_register "" "Something went wrong. Incorrect URL?"
+stop_agent
+
+# test 9 & 10 - no url supplied
+# expected results: VAC url is not supplied. Please do so with the -z argument.
+export ARGS=""
+start_agent
+test_it_fail GET vac_register "" "VAC url is not supplied. Please do so with the -z argument."
+

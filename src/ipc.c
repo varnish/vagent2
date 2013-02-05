@@ -100,7 +100,7 @@ void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 	assert(data);
 	char buffer[12];
 	assert(len < 1000000000);
-	assert(len > 0);
+	assert(len >= 0);
 	snprintf(buffer,11,"%09d ",len);
 	ipc_write(handle, buffer, 10);
 	ipc_write(handle, data, len);
@@ -119,10 +119,9 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	assert(fmt);
 	va_start(ap, fmt);
 	iret = vasprintf(&buffer, fmt, ap);
-	assert(iret>0);
+	assert(iret>=0);
 	va_end(ap);
 	assert(buffer);
-	assert(*buffer);
 	ipc_send(handle, buffer, strlen(buffer),ret);
 	free(buffer);
 }
@@ -170,7 +169,7 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	assert(i == 10);
 	assert(buffer[9] == ' ');
 	length = atoi(buffer);
-	assert(length > 0);
+	assert(length >= 0);
 	
 	data = malloc(length+1);
 	assert(data);

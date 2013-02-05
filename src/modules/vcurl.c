@@ -43,10 +43,15 @@ struct vcurl_priv_t {
 };
 
 static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
+	if( url == NULL || url[0] == '\0') {
+		ret->answer = strdup("VAC url is not supplied. Please do so with the -z argument.");
+		ret->status = 500;
+		return;
+	}
 	struct vcurl_priv_t *private = priv;
 	CURL *curl;
 	CURLcode res;
-	logger( private->logger, "issuing curl command with url=%s", url);
+	logger( private->logger, "issuing curl command with url=%s %X", url, url);
 	curl = curl_easy_init();
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_URL, url);

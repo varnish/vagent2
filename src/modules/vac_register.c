@@ -52,7 +52,7 @@ struct vac_register_priv_t {
 static struct ipc_ret_t *send_vcurl( struct vac_register_priv_t *private) {
 	struct ipc_ret_t *vret = malloc( sizeof(struct ipc_ret_t ) );
 	logger( private->logger, "registering with the vac: %s", private->vac_url);
-	ipc_run(private->vcurl, vret, "%s", private->vac_url);
+	ipc_run(private->vcurl, vret, "%s", private->vac_url ? private->vac_url : "");
 	return vret;	
 }
  
