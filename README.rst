@@ -7,9 +7,9 @@ Varnish Agent
 -------------
 
 :Manual section: 1
-:Author: Kristian Lyngstøl
-:Date: 2013-01-27
-:Version: 2.1
+:Authors: Kristian Lyngstøl, Yves Hwang
+:Date: 2013-02-06
+:Version: 2.2
 
 SYNOPSIS
 ========
@@ -18,7 +18,7 @@ SYNOPSIS
 
         varnish-agent [-p directory] [-H directory] [-n name] [-c port]
                       [-S file] [-T host:port] [-t timeout] [-h]
-                      [-P pidfile] [-V] [-u user] [-g group]
+                      [-P pidfile] [-V] [-u user] [-g group] [-z http://vac_register_url]
 
 DESCRIPTION
 ===========
@@ -74,6 +74,9 @@ OPTIONS
 -u user     User to run as. Defaults to nobody.
 
 -g group    Group to run as. Defaults to the primary group of the user.
+
+-z http://vac_register_url
+            Specify the callback vac register url.
 
 VARNISH CONFIGURATION
 =====================
