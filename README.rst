@@ -75,8 +75,8 @@ OPTIONS
 
 -g group    Group to run as. Defaults to the primary group of the user.
 
--z http://vac_register_url
-            Specify the callback vac register url.
+-z vac_register_url
+            Specify the callback vac register url. 
 
 VARNISH CONFIGURATION
 =====================
