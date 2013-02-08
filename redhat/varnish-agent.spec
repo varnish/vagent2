@@ -20,8 +20,7 @@ Administration Console (VAC).
 make
 
 %check
-# broken upstream, disabled until further notice
-#make check
+make check
 
 %install
 make install DESTDIR=%{buildroot}
