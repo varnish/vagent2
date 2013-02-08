@@ -21,6 +21,7 @@ make
 
 %check
 make check
+cat tests/test-suite.log
 
 %install
 make install DESTDIR=%{buildroot}
