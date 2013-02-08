@@ -20,8 +20,7 @@ Administration Console (VAC).
 make
 
 %check
-make check
-cat tests/test-suite.log
+make check || ( tail -n +1 tests/*.log ; false )
 
 %install
 make install DESTDIR=%{buildroot}
