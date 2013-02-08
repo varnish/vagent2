@@ -8,6 +8,7 @@ Build-Depends: debhelper (>= 7),
 	       libmicrohttpd-dev,
 	       python-docutils,
 	       varnish (>= 3.0.2),
+	       libcurl4-gnutls-dev | libcurl-dev,
 	       libwww-perl,
 	       python-demjson
 Standards-Version: 3.8.1
