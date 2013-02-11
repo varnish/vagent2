@@ -41,6 +41,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <netinet/in.h>
 
 #include "httpd.h"
 
@@ -161,6 +162,24 @@ static int find_listener(struct httpd_request *request, struct httpd_priv_t *htt
 	return 0;
 }
 
+static void log_request(struct MHD_Connection *connection,
+			const struct httpd_priv_t *http,
+			const char *method,
+			const char *url)
+{
+	const union MHD_ConnectionInfo *info;
+	const unsigned char *ip;
+
+	info = MHD_get_connection_info (connection,
+			MHD_CONNECTION_INFO_CLIENT_ADDRESS);
+	assert(info);
+
+	ip = (unsigned char *)&info->client_addr->sin_addr.s_addr;
+	logger(http->logger, "%hhu.%hhu.%hhu.%hhu:%d - %s %s",
+	       ip[0], ip[1], ip[2], ip[3], info->client_addr->sin_port,
+	       method, url);
+}
+
 static int answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
                       const char *version, const char *upload_data,
@@ -187,7 +206,9 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
-	logger(http->logger, "%s %s",method, url );
+
+	log_request(connection, http, method, url);
+
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
 		if (!strcmp(method,"DELETE")) {
 			request.method = M_DELETE;
