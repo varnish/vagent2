@@ -167,9 +167,10 @@ static void log_request(struct MHD_Connection *connection,
 			const char *method,
 			const char *url)
 {
+
+#if MHD_VERSION < 0x00090600
 	const union MHD_ConnectionInfo *info;
 	const unsigned char *ip;
-
 	info = MHD_get_connection_info (connection,
 			MHD_CONNECTION_INFO_CLIENT_ADDRESS);
 	assert(info);
@@ -178,6 +179,10 @@ static void log_request(struct MHD_Connection *connection,
 	logger(http->logger, "%hhu.%hhu.%hhu.%hhu:%d - %s %s",
 	       ip[0], ip[1], ip[2], ip[3], info->client_addr->sin_port,
 	       method, url);
+#else
+	(void)connection;
+	logger(http->logger, "%s %s", method, url);
+#endif
 }
 
 static int answer_to_connection (void *cls, struct MHD_Connection *connection,
