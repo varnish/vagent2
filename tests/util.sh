@@ -50,8 +50,6 @@ stop_agent() {
 
 cleanup() {
     echo Stopping varnishd and the agent
-    [ -z "$varnishpid" ] || kill "$varnishpid" || true
-    [ -z "$agentpid" ] || kill "$agentpid" || true
     stop_varnish
     stop_agent
     echo Cleaning up
