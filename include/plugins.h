@@ -69,7 +69,7 @@ void vparams_init(struct agent_core_t *core);
 void vban_init(struct agent_core_t *core);
 void vstat_init(struct agent_core_t *core);
 void vlog_init(struct agent_core_t *core);
-void vcurl_init(struct agent_core_t *core);
+void curl_init(struct agent_core_t *core);
 void vac_register_init( struct agent_core_t *core);
 #endif
 

@@ -44,30 +44,32 @@
 
 struct vac_register_priv_t {
 	int logger;
-	int vcurl;
+	int curl;
 	//vac specific stuff
 	char* vac_url;
 };
 
-static struct ipc_ret_t *send_vcurl( struct vac_register_priv_t *private) {
+static struct ipc_ret_t *send_curl(struct vac_register_priv_t *private)
+{
 	struct ipc_ret_t *vret = malloc( sizeof(struct ipc_ret_t ) );
 	logger( private->logger, "registering with the vac: %s", private->vac_url);
-	ipc_run(private->vcurl, vret, "%s", private->vac_url ? private->vac_url : "");
+	ipc_run(private->curl, vret, "%s", private->vac_url ? private->vac_url : "");
 	return vret;	
 }
- 
 
-static unsigned int vac_register_reply(struct httpd_request *request, void *data) {
+static unsigned int vac_register_reply(struct httpd_request *request, void *data)
+{
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
-	struct ipc_ret_t *vret = send_vcurl( vdata);
-	logger( vdata->logger, "vcurl response: status=%d answer=%s", vret->status, vret->answer); 
+	struct ipc_ret_t *vret = send_curl( vdata);
+	logger( vdata->logger, "curl response: status=%d answer=%s", vret->status, vret->answer); 
 	send_response(request->connection, vret->status, vret->answer, strlen(vret->answer) );
 	free(vret);
 	return 0;	
 }
 
-static void *vac_register( void* data) {
+static void *vac_register(void *data)
+{
 	struct agent_core_t *core = (struct agent_core_t *)data;	
 	struct vac_register_priv_t *private;
 	struct agent_plugin_t *plug;
@@ -75,7 +77,7 @@ static void *vac_register( void* data) {
 	assert(plug);
 	private = plug->data;
 	//make the curl call
-	struct ipc_ret_t *vret = send_vcurl( private); 
+	struct ipc_ret_t *vret = send_curl( private); 
 	logger( private->logger, "Response received from curl: status=%d answer=%s", vret->status, vret->answer);
 	free(vret);
 	return NULL;
@@ -97,7 +99,7 @@ void vac_register_init( struct agent_core_t *core) {
 
 	//initialise the private data structure
 	private->logger = ipc_register(core, "logger");
-	private->vcurl = ipc_register(core, "vcurl");
+	private->curl = ipc_register(core, "curl");
 	
 	/**
 	 * XXX: construct the URL based on varnish name, cli setup and vagent's own api location.
@@ -113,5 +115,5 @@ void vac_register_init( struct agent_core_t *core) {
 	plug->start = vac_register_start; 
 	
 	//httpd register
-	httpd_register_url(core, "/vac_register", M_GET, vac_register_reply, private);
+	httpd_register_url(core, "/vac_register", M_POST, vac_register_reply, private);
 }
