@@ -26,6 +26,7 @@
  * SUCH DAMAGE.
  */
 
+#define _GNU_SOURCE
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -40,26 +41,90 @@
 
 struct curl_priv_t {
 	int logger;
+	void *data;
+	char *pos;
+	unsigned int ndata;
 };
+
+static size_t dropdata(void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	(void)ptr;
+	(void)userdata;
+	return size*nmemb;
+}
+
+static size_t senddata( void *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	struct curl_priv_t *private = userdata;
+	unsigned int tmp;
+	if (private->ndata == 0) {
+		tmp = 0;
+	} else {
+		assert(private->pos);
+		if (size*nmemb > private->ndata) {
+			memcpy(ptr, (char *) private->pos, private->ndata);
+			tmp = private->ndata;
+			private->ndata = 0;
+			private->pos = NULL;
+		} else {
+			memcpy(ptr, private->pos, size*nmemb);
+			tmp = size*nmemb;
+			private->ndata -= tmp;
+			private->pos += tmp;
+		}
+	}
+	logger(private->logger, "Writing %d bytes of data. Buffer: %d*%d", tmp, size, nmemb);
+	return tmp;
+}
 
 static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	struct curl_priv_t *private = priv;
 	CURL *curl;
 	CURLcode res;
+        struct curl_slist *slist=NULL;
+	void *data = NULL;
+	int do_put = 0;
+	char *c_length = NULL;
 
 	if( url == NULL || url[0] == '\0') {
 		ret->answer = strdup("VAC url is not supplied. Please do so with the -z argument.");
 		ret->status = 500;
 		return;
 	}
+	
+	data = index(url,'\n');
+	if (data) {
+		int asnret;
+		do_put = 1;
+		*(char *)data = '\0';
+		private->data = (char *)data + 1;
+		private->ndata = strlen(private->data);
+		private->pos = private->data;
+		asnret = asprintf(&c_length, "Content-Length: %u", private->ndata);
+		assert(asnret);
+		slist = curl_slist_append(slist, "expect:");
+		slist = curl_slist_append(slist, c_length);
+		slist = curl_slist_append(slist, "Transfer-Encoding:");
+	}
 
-	logger( private->logger, "Issuing curl command with url=%s %X", url, url);
+	
+	logger( private->logger, "Issuing curl command with url=%s. %s", url, data ?
+			"Request body present" : "No request body");
+
 	curl = curl_easy_init();
 
 	if(curl) {
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
-		curl_easy_setopt(curl, CURLOPT_NOBODY, 1); //does a HEAD for now
+		curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
+		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
+		if (data) {
+			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
+			curl_easy_setopt(curl, CURLOPT_READFUNCTION, senddata);
+			curl_easy_setopt(curl, CURLOPT_READDATA, private);
+		}
+		
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK) {
 			ret->answer = strdup("Something went wrong. Incorrect URL?");
@@ -75,6 +140,8 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 		ret->status = 500;
 		logger( private->logger, "%s", ret->answer);
 	}
+	if (c_length)
+		free(c_length);
 }
 
 void curl_init( struct agent_core_t *core) {

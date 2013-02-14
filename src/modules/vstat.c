@@ -58,11 +58,14 @@ struct vstat_priv_t {
 	struct VSM_data *vd;
 	int jp;
 	int open;
+	int curl;
+	int logger;
 	const struct VSC_C_main *VSC_C_main;
 	struct vsb *vsb_http;
 	struct vsb *vsb_timer;
 	time_t now;
 	int last_uptime;
+	char *push_url;
 	pthread_mutex_t lck;
 };
 
@@ -164,6 +167,88 @@ static unsigned int vstat_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
+static int push_stats(struct vstat_priv_t *vstat)
+{
+	struct ipc_ret_t vret;
+	pthread_mutex_lock(&vstat->lck);
+	if (!vstat->open) {
+		vstat_open(vstat);
+	}
+
+	if (check_reopen(vstat)) {
+		if (vstat->open) {
+			VSM_Close(vstat->vd);
+			vstat->open = 0;
+		}
+		vstat_open(vstat);
+	}
+
+	if (!vstat->open) {
+		pthread_mutex_unlock(&vstat->lck);
+		return -1;
+	}
+
+	do_json(vstat, vstat->vsb_timer);
+	pthread_mutex_unlock(&vstat->lck);
+	assert(VSB_finish(vstat->vsb_timer) == 0);
+	if (vstat->push_url)
+		ipc_run(vstat->curl, &vret,  
+			"%s\n%s",vstat->push_url ? vstat->push_url : "http://localhost:8133/",
+			VSB_data(vstat->vsb_timer));
+	VSB_clear(vstat->vsb_timer);
+	return 0;
+}
+
+static unsigned int vstat_push_test(struct httpd_request *request, void *data)
+{
+	struct vstat_priv_t *vstat;
+	GET_PRIV(data,vstat);
+	if (push_stats(vstat) < 0)
+		send_response_fail(request->connection, "Stats pushing failed");
+	else
+		send_response_ok(request->connection, "Stats pushed");
+	return 0;
+}
+
+
+
+static unsigned int vstat_push_url(struct httpd_request *request, void *data)
+{
+	struct vstat_priv_t *vstat;
+	GET_PRIV(data,vstat);
+	pthread_mutex_lock(&vstat->lck);
+	assert(request->data);
+	if (vstat->push_url)
+		free(vstat->push_url);
+	vstat->push_url = malloc(request->ndata + 1);
+	memcpy(vstat->push_url, request->data, request->ndata);
+	vstat->push_url[request->ndata] = '\0';
+	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
+	send_response_ok(request->connection, "Url stored");
+	pthread_mutex_unlock(&vstat->lck);
+	return 0;
+}
+
+static void *vstat_run(void *data)
+{
+	struct vstat_priv_t *vstat;
+	GET_PRIV(data,vstat);
+	while (1) {
+		sleep(1);
+		if (vstat->push_url && *vstat->push_url)
+			push_stats(vstat);
+	}
+	return NULL;
+}
+
+static pthread_t *
+vstat_start(struct agent_core_t *core, const char *name)
+{
+	(void)name;
+	pthread_t *thread = malloc(sizeof (pthread_t));
+	pthread_create(thread,NULL,(*vstat_run),core);
+	return thread;
+}
 
 void
 vstat_init(struct agent_core_t *core)
@@ -175,12 +260,17 @@ vstat_init(struct agent_core_t *core)
 	
 	priv->vd = VSM_New();
 	priv->open = 0;
+	priv->push_url = NULL;
 	assert(priv->vd);
 	VSC_Setup(priv->vd);
 	priv->jp = 0;
 	priv->vsb_http = NULL;
 	priv->vsb_http = VSB_new_auto();
+	priv->vsb_timer = VSB_new_auto();
 	plug->data = priv;
+	plug->start = vstat_start;
+	priv->curl = ipc_register(core, "curl");
+	priv->logger = ipc_register(core, "logger");
 
 	pthread_mutex_init(&priv->lck, NULL);
 
@@ -188,5 +278,7 @@ vstat_init(struct agent_core_t *core)
 		VSC_Arg(priv->vd, 'n', core->config->n_arg);
 
 	httpd_register_url(core, "/stats", M_GET, vstat_reply, core);
+	httpd_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
+	httpd_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 	return;
 }
