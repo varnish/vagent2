@@ -6,4 +6,5 @@ TESTS = ban.sh \
 	log.sh \
 	status.sh \
 	vcl.sh \
+	vdirect.sh \
 	echo.sh
