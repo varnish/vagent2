@@ -62,8 +62,8 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 		send_response_fail(request->connection, "Invalid URL");
 		return 0;
 	}
-	fd = asprintf(&path, "%s/%s", core->config->H_arg, url_stub);
-	assert(fd>0);
+	ret = asprintf(&path, "%s/%s", core->config->H_arg, url_stub);
+	assert(ret>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
 		logger(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
