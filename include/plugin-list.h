@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Varnish Software AS
+ * Copyright (c) 2013 Varnish Software AS
  * All rights reserved.
  *
  * Author: Kristian Lyngstøl <kristian@bohemians.org>
@@ -26,42 +26,27 @@
  * SUCH DAMAGE.
  */
 
-#ifndef PLUGINS_H
-#define PLUGINS_H
-
-#include "common.h"
-
 /*
- * Basic plugin functions.
+ * X-macros rock.
  *
- * All plugins are first allocated with plugin_alloc, then some
- * configuration is done, then initialization.
- */
-
-/*
- * Search for a plugin.
- */
-struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name);
-
-/*
- * Allocate a plugin and IPC. Does NOT init the plugin.
- */
-void plugin_alloc(const char *name, struct agent_core_t *core);
-
-/*
- * Init functions for said plugins.
+ * This is the only place you need to add information about your
+ * plugin/module. It CURRENTLY has three implications:
  *
- * Should eventually be dealt with by dlopen etc.
- *
- * These are all run in the context of the main thread. These functions are
- * used to register ipc-interests, url-handlers, log-handlers etc.
- *
+ * The plugin's init function is declared. See plugins.h.
+ * plugin_alloc() is run for the plugin. See main.c.
+ * The plugin's init function is run. See main.c
  */
-
-#define PLUGIN(plug) \
-	void plug ## _init(struct agent_core_t *core);
-#include "plugin-list.h"
-#undef PLUGIN
-
-#endif
-
+PLUGIN(vping)
+PLUGIN(logger)
+PLUGIN(httpd)
+PLUGIN(echo)
+PLUGIN(vstatus)
+PLUGIN(vcl)
+PLUGIN(html)
+PLUGIN(vadmin)
+PLUGIN(vparams)
+PLUGIN(vban)
+PLUGIN(vstat)
+PLUGIN(vlog)
+PLUGIN(curl)
+PLUGIN(vac_register)

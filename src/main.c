@@ -170,38 +170,18 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
  */
 static void core_alloc_plugins(struct agent_core_t *core)
 {
-	plugin_alloc("vping",core);
-	plugin_alloc("logger",core);
-	plugin_alloc("vadmin",core);
-	plugin_alloc("httpd",core);
-	plugin_alloc("echo",core);
-	plugin_alloc("vstatus",core);
-	plugin_alloc("vcl",core);
-	plugin_alloc("html",core);
-	plugin_alloc("vparams",core);
-	plugin_alloc("vban", core);
-	plugin_alloc("vstat",core);
-	plugin_alloc("vlog", core);
-	plugin_alloc("curl", core);
-	plugin_alloc("vac_register", core);
+#define PLUGIN(plug) \
+	plugin_alloc(#plug, core);
+#include "plugin-list.h"
+#undef PLUGIN
 }
 
 static int core_plugins(struct agent_core_t *core)
 {
-	vping_init(core);
-	logger_init(core);
-	vadmin_init(core);
-	httpd_init(core);
-	echo_init(core);
-	vstatus_init(core);
-	vcl_init(core);
-	html_init(core);
-	vparams_init(core);
-	vban_init(core);
-	vstat_init(core);
-	vlog_init(core);
-	curl_init(core);
-	vac_register_init(core);
+#define PLUGIN(plug) \
+	plug ## _init(core);
+#include "plugin-list.h"
+#undef PLUGIN
 	return 1;
 }
 
