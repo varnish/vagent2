@@ -620,6 +620,28 @@ function panicShow()
 	});
 }
 
+function panicTest()
+{
+	$.ajax({
+		type: "POST",
+		url: "/direct",
+		data: "debug.panic.worker",
+		timeout: agent.globaltimeout,
+		dataType: "text",
+		success: function (data, textStatus, jqXHR) {
+			agent.out = data;
+			out_up();
+		},
+		error: function (jqXHR, textStatus, errorThrown) {
+			agent.out = "Panic command failed\n" + errorThrown + "\n" + textStatus + "\n" + jqXHR;
+			agent.out += jqXHR.responseText;
+
+			clog(jqXHR);
+			clog(errorThrown);
+			out_up();
+		}
+	});
+}
 function panicClear()
 {
 	$.ajax({
