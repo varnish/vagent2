@@ -26,6 +26,7 @@ varnish_agent_SOURCES = \
 	modules/vlog.c \
 	modules/vban.c \
 	modules/curl.c \
+	modules/vdirect.c \
 	modules/vac_register.c
 
 varnish_agent_LDADD = \
