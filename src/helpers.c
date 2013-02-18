@@ -90,3 +90,8 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	free(vret.answer);
 }
 
+unsigned int help_reply(struct httpd_request *request, void *data)
+{
+	send_response_ok(request->connection, (char *)data);
+	return 0;
+}

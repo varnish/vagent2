@@ -106,14 +106,6 @@ static unsigned int vstatus_panic(struct httpd_request *request, void *data)
 	return 0;
 }
 
-
-static unsigned int vstatus_panic_help(struct httpd_request *request, void *data)
-{
-	(void)data;
-	send_response_ok(request->connection, PANIC_HELP);
-	return 0;
-}
-
 static unsigned int vstatus_version(struct httpd_request *request, void *data)
 {
 	(void)data;
@@ -143,7 +135,7 @@ vstatus_init(struct agent_core_t *core)
 	httpd_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
 	httpd_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
 	httpd_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
-	httpd_register_url(core, "/help/panic", M_GET, vstatus_panic_help, core);
+	httpd_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
 	httpd_register_url(core, "/version", M_GET, vstatus_version, core);
 	httpd_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
 }

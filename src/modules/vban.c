@@ -94,13 +94,6 @@ static unsigned int vban_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vban_help(struct httpd_request *request, void *data)
-{
-	(void)data;
-	send_response_ok(request->connection, BAN_HELP_TEXT);
-	return 0;
-}
-
 void vban_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
@@ -112,5 +105,5 @@ void vban_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
-	httpd_register_url(core, "/help/ban", M_GET, vban_help, core);
+	httpd_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
 }

@@ -261,10 +261,6 @@ static unsigned int vparams_reply(struct httpd_request *request, void *data)
 	plug = plugin_find(core,"vparams");
 	vparams = plug->data;
 
-	if (!strcmp(request->url,"/help/param")) {
-		send_response_ok(request->connection, PARAM_HELP);
-		return 1;
-	}
 	if (!strcmp(request->url, "/paramjson/") && request->method == M_GET) {
 		param_json(request, vparams);
 		return 1;
@@ -322,5 +318,5 @@ vparams_init(struct agent_core_t *core)
 	plug->start = NULL;
 	httpd_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
 	httpd_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
-	httpd_register_url(core, "/help/param", M_GET, vparams_reply, core);
+	httpd_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }

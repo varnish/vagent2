@@ -32,6 +32,7 @@
 #include "ipc.h"
 #include "httpd.h"
 #include "vsb.h"
+#include "helpers.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -294,8 +295,6 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			}
 			free(vret.answer);
 			return 0;
-		} else if(!strncmp(request->url, "/help/vcl", strlen("/help/vcl"))) {
-			return send_response_ok(request->connection, vcl->help);
 		} else if(!strcmp(request->url, "/vcljson/")) {
 			struct vsb *json;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
@@ -379,9 +378,9 @@ void vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
+	mk_help(core, priv);
 	httpd_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
 	httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
 	httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
-	httpd_register_url(core, "/help/vcl",  M_GET , vcl_reply, core);
-	mk_help(core, priv);
+	httpd_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }

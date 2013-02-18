@@ -67,13 +67,6 @@ static unsigned int vdirect_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vdirect_help_reply(struct httpd_request *request, void *data)
-{
-	(void)data;
-	send_response_ok(request->connection, DIRECT_HELP);
-	return 0;
-}
-
 void
 vdirect_init(struct agent_core_t *core)
 {
@@ -86,7 +79,7 @@ vdirect_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/direct", M_POST, vdirect_reply, core);
-	httpd_register_url(core, "/help/direct", M_GET, vdirect_help_reply, core);
+	httpd_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
 }
 
 
