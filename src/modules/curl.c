@@ -83,7 +83,6 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	CURLcode res;
         struct curl_slist *slist=NULL;
 	void *data = NULL;
-	int do_put = 0;
 	char *c_length = NULL;
 
 	if( url == NULL || url[0] == '\0') {
@@ -95,7 +94,6 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	data = index(url,'\n');
 	if (data) {
 		int asnret;
-		do_put = 1;
 		*(char *)data = '\0';
 		private->data = (char *)data + 1;
 		private->ndata = strlen(private->data);
