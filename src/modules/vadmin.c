@@ -56,6 +56,7 @@ struct vadmin_config_t {
 	int sock;
 	int state;
 	int logger;
+	int s_arg_fd;
 };
 
 static int
@@ -145,7 +146,6 @@ n_arg_sock(struct agent_core_t *core)
 static int
 cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 {
-	int fd;
 	unsigned status;
 	char *answer = NULL;
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
@@ -167,21 +167,30 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 			assert(close(vadmin->sock) == 0);
 			return(-1);
 		}
-		fd = open(core->config->S_arg, O_RDONLY);
-		if (fd < 0) {
+		if (vadmin->s_arg_fd == -1) {
+			vadmin->s_arg_fd = open(core->config->S_arg, O_RDONLY);
+		} else {
+			lseek(vadmin->s_arg_fd, 0, SEEK_SET);
+		}
+		if (vadmin->s_arg_fd < 0) {
 			logger(vadmin->logger, "Cannot open \"%s\": %s",
 			    core->config->S_arg, strerror(errno));
 			assert(close(vadmin->sock) == 0);
 			return (-1);
 		}
-		VCLI_AuthResponse(fd, answer, buf);
-		assert(close(fd) == 0);
+		VCLI_AuthResponse(vadmin->s_arg_fd, answer, buf);
 		free(answer);
 
 		cli_write(vadmin->sock, "auth ");
 		cli_write(vadmin->sock, buf);
 		cli_write(vadmin->sock, "\n");
 		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
+		if (status != CLIS_OK) {
+			logger(vadmin->logger, "Failed authentication.");
+			assert(close(vadmin->s_arg_fd) == 0);
+			vadmin->s_arg_fd = -1;
+		}
+
 	}
 	if (status != CLIS_OK) {
 		logger(vadmin->logger, "Rejected %u\n%s", status, answer);
@@ -258,6 +267,7 @@ vadmin_init(struct agent_core_t *core)
 	v->start = ipc_start;
 	vadmin->sock = -1;
 	vadmin->state = 0;
+	vadmin->s_arg_fd = -1;
 	vadmin->logger = ipc_register(core, "logger");
 
 	if (core->config->n_arg != NULL) {
@@ -272,5 +282,7 @@ vadmin_init(struct agent_core_t *core)
 		assert(core->config->T_arg != NULL);
 	}
 	signal(SIGPIPE, SIG_IGN);
+	if (vadmin->state == 0)
+		cli_sock(vadmin, core);
 	return ;
 }
