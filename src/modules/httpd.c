@@ -44,6 +44,7 @@
 #include <netinet/in.h>
 
 #include "httpd.h"
+#include "base64.h"
 
 #define RCV_BUFFER 2048000
 
@@ -99,6 +100,26 @@ static char *make_help(struct httpd_priv_t *http)
 	}
 	strcat(body,"\n");
 	return body;
+}
+
+static int send_auth_response(struct MHD_Connection *connection)
+{
+	int ret;
+	struct MHD_Response *MHDresponse;
+	void *data_copy;
+	int status = 401;
+	const char *data = "Test";
+	unsigned int ndata = 4;
+	data_copy = malloc(ndata);
+	memcpy(data_copy, data, ndata);
+	MHDresponse = MHD_create_response_from_data(ndata,
+			data_copy, MHD_YES, MHD_NO);
+	assert(MHDresponse);
+	MHD_add_response_header(MHDresponse, "WWW-Authenticate", "Basic realm=varnish-agent");
+	ret = MHD_queue_response (connection, status, MHDresponse);
+	assert(ret == 1);
+	MHD_destroy_response (MHDresponse);
+	return ret;
 }
 
 int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
@@ -162,11 +183,37 @@ static int find_listener(struct httpd_request *request, struct httpd_priv_t *htt
 	return 0;
 }
 
+struct header_finder_t {
+	const char *header;
+	char *value;
+};
+
+static int get_key (void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+{
+	struct header_finder_t *finder = cls;
+	(void)kind;
+	if (!strcasecmp(finder->header, key)) {
+		finder->value = strdup(value);
+		return MHD_NO;
+	}
+	return MHD_YES;
+}
+
+static char *http_get_header(struct MHD_Connection *connection, const char *header)
+{
+	struct header_finder_t finder;
+	finder.header = header;
+	finder.value = NULL;
+	MHD_get_connection_values (connection, MHD_HEADER_KIND, &get_key, &finder);
+	return finder.value;
+}
+
 static void log_request(struct MHD_Connection *connection,
 			const struct httpd_priv_t *http,
 			const char *method,
 			const char *url)
 {
+
 
 #if MHD_VERSION < 0x00090600
 	const union MHD_ConnectionInfo *info;
@@ -185,6 +232,7 @@ static void log_request(struct MHD_Connection *connection,
 #endif
 }
 
+
 static int answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
                       const char *version, const char *upload_data,
@@ -195,6 +243,8 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_plugin_t *plug;
 	struct httpd_request request;
 	struct connection_info_struct *con_info = NULL;
+	char *auth = NULL;
+	char base64pw[1024];
 
 	(void)version;
 	plug = plugin_find(core,"httpd");
@@ -211,6 +261,20 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
+	assert(core->config->password);
+	auth = http_get_header(connection, "Authorization");
+	/*
+	 * XXX: Should be stored somewhere...
+	 */
+	base64_encode(BASE64, core->config->password, strlen(core->config->password), base64pw, sizeof(base64pw));
+	if (!auth || strncmp(auth,"Basic ", strlen("Basic ")) || strcmp(auth + strlen("Basic "), base64pw)) {
+		send_auth_response(connection);
+		if (auth)
+			free(auth);
+		return MHD_YES;
+	}
+	if (auth)
+		free(auth);
 
 	log_request(connection, http, method, url);
 

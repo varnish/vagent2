@@ -45,6 +45,7 @@ struct agent_config_t {
 	char *n_arg;
 	char *u_arg;
 	char *g_arg;
+	char *K_arg;
 
 	int d_arg; // 0 - fork. 1 - foreground.
 	char *c_arg; // Listening port for incoming requests
@@ -52,6 +53,7 @@ struct agent_config_t {
 	char *H_arg; // HTML directory
 	char *P_arg; // Pid file
 	char *vac_arg;
+	char *password;
 };
 
 /*

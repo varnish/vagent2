@@ -6,6 +6,7 @@ VARNISH_PID=$TMPDIR/varnish.pid
 PHASE=1
 VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 
+init_password
 phase() {
 	now=$(date +%s)
 	echo
@@ -51,12 +52,12 @@ do_vlog_test() {
 }
 
 uptime_1() {
-	UPTIME1=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+	UPTIME1=$(lwp-request -m GET http://${PASS}@localhost:$AGENT_PORT/stats | grep uptime)
 	echo -e "\tUptime string: $UPTIME1"
 }
 uptime_2() {
 	echo -e "\tComparing uptime"
-	UPTIME2=$(lwp-request -m GET http://localhost:$AGENT_PORT/stats | grep uptime)
+	UPTIME2=$(lwp-request -m GET http://${PASS}@localhost:$AGENT_PORT/stats | grep uptime)
 	if [ "x$?" != "x0" ]; then fail; else pass; fi
 	inc
 	if [ "x$UPTIME" != "x$UPTIME2" ]; then pass; else fail "$OUT vs $OUT2"; fi

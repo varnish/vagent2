@@ -40,7 +40,7 @@
  */
 #define daemon I_hate_you_so_much_right_now
 #endif
-
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -58,6 +58,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
+#include "base64.h"
 
 #ifdef __APPLE__
 #undef daemon
@@ -66,13 +67,38 @@
  */
 extern int daemon(int, int);
 #endif
+
+static char *get_line(const char *filename)
+{
+	FILE *fp;
+	char buffer[1024];
+	unsigned int s;
+	char *tmp;
+	fp = fopen(filename, "r");
+	if (!fp) {
+		warn("Cannot open file %s for reading", filename);
+		return NULL;
+	}
+
+	assert(fp);
+
+	s = fread(buffer, 1, sizeof(buffer), fp);
+	assert(s>0);
+	buffer[s+1] = '\0';
+	tmp = index(buffer,'\n');
+	if (tmp)
+		*tmp = '\0';
+	fclose(fp);
+	return strdup(buffer);
+}
+
 static void usage(const char *argv0)
 {
 	fprintf(stderr,
 	"Varnish Agent usage: \n"
 	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
 	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n"
-	"   [-z http://host:port]\n\n"
+	"   [-z http://host:port] [-K agentsecretfile]\n\n"
 	"-p directory          Persistence directory: where VCL and parameters\n"
 	"                      are stored. Default: " AGENT_PERSIST_DIR "\n"
 	"-H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
@@ -87,6 +113,7 @@ static void usage(const char *argv0)
 	"-h                    Prints this.\n"
 	"-u user               User to run as(default: nobody)\n"
 	"-g group              Group to run as (default: user's primary or nogroup)\n"
+	"-K agentsecretfile    File containing username:password for authentication\n"
 	"-z http://host:port   VAC interface.\n"
 	"\n"
 	"All arguments are optional.\n"
@@ -111,8 +138,12 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
 	core->config->P_arg = NULL;
 	core->config->vac_arg= NULL;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:")) != -1) {
+	core->config->K_arg = strdup("/etc/varnish/agent_secret");
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:K:")) != -1) {
 		switch (opt) {
+		case 'K':
+			core->config->K_arg = optarg;
+			break;
 		case 'p':
 			core->config->p_arg = optarg;
 			break;
@@ -159,6 +190,12 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 		}
 	}
 
+	assert(core->config->K_arg);	
+	core->config->password = get_line(core->config->K_arg);
+	if (!core->config->password) {
+		errx(1,"No password present. Put one in %s using \"user:password\" format", core->config->K_arg);
+	}
+
 	argc -= optind;
 	argv += optind;
 }
@@ -202,7 +239,6 @@ static void p_open(struct pidfh **pfh, const char *p)
 static void v_daemon(struct pidfh **pfh) 
 {
 	int ret;
-	printf("Plugins initialized. Forking.\n");
 #ifdef __APPLE__
 	printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
 	printf("Consider using -d to run in foreground instead.\n");
@@ -227,8 +263,7 @@ static void sandbox(struct agent_core_t *core)
 	if (geteuid() == 0) {
 		pw = getpwnam(core->config->u_arg ? core->config->u_arg : "nobody");
 		if (pw == NULL) {
-			printf("%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "nobody");
-			exit(1);
+			errx(1,"%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "nobody");
 		}
 
 		if (!core->config->g_arg) {
@@ -238,8 +273,7 @@ static void sandbox(struct agent_core_t *core)
 			struct group *gr;
 			gr = getgrnam(core->config->g_arg);
 			if (gr == NULL) {
-				printf("%s is not a valid group\n", core->config->g_arg);
-				exit(1);
+				errx(1,"%s is not a valid group\n", core->config->g_arg);
 			}
 			ret = setgid(gr->gr_gid);
 			assert(ret == 0);
@@ -247,7 +281,7 @@ static void sandbox(struct agent_core_t *core)
 		ret = setuid(pw->pw_uid);
 		assert(ret == 0);
 	} else {
-		printf("Not running as root, no priv-sep\n");
+		warnx("Not running as root, no priv-sep");
 	}
 }
 
@@ -262,6 +296,7 @@ int main(int argc, char **argv)
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
 	core_opt(&core, argc, argv);
+	base64_init();
 	core_plugins(&core);
 	
 	if (core.config->P_arg)
@@ -269,7 +304,7 @@ int main(int argc, char **argv)
 
 	sandbox(&core);
 	if (core.config->d_arg)
-		printf("Plugins initialized. -d argument given, so not forking.\n");
+		warnx("Plugins initialized. -d argument given, so not forking.");
 	else
 		v_daemon(&pfh);
 		

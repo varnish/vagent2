@@ -10,6 +10,7 @@ TMPDIR="${TMPDIR:-$(mktemp -d)}"
 SRCDIR="${SRCDIR:-"."}"
 ORIGPWD="${ORIGPWD:-"."}"
 VARNISH_PID="${TMPDIR}/varnish.pid"
+PASS="${PASS:-agent:test}"
 
 inc() {
 	N=$(( ${N} + 1 ))
@@ -56,9 +57,14 @@ cleanup() {
     rm -rf ${TMPDIR}
 }
 
+init_password() {
+	echo $PASS > ${TMPDIR}/agent-secret
+}
+
 init_misc() {
 	trap 'cleanup' EXIT
 	mkdir -p ${TMPDIR}/vcl
+	init_password
 }
 
 
@@ -107,6 +113,7 @@ start_agent() {
 	printf "Starting agent:\n\n"
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	echo -e "\tAgent port: $AGENT_PORT"
+	ARGS="$ARGS -K ${TMPDIR}/agent-secret"
 	echo -e "\tAgent arguments:  ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
 	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
 
@@ -120,7 +127,7 @@ init_all() {
 }
 
 test_it() {
-	FOO=$(lwp-request -m $1 http://localhost:$AGENT_PORT/$2 <<<"$3")
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:$AGENT_PORT/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
@@ -128,7 +135,7 @@ test_it() {
 }
 
 test_it_no_content() {
-	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 </dev/null)
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 </dev/null)
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
@@ -136,7 +143,7 @@ test_it_no_content() {
 }
 
 test_it_fail() {
-	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
@@ -144,7 +151,7 @@ test_it_fail() {
 }
 
 test_it_long() {
-	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
@@ -152,7 +159,7 @@ test_it_long() {
 }
 
 test_it_long_fail() {
-	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
@@ -160,7 +167,7 @@ test_it_long_fail() {
 }
 
 test_it_long_content_fail() {
-	FOO=$(lwp-request -m $1 http://localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if echo $FOO | grep -q "$4"; then fail "$*: $FOO"; else pass; fi
@@ -176,7 +183,7 @@ is_running() {
 
 test_json() {
 	NAME="${TMPDIR}/jsontest$N.json"
-	lwp-request -m GET http://localhost:${AGENT_PORT}/$1 > $NAME
+	lwp-request -m GET "http://${PASS}@localhost:${AGENT_PORT}/$1" > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
 	FOO=$(jsonlint -v $NAME)

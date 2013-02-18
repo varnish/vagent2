@@ -13,6 +13,7 @@ varnish_agent_SOURCES = \
 	foreign/vss.c \
 	foreign/vsb.c \
 	foreign/pidfile.c \
+	foreign/base64.c \
 	modules/vadmin.c \
 	modules/vping.c \
 	modules/logger.c \

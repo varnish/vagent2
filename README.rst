@@ -18,7 +18,9 @@ SYNOPSIS
 
         varnish-agent [-p directory] [-H directory] [-n name] [-c port]
                       [-S file] [-T host:port] [-t timeout] [-h]
-                      [-P pidfile] [-V] [-u user] [-g group] [-z http://vac_register_url]
+                      [-P pidfile] [-V] [-u user] [-g group]
+                      [-z http://vac_register_url]
+                      [-K agentsecretfile]
 
 DESCRIPTION
 ===========
@@ -28,7 +30,8 @@ and other varnish-related services to allow remote control and monitoring
 of Varnish.
 
 It listens to port 6085 by default. Try ``http://hostname:6085/html/`` for
-the HTML front-end. All arguments are optional. The Varnish Agent will read
+the HTML front-end. All arguments are optional, but a password-file is
+required, see the ``-K`` option. The Varnish Agent will read other
 necessary options from the shm-log.
 
 The Varnish Agent persists VCL changes to ``/var/lib/varnish-agent/`` and
@@ -36,6 +39,12 @@ maintains ``/var/lib/varnish-agent/boot.vcl``.
 
 OPTIONS
 =======
+
+-K file
+            Path to a file containing a single line representing the
+            username and password required to authenticate. The file is the
+            only required configuration of the agent. It should have a
+            format of ``username:password``.
 
 -p directory
             Specify persistence directory. This is where VCL is stored. See

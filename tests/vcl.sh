@@ -13,10 +13,10 @@ DUMMYVCL="$(cat data/smallvcl)"
 test_vcl_file() {
 	VCL="$1"
 	OUT="${TMPDIR}/$(basename $VCL).tmp"
-	lwp-request -m PUT http://localhost:${AGENT_PORT}/vcl/test3 <$VCL > /dev/null
+	lwp-request -m PUT "http://${PASS}@localhost:${AGENT_PORT}/vcl/test3" <$VCL > /dev/null
 	if [ "x$?" = "x0" ]; then pass; else fail "VCL step 1: $OUT"; fi
 	inc
-	lwp-request -m GET http://localhost:${AGENT_PORT}/vcl/test3 >$OUT
+	lwp-request -m GET "http://${PASS}@localhost:${AGENT_PORT}/vcl/test3" >$OUT
 	if [ "x$?" = "x0" ]; then pass; else fail "VCL step 2: $OUT"; fi
 	inc
 	if diff -q $VCL $OUT > /dev/null; then pass; else fail "VCL step 3: $OUT"; fi
