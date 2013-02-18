@@ -86,7 +86,7 @@ vdirect_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	httpd_register_url(core, "/direct", M_POST, vdirect_reply, core);
-	httpd_register_url(core, "/help/direct", M_POST, vdirect_help_reply, core);
+	httpd_register_url(core, "/help/direct", M_GET, vdirect_help_reply, core);
 }
 
 
