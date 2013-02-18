@@ -151,6 +151,11 @@
 	        <option value="RxHeader/^Host:">Host headers received</option>
 	        <option value="TxHeader/^Content-Type:">Content type</option>
 	      </select>
+	      <div class="input-append">
+	      <input size="4" cols="4" min="1" max="1000" maxlength="4" type="number" value="5" id="varnishtoplength" onchange="varnishtopChange()">
+	      <input type="submit" class="btn btn-primary"
+	      onclick="varnishtopUpdate()" value="Update list length"/>
+	      </div>
 	      <pre id="varnishtop"></pre>
 	      </div>
 	    </div><!-- span -->

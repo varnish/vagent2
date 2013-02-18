@@ -25,7 +25,8 @@ var agent = {
 	 * Global AJAX timeout (in milliseconds)
 	 */
 	globaltimeout: 5000,
-	version: ""
+	version: "",
+	varnishtoplength: 5
 };
 
 function clog(text)
@@ -518,6 +519,16 @@ function update_stats()
 	});
 }
 
+function varnishtopChange()
+{
+	agent.varnishtoplength = document.getElementById("varnishtoplength").value;
+}
+function varnishtopUpdate()
+{
+	varnishtopChange()
+	updateTop()
+}
+
 function updateTop()
 {
 	var tag = document.getElementById("varnishtop-sel").value;
@@ -542,7 +553,7 @@ function updateTop()
 				arr.push({"url":i,"num":list[i]});
 			}
 			arr.sort(function(a,b) {return b.num - a.num;});
-			for (var i=0; i<arr.length && i < 5; i++) {
+			for (var i=0; i<arr.length && i < agent.varnishtoplength; i++) {
 				tmp += arr[i].url + "  (" + arr[i].num + " times)\n";
 			}
 			var d = document.getElementById("varnishtop");
