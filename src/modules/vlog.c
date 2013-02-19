@@ -72,7 +72,7 @@
 #include <unistd.h>
 #include <varnishapi.h>
 #include "common.h"
-#include "httpd.h"
+#include "http.h"
 #include "ipc.h"
 #include "plugins.h"
 #include "vsb.h"
@@ -290,7 +290,7 @@ static char *next_slash(const char *p)
 	return ret;
 }
 
-static unsigned int vlog_reply(struct httpd_request *request, void *data)
+static unsigned int vlog_reply(struct http_request *request, void *data)
 {
 	struct vlog_priv_t *vlog;
 	int ret;
@@ -363,7 +363,7 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	VSB_printf(vlog->answer, "\n] }\n");
 	assert(VSB_finish(vlog->answer) == 0);
 	if (VSB_len(vlog->answer) > 1) {
-		struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+		struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 		resp->data = VSB_data(vlog->answer);
 		resp->ndata = VSB_len(vlog->answer);
 		http_add_header(resp,"Content-Type","application/json");
@@ -388,5 +388,5 @@ void vlog_init(struct agent_core_t *core)
 	assert(plug);
 	plug->data = priv;
 
-	httpd_register_url(core, "/log", M_GET, vlog_reply, core);
+	http_register_url(core, "/log", M_GET, vlog_reply, core);
 }

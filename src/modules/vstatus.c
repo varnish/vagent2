@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 #include "helpers.h"
 #include "config.h"
 #include "vcs_version.h"
@@ -67,7 +67,7 @@ struct vstatus_priv_t {
 	int vadmin;
 };
 
-static unsigned int vstatus_reply(struct httpd_request *request, void *data)
+static unsigned int vstatus_reply(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	GET_PRIV(data, vstatus);
@@ -75,7 +75,7 @@ static unsigned int vstatus_reply(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_stop(struct httpd_request *request, void *data)
+static unsigned int vstatus_stop(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	GET_PRIV(data, vstatus);
@@ -83,7 +83,7 @@ static unsigned int vstatus_stop(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_start(struct httpd_request *request, void *data)
+static unsigned int vstatus_start(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	GET_PRIV(data, vstatus);
@@ -91,7 +91,7 @@ static unsigned int vstatus_start(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_panic(struct httpd_request *request, void *data)
+static unsigned int vstatus_panic(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	GET_PRIV(data, vstatus);
@@ -106,14 +106,14 @@ static unsigned int vstatus_panic(struct httpd_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_version(struct httpd_request *request, void *data)
+static unsigned int vstatus_version(struct http_request *request, void *data)
 {
 	(void)data;
 	send_response_ok(request->connection, VCS_Version "\n");
 	return 0;
 }
 
-static unsigned int vstatus_package_string(struct httpd_request *request, void *data)
+static unsigned int vstatus_package_string(struct http_request *request, void *data)
 {
 	(void)data;
 	send_response_ok(request->connection, PACKAGE_STRING "\n");
@@ -131,13 +131,13 @@ vstatus_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/status", M_GET, vstatus_reply, core);
-	httpd_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
-	httpd_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
-	httpd_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
-	httpd_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
-	httpd_register_url(core, "/version", M_GET, vstatus_version, core);
-	httpd_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
+	http_register_url(core, "/status", M_GET, vstatus_reply, core);
+	http_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
+	http_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
+	http_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
+	http_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
+	http_register_url(core, "/version", M_GET, vstatus_version, core);
+	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
 }
 
 

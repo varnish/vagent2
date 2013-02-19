@@ -49,7 +49,7 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "vss-hack.h"
-#include "httpd.h"
+#include "http.h"
 #include "helpers.h"
 
 struct vadmin_config_t {

@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 #include "helpers.h"
 
 #include <ctype.h>
@@ -232,14 +232,14 @@ static char *vparams_show_json(char *raw)
 	return out2;
 }
 
-static void param_json(struct httpd_request *request, struct vparams_priv_t *vparams)
+static void param_json(struct http_request *request, struct vparams_priv_t *vparams)
 {
 	struct ipc_ret_t vret;
 	char *tmp;
 	ipc_run(vparams->vadmin, &vret, "param.show -l");
 	if (vret.status == 200) {
 		tmp = vparams_show_json(vret.answer);
-		struct httpd_response *resp = http_mkresp(request->connection, 200, tmp);
+		struct http_response *resp = http_mkresp(request->connection, 200, tmp);
 		http_add_header(resp,"Content-Type","application/json");
 		send_response2(resp);
 		free(tmp);
@@ -253,7 +253,7 @@ static void param_json(struct httpd_request *request, struct vparams_priv_t *vpa
 /*
  * FIXME: Should be simplified/split up.
  */
-static unsigned int vparams_reply(struct httpd_request *request, void *data)
+static unsigned int vparams_reply(struct http_request *request, void *data)
 {
 	const char *arg;
 	struct agent_core_t *core = data;
@@ -318,7 +318,7 @@ vparams_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
-	httpd_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
-	httpd_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
+	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
+	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
+	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }

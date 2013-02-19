@@ -38,7 +38,7 @@
  */
 PLUGIN(vping)
 PLUGIN(logger)
-PLUGIN(httpd)
+PLUGIN(http)
 PLUGIN(echo)
 PLUGIN(vstatus)
 PLUGIN(vcl)

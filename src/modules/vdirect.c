@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 #include "helpers.h"
 #include "config.h"
 #include "vcs_version.h"
@@ -51,7 +51,7 @@ struct vdirect_priv_t {
 	int vadmin;
 };
 
-static unsigned int vdirect_reply(struct httpd_request *request, void *data)
+static unsigned int vdirect_reply(struct http_request *request, void *data)
 {
 	struct vdirect_priv_t *vdirect;
 	GET_PRIV(data, vdirect);
@@ -78,8 +78,8 @@ vdirect_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/direct", M_POST, vdirect_reply, core);
-	httpd_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
+	http_register_url(core, "/direct", M_POST, vdirect_reply, core);
+	http_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
 }
 
 

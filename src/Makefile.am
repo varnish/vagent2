@@ -17,7 +17,7 @@ varnish_agent_SOURCES = \
 	modules/vadmin.c \
 	modules/vping.c \
 	modules/logger.c \
-	modules/httpd.c \
+	modules/http.c \
 	modules/echo.c \
 	modules/vstatus.c \
 	modules/vparams.c \

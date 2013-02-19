@@ -31,7 +31,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 #include "helpers.h"
 
 #include <unistd.h>
@@ -58,7 +58,7 @@ struct vban_priv_t {
 	int vadmin;
 };
 
-static unsigned int vban_reply(struct httpd_request *request, void *data)
+static unsigned int vban_reply(struct http_request *request, void *data)
 {
 	struct vban_priv_t *vban;
 	struct agent_plugin_t *plug;
@@ -104,6 +104,6 @@ void vban_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
-	httpd_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
+	http_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
+	http_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
 }

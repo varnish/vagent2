@@ -48,7 +48,7 @@
 #include <pthread.h>
 #include "vsb.h"
 #include "common.h"
-#include "httpd.h"
+#include "http.h"
 #include "ipc.h"
 #include "plugins.h"
 #include "helpers.h"
@@ -135,7 +135,7 @@ static int check_reopen(struct vstat_priv_t *vstat)
 	return 0;
 }
 
-static unsigned int vstat_reply(struct httpd_request *request, void *data)
+static unsigned int vstat_reply(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
@@ -162,7 +162,7 @@ static unsigned int vstat_reply(struct httpd_request *request, void *data)
 	do_json(vstat, vstat->vsb_http);
 	pthread_mutex_unlock(&vstat->lck);
 	assert(VSB_finish(vstat->vsb_http) == 0);
-	struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+	struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = VSB_data(vstat->vsb_http);
 	resp->ndata = VSB_len(vstat->vsb_http);
 	http_add_header(resp,"Content-Type","application/json");
@@ -204,7 +204,7 @@ static int push_stats(struct vstat_priv_t *vstat)
 	return 0;
 }
 
-static unsigned int vstat_push_test(struct httpd_request *request, void *data)
+static unsigned int vstat_push_test(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
@@ -217,7 +217,7 @@ static unsigned int vstat_push_test(struct httpd_request *request, void *data)
 
 
 
-static unsigned int vstat_push_url(struct httpd_request *request, void *data)
+static unsigned int vstat_push_url(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
@@ -282,8 +282,8 @@ vstat_init(struct agent_core_t *core)
 	if (core->config->n_arg)
 		VSC_Arg(priv->vd, 'n', core->config->n_arg);
 
-	httpd_register_url(core, "/stats", M_GET, vstat_reply, core);
-	httpd_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
-	httpd_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
+	http_register_url(core, "/stats", M_GET, vstat_reply, core);
+	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
+	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 	return;
 }

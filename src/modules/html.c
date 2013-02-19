@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -48,14 +48,14 @@ struct html_priv_t {
 	int logger;
 };
 
-static unsigned int html_reply(struct httpd_request *request, void *data)
+static unsigned int html_reply(struct http_request *request, void *data)
 {
 	int ret, fd=-1;
 	char *path = NULL;
 	char *buffer = NULL;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
-	struct httpd_response *resp;
+	struct http_response *resp;
 	struct html_priv_t *html;
 	GET_PRIV(data, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
@@ -110,5 +110,5 @@ html_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	httpd_register_url(core, "/html/", M_GET, html_reply, core);
+	http_register_url(core, "/html/", M_GET, html_reply, core);
 }

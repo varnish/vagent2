@@ -43,23 +43,23 @@
 #include <stdio.h>
 #include <netinet/in.h>
 
-#include "httpd.h"
+#include "http.h"
 #include "base64.h"
 
 #define RCV_BUFFER 2048000
 
-struct httpd_listener {
+struct http_listener {
 	char *url;
 	unsigned int method;
-	unsigned int (*cb)(struct httpd_request *request, void *data);
+	unsigned int (*cb)(struct http_request *request, void *data);
 	void *data;
-	struct httpd_listener *next;
+	struct http_listener *next;
 };
 
-struct httpd_priv_t {
+struct http_priv_t {
 	int logger;
 	char *help_page;
-	struct httpd_listener *listener;
+	struct http_listener *listener;
 };
 
 struct connection_info_struct {
@@ -67,11 +67,11 @@ struct connection_info_struct {
 	int progress;
 };
 
-static char *make_help(struct httpd_priv_t *http)
+static char *make_help(struct http_priv_t *http)
 {
 	char *body;
 	char buffer[512];
-	struct httpd_listener *listener;
+	struct http_listener *listener;
 	int ret;
 	ret = asprintf(&body,"This is the varnish agent.\n\n"
 		"GET requests never modify state\n"
@@ -104,16 +104,16 @@ static char *make_help(struct httpd_priv_t *http)
 
 static int send_auth_response(struct MHD_Connection *connection)
 {
-	struct httpd_response *resp = http_mkresp(connection, 401, "Authorize, please");
+	struct http_response *resp = http_mkresp(connection, 401, "Authorize, please");
 	http_add_header(resp, "WWW-Authenticate", "Basic realm=varnish-agent");
 	send_response2(resp);
 	http_free_resp(resp);
 	return 1;
 }
 
-void http_add_header(struct httpd_response *resp, const char *key, const char *value)
+void http_add_header(struct http_response *resp, const char *key, const char *value)
 {
-	struct httpd_header *hdr = malloc(sizeof(struct httpd_header));
+	struct http_header *hdr = malloc(sizeof(struct http_header));
 	assert(hdr);
 	assert(key);
 	assert(value);
@@ -126,10 +126,10 @@ void http_add_header(struct httpd_response *resp, const char *key, const char *v
 }
 
 
-void http_free_resp(struct httpd_response *resp)
+void http_free_resp(struct http_response *resp)
 {
-	struct httpd_header *hdr;
-	struct httpd_header *to_delete;
+	struct http_header *hdr;
+	struct http_header *to_delete;
 	for (hdr = resp->headers; hdr; ) {
 		free(hdr->key);
 		free(hdr->value);
@@ -140,9 +140,9 @@ void http_free_resp(struct httpd_response *resp)
 	free(resp);
 }
 
-struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body)
+struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 {
-	struct httpd_response *resp = malloc(sizeof(struct httpd_response));
+	struct http_response *resp = malloc(sizeof(struct http_response));
 	resp->status = status;
 	resp->connection = conn;
 	resp->data = body;
@@ -154,12 +154,12 @@ struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, cons
 	return resp;
 }
 
-int send_response2(struct httpd_response *resp)
+int send_response2(struct http_response *resp)
 {
 	int ret;
 	struct MHD_Response *MHDresponse;
 	void *data_copy;
-	struct httpd_header *hdr;
+	struct http_header *hdr;
 	data_copy = malloc(resp->ndata);
 	memcpy(data_copy, resp->data, resp->ndata);
 	MHDresponse = MHD_create_response_from_data(resp->ndata,
@@ -175,7 +175,7 @@ int send_response2(struct httpd_response *resp)
 }
 static int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
 {
-	struct httpd_response *resp = http_mkresp(connection, status, NULL);
+	struct http_response *resp = http_mkresp(connection, status, NULL);
 	int ret;
 	resp->data = data;
 	resp->ndata = ndata;
@@ -213,9 +213,9 @@ static void request_completed (void *cls, struct MHD_Connection *connection,
 	*con_cls = NULL;
 }
 
-static int find_listener(struct httpd_request *request, struct httpd_priv_t *http)
+static int find_listener(struct http_request *request, struct http_priv_t *http)
 {
-	struct httpd_listener *listener;
+	struct http_listener *listener;
 	assert(request);
 	for (listener = http->listener; listener != NULL; listener = listener->next) {
 		if (!strncmp(listener->url,request->url,strlen(listener->url))) {
@@ -254,7 +254,7 @@ static char *http_get_header(struct MHD_Connection *connection, const char *head
 }
 
 static void log_request(struct MHD_Connection *connection,
-			const struct httpd_priv_t *http,
+			const struct http_priv_t *http,
 			const char *method,
 			const char *url)
 {
@@ -284,16 +284,16 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
                       size_t *upload_data_size, void **con_cls)
 {
 	struct agent_core_t *core = (struct agent_core_t *)cls;
-	struct httpd_priv_t *http;
+	struct http_priv_t *http;
 	struct agent_plugin_t *plug;
-	struct httpd_request request;
+	struct http_request request;
 	struct connection_info_struct *con_info = NULL;
 	char *auth = NULL;
 	char base64pw[1024];
 
 	(void)version;
-	plug = plugin_find(core,"httpd");
-	http = (struct httpd_priv_t *) plug->data;
+	plug = plugin_find(core,"http");
+	http = (struct http_priv_t *) plug->data;
 	assert(plug);
 	assert(http);
 
@@ -379,18 +379,18 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	return send_response_fail (connection, "Failed\n");
 }
 
-static void *httpd_run(void *data)
+static void *http_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct agent_plugin_t *plug;
-	struct httpd_priv_t *http;
+	struct http_priv_t *http;
 	int port;
 	struct MHD_Daemon *d;
 	assert(data);
 	assert(core);
-	plug = plugin_find(core,"httpd");
+	plug = plugin_find(core,"http");
 	assert(plug);
-	http = (struct httpd_priv_t *) plug->data;
+	http = (struct http_priv_t *) plug->data;
 	assert(http);
 	port = atoi(core->config->c_arg);
 	assert(port > 0);
@@ -418,49 +418,49 @@ static void *httpd_run(void *data)
 }
 
 
-int httpd_register_url(struct agent_core_t *core, const char *url,
+int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method,
-		       unsigned int (*cb)(struct httpd_request *request,
+		       unsigned int (*cb)(struct http_request *request,
 		       void *data), void *data)
 {
-	struct httpd_listener *listener = malloc(sizeof(struct httpd_listener));
-	struct agent_plugin_t *plug = plugin_find(core,"httpd");
-	struct httpd_priv_t *httpd = plug->data;
+	struct http_listener *listener = malloc(sizeof(struct http_listener));
+	struct agent_plugin_t *plug = plugin_find(core,"http");
+	struct http_priv_t *http = plug->data;
 	assert(listener);
 	assert(plug);
-	assert(httpd);
+	assert(http);
 	listener->url = strdup(url);
 	assert(listener->url);
 	assert(cb);
 	listener->method = method;
 	listener->cb = cb;
 	listener->data = data;
-	listener->next = httpd->listener;
-	httpd->listener = listener;
+	listener->next = http->listener;
+	http->listener = listener;
 	return 1;
 }
 
-static pthread_t *httpd_start(struct agent_core_t *core, const char *name)
+static pthread_t *http_start(struct agent_core_t *core, const char *name)
 {
 	int ret;
 	pthread_t *thread = malloc(sizeof (pthread_t));
 	assert(thread);
-	ret = pthread_create(thread,NULL,(*httpd_run),core);
+	ret = pthread_create(thread,NULL,(*http_run),core);
 	assert(ret == 0);
 	(void)name;
 	return thread;
 }
 
-void httpd_init(struct agent_core_t *core)
+void http_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct httpd_priv_t *priv = malloc(sizeof(struct httpd_priv_t));
+	struct http_priv_t *priv = malloc(sizeof(struct http_priv_t));
 	assert(priv);
-	plug = plugin_find(core,"httpd");
+	plug = plugin_find(core,"http");
 	assert(plug);
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
-	plug->start = httpd_start;
+	plug->start = http_start;
 	priv->listener = NULL;
 	priv->help_page = NULL;
 }

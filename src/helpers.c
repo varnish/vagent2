@@ -41,7 +41,7 @@
 #include "common.h"
 #include "ipc.h"
 #include "helpers.h"
-#include "httpd.h"
+#include "http.h"
 
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 			 int min, int max, const char *fmt, ...)
@@ -90,7 +90,7 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	free(vret.answer);
 }
 
-unsigned int help_reply(struct httpd_request *request, void *data)
+unsigned int help_reply(struct http_request *request, void *data)
 {
 	send_response_ok(request->connection, (char *)data);
 	return 0;

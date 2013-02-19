@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 
 #include <unistd.h>
 #include <stdlib.h>

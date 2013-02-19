@@ -33,7 +33,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -45,10 +45,10 @@ struct echo_priv_t {
 	int logger;
 };
 
-static unsigned int echo_reply(struct httpd_request *request, void *data)
+static unsigned int echo_reply(struct http_request *request, void *data)
 {
 	struct echo_priv_t *echo = data;
-	struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+	struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = request->data;
 	resp->ndata = request->ndata;
 	logger(echo->logger, "Responding to request");
@@ -91,5 +91,5 @@ void echo_init(struct agent_core_t *core)
 	 * request like that is encountered, the echo_reply function will
 	 * be called with "priv" as the last argument.
 	 */
-	httpd_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
+	http_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
 }

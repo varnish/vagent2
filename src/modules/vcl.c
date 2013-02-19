@@ -30,7 +30,7 @@
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
-#include "httpd.h"
+#include "http.h"
 #include "vsb.h"
 #include "helpers.h"
 #include <unistd.h>
@@ -176,7 +176,7 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 	return 0;
 }
 
-static int vcl_store(struct httpd_request *request,
+static int vcl_store(struct http_request *request,
 		      struct vcl_priv_t *vcl,
 		      struct ipc_ret_t *vret,
 		      struct agent_core_t *core,
@@ -258,7 +258,7 @@ static struct vsb *vcl_list_json(char *raw)
 	return vsb;
 }
 
-static unsigned int vcl_reply(struct httpd_request *request, void *data)
+static unsigned int vcl_reply(struct http_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -303,7 +303,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			} else {
 				json = vcl_list_json(vret.answer);
 				assert(VSB_finish(json) == 0);
-				struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+				struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 				resp->data = VSB_data(json);
 				resp->ndata = VSB_len(json); 
 				http_add_header(resp, "Content-Type", "application/json");
@@ -323,7 +323,7 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		assert(ret>0);
 		status = vcl_store(request, vcl, &vret, core, cmd);
 		free(cmd);
-		struct httpd_response *resp = http_mkresp(request->connection, status, vret.answer);
+		struct http_response *resp = http_mkresp(request->connection, status, vret.answer);
 		send_response2(resp);
 		http_free_resp(resp);
 		free(vret.answer);
@@ -333,13 +333,13 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			if (strlen(request->url) >= 6) {
 				status = vcl_store(request, vcl, &vret, core,
 					           request->url + strlen("/vcl/"));
-				struct httpd_response *resp = http_mkresp(request->connection, status, vret.answer);
+				struct http_response *resp = http_mkresp(request->connection, status, vret.answer);
 				send_response2(resp);
 				http_free_resp(resp);
 				free(vret.answer);
 				return 0;
 			} else {
-				struct httpd_response *resp = http_mkresp(request->connection, 400, "Bad URL?");
+				struct http_response *resp = http_mkresp(request->connection, 400, "Bad URL?");
 				send_response2(resp);
 				http_free_resp(resp);
 				return 0;
@@ -389,8 +389,8 @@ void vcl_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	plug->start = NULL;
 	mk_help(core, priv);
-	httpd_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
-	httpd_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
-	httpd_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
-	httpd_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
+	http_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
+	http_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
+	http_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
+	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }

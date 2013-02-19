@@ -26,8 +26,8 @@
  * SUCH DAMAGE.
  */
 
-#ifndef HTTPD_H
-#define HTTPD_H
+#ifndef HTTP_H
+#define HTTP_H
 
 
 /*
@@ -38,7 +38,7 @@
  * POST can affect state and does not require idempotence.
  * PUT can affect state but has to be idempotent.
  *
- * HEAD is the same as GET, the httpd-module handles it transparently for
+ * HEAD is the same as GET, the http-module handles it transparently for
  * us.
  *
  * Examples:
@@ -68,7 +68,7 @@ enum http_method {
  * data is the actual data, not guaranteed to be nul-terminated.
  * ndata is the length of data. can be 0.
  */
-struct httpd_request {
+struct http_request {
 	struct MHD_Connection *connection;
 	enum http_method method;
 	const char *url;
@@ -78,23 +78,23 @@ struct httpd_request {
 	unsigned int ndata;
 };
 
-struct httpd_header {
+struct http_header {
 	char *key;
 	char *value;
-	struct httpd_header *next;
+	struct http_header *next;
 };
 
-struct httpd_response {
+struct http_response {
 	struct MHD_Connection *connection;
-	struct httpd_header *headers;
+	struct http_header *headers;
 	int status;
 	const void *data;
 	unsigned int ndata;
 };
 
-void http_add_header(struct httpd_response *resp, const char *key, const char *value);
-void http_free_resp(struct httpd_response *resp);
-struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body);
+void http_add_header(struct http_response *resp, const char *key, const char *value);
+void http_free_resp(struct http_response *resp);
+struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body);
 /*
  * Use send_response during a callback to .... send a response.
  *
@@ -102,7 +102,7 @@ struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, cons
  * client might not receive the data right away.
  */
 
-int send_response2(struct httpd_response *resp);
+int send_response2(struct http_response *resp);
 /*
  * Various shortcuts for send_response().
  */
@@ -123,9 +123,9 @@ int send_response_fail(struct MHD_Connection *connection, const char *data);
  * Note that you can not have multiple listeners for the same URL even if
  * they don't have overlapping methods.
  */
-int httpd_register_url(struct agent_core_t *core, const char *url,
+int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method,
-		       unsigned int (*cb)(struct httpd_request *request,
+		       unsigned int (*cb)(struct http_request *request,
 		       void *data), void *data);
 
 #endif
