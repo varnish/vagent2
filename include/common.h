@@ -54,6 +54,8 @@ struct agent_config_t {
 	char *P_arg; // Pid file
 	char *vac_arg;
 	char *password;
+	char *user;
+	char *userpass;
 };
 
 /*

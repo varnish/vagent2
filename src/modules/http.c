@@ -306,12 +306,12 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		*con_cls = con_info;
 		return MHD_YES;
 	}
-	assert(core->config->password);
+	assert(core->config->userpass);
 	auth = http_get_header(connection, "Authorization");
 	/*
 	 * XXX: Should be stored somewhere...
 	 */
-	base64_encode(BASE64, core->config->password, strlen(core->config->password), base64pw, sizeof(base64pw));
+	base64_encode(BASE64, core->config->userpass, strlen(core->config->userpass), base64pw, sizeof(base64pw));
 	if (!auth || strncmp(auth,"Basic ", strlen("Basic ")) || strcmp(auth + strlen("Basic "), base64pw)) {
 		send_auth_response(connection);
 		if (auth)

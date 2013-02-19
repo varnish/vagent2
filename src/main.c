@@ -193,10 +193,17 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	}
 
 	assert(core->config->K_arg);	
-	core->config->password = get_line(core->config->K_arg);
-	if (!core->config->password) {
+	core->config->userpass = get_line(core->config->K_arg);
+	if (!core->config->userpass) {
 		errx(1,"No password present. Put one in %s using \"user:password\" format", core->config->K_arg);
 	}
+	core->config->user = strdup(core->config->userpass);
+	core->config->password = index(core->config->user, ':');
+	if (core->config->password == NULL || *(core->config->password + 1)== '\0')
+		errx(1, "Username and password string does not contain a colon. Format: \"username:password\"");
+	*core->config->password = '\0';
+	core->config->password++;
+
 
 	argc -= optind;
 	argv += optind;

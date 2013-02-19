@@ -42,32 +42,61 @@
 #include <string.h>
 #include <curl/curl.h>
 
+#include "vsb.h"
 struct vac_register_priv_t {
 	int logger;
 	int curl;
+	struct agent_core_t *core;
+	struct vsb *vsb_out;
 	//vac specific stuff
 	char* vac_url;
 };
 
-static struct ipc_ret_t *send_curl(struct vac_register_priv_t *private)
+static void generate_json(struct vac_register_priv_t *priv)
 {
-	struct ipc_ret_t *vret = malloc( sizeof(struct ipc_ret_t ) );
+	assert(priv->vsb_out);
+	VSB_clear(priv->vsb_out);
+	VSB_printf(priv->vsb_out, "{\n");
+	VSB_printf(priv->vsb_out, "\t\"port\": \"%s\",\n", priv->core->config->c_arg);
+	VSB_printf(priv->vsb_out, "\t\"user\": ");
+	VSB_quote(priv->vsb_out, priv->core->config->user, strlen(priv->core->config->user), 0);
+	VSB_printf(priv->vsb_out, ",\n");
+	VSB_printf(priv->vsb_out, "\t\"password\": ");
+	VSB_quote(priv->vsb_out, priv->core->config->password, strlen(priv->core->config->password), 0);
+	VSB_printf(priv->vsb_out, ",\n");
+	VSB_printf(priv->vsb_out, "\t\"dash-n\": \"%s\"\n", priv->core->config->n_arg ? priv->core->config->n_arg : "");
+	VSB_printf(priv->vsb_out, "}\n");
+	assert(VSB_finish(priv->vsb_out) == 0);
+}
+
+static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret)
+{
+	if (private->vac_url == NULL || *private->vac_url == '\0') {
+		logger(private->logger, "Not registering with the VAC. Unknown vac url. Try using -z");
+		return -1;
+	}
 	logger( private->logger, "registering with the vac: %s", private->vac_url);
-	ipc_run(private->curl, vret, "%s", private->vac_url ? private->vac_url : "");
-	return vret;	
+	generate_json(private);
+	ipc_run(private->curl, vret, "%s\n%s", private->vac_url ? private->vac_url : "", VSB_data(private->vsb_out));
+	return 0;	
 }
 
 static unsigned int vac_register_reply(struct http_request *request, void *data)
 {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
-	struct ipc_ret_t *vret = send_curl( vdata);
-	struct http_response *resp = http_mkresp(request->connection, vret->status, vret->answer);
-	logger( vdata->logger, "curl response: status=%d answer=%s", vret->status, vret->answer); 
+	struct ipc_ret_t vret;
+	int ret = send_curl( vdata, &vret);
+	struct http_response *resp;
+	if (ret != 0) {
+		send_response_fail(request->connection, "Couldn't register.");
+		return 0;
+	}
+	resp = http_mkresp(request->connection, vret.status, vret.answer);
+	logger( vdata->logger, "curl response: status=%d answer=%s", vret.status, vret.answer); 
 	send_response2(resp);
 	http_free_resp(resp);
-	free(vret->answer);
-	free(vret);
+	free(vret.answer);
 	return 0;	
 }
 
@@ -76,13 +105,18 @@ static void *vac_register(void *data)
 	struct agent_core_t *core = (struct agent_core_t *)data;	
 	struct vac_register_priv_t *private;
 	struct agent_plugin_t *plug;
+	struct ipc_ret_t vret;
+	int ret;
 	plug = plugin_find(core,"vac_register");
 	assert(plug);
 	private = plug->data;
-	//make the curl call
-	struct ipc_ret_t *vret = send_curl( private); 
-	logger( private->logger, "Response received from curl: status=%d answer=%s", vret->status, vret->answer);
-	free(vret);
+	ret = send_curl( private, &vret);
+	if (ret == 0) {
+		logger( private->logger, "Response received from curl: status=%d answer=%s", vret.status, vret.answer);
+		free(vret.answer);
+	} else {
+		logger(private->logger, "Couldn't register with the VAC");
+	}
 	return NULL;
 }
 
@@ -90,7 +124,7 @@ static pthread_t *vac_register_start(struct agent_core_t *core, const char *name
 {
 	(void)name;
 	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*vac_register),core);
+	pthread_create(thread,NULL,(vac_register),core);
 	return thread;
 }
 
@@ -103,7 +137,8 @@ void vac_register_init( struct agent_core_t *core) {
 	//initialise the private data structure
 	private->logger = ipc_register(core, "logger");
 	private->curl = ipc_register(core, "curl");
-	
+	private->vsb_out = VSB_new_auto();
+	private->core = core;
 	/**
 	 * XXX: construct the URL based on varnish name, cli setup and vagent's own api location.
          *	pending vac api changes.
