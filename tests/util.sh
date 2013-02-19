@@ -47,6 +47,7 @@ stop_agent() {
 	fi
 	echo -e "\tStopping agent($agentpid)"
 	kill $agentpid
+	pidwaitinverse $agentpid
 }
 
 cleanup() {
@@ -90,6 +91,22 @@ pidwait() {
 		fail "$1 not started correctly? FAIL"
 		exit 1
 	fi
+}
+
+pidwaitinverse() {
+	if [ -z "$1" ]; then
+		echo "pidwaitinverse failed because there is no pid";
+		return
+	fi
+	I=1
+	for a in $(seq 1 5); do
+		if ! kill -0 $1; then
+			break
+		fi
+		sleep 0.5;
+		I=$(( $I + 1 ))
+	done
+	echo -e "\tPidwaitinverse took $I iterations"
 }
 
 start_varnish() {

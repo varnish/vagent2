@@ -68,6 +68,8 @@
 extern int daemon(int, int);
 #endif
 
+int threads_started = 0;
+
 static char *get_line(const char *filename)
 {
 	FILE *fp;
@@ -311,10 +313,12 @@ int main(int argc, char **argv)
 	if (pfh)
 		pidfile_write(pfh);
 	ipc_sanity(&core);
+	threads_started = 1;
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		if (plug->start != NULL)
 			plug->start(&core, plug->name);
 	}
+	threads_started = 2;
 	for (plug = core.plugins; plug; plug = plug->next) {
 		if (plug->thread) {
 			pthread_join(*plug->thread, NULL);

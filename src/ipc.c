@@ -101,6 +101,7 @@ void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 	char buffer[12];
 	assert(len < 1000000000);
 	assert(len >= 0);
+	assert(threads_started > 0);
 	snprintf(buffer,11,"%09d ",len);
 	ipc_write(handle, buffer, 10);
 	ipc_write(handle, data, len);

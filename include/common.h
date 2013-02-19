@@ -95,14 +95,19 @@ struct agent_plugin_t {
 	pthread_t *thread;
 };
 
+extern int threads_started;
 /*
  * Logger macro to include file, func, line etc.
  * Register with the logger-plugin and use that as the handle.
  */
 #define logger(l,fmt,...) do { \
 	struct ipc_ret_t logger_thing_int; \
-	ipc_run(l, &logger_thing_int, "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
-	free(logger_thing_int.answer); \
+	if (threads_started == 0) \
+		printf("%s (%s:%d): " fmt "\n" , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+	else {\
+		ipc_run(l, &logger_thing_int, "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		free(logger_thing_int.answer); \
+	} \
 } while(0)
 void assert_fail(const char *expr, const char *file, int line, const char *func);
 

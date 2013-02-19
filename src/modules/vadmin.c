@@ -236,7 +236,7 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	}
 	logger(vadmin->logger, "Running %s",cmd);
 	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
-	logger(vadmin->logger, "Got: %d ",ret->status, ret->answer);
+	logger(vadmin->logger, "Got: %d ",ret->status);
 }
 
 static void

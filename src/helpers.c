@@ -55,7 +55,7 @@ void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 	iret = vasprintf(&buffer, fmt, ap);
 	assert(iret>0);
 	va_end(ap);
-	ipc_run(vadmin, &vret, buffer);
+	ipc_run(vadmin, &vret, "%s", buffer);
 	free(buffer);
 
 	if (vret.status >= min && vret.status <= max)
@@ -80,7 +80,7 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	iret = vasprintf(&buffer, fmt, ap);
 	assert(iret>0);
 	va_end(ap);
-	ipc_run(vadmin, &vret, buffer);
+	ipc_run(vadmin, &vret, "%s", buffer);
 	free(buffer);
 
 	if (vret.status == 200)
