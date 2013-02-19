@@ -162,7 +162,12 @@ static unsigned int vstat_reply(struct httpd_request *request, void *data)
 	do_json(vstat, vstat->vsb_http);
 	pthread_mutex_unlock(&vstat->lck);
 	assert(VSB_finish(vstat->vsb_http) == 0);
-	send_response(request->connection, 200, VSB_data(vstat->vsb_http), VSB_len(vstat->vsb_http));
+	struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+	resp->data = VSB_data(vstat->vsb_http);
+	resp->ndata = VSB_len(vstat->vsb_http);
+	http_add_header(resp,"Content-Type","application/json");
+	send_response2(resp);
+	http_free_resp(resp);
 	VSB_clear(vstat->vsb_http);
 	return 0;
 }

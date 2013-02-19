@@ -104,38 +104,83 @@ static char *make_help(struct httpd_priv_t *http)
 
 static int send_auth_response(struct MHD_Connection *connection)
 {
-	int ret;
-	struct MHD_Response *MHDresponse;
-	void *data_copy;
-	int status = 401;
-	const char *data = "Test";
-	unsigned int ndata = 4;
-	data_copy = malloc(ndata);
-	memcpy(data_copy, data, ndata);
-	MHDresponse = MHD_create_response_from_data(ndata,
-			data_copy, MHD_YES, MHD_NO);
-	assert(MHDresponse);
-	MHD_add_response_header(MHDresponse, "WWW-Authenticate", "Basic realm=varnish-agent");
-	ret = MHD_queue_response (connection, status, MHDresponse);
-	assert(ret == 1);
-	MHD_destroy_response (MHDresponse);
-	return ret;
+	struct httpd_response *resp = http_mkresp(connection, 401, "Authorize, please");
+	http_add_header(resp, "WWW-Authenticate", "Basic realm=varnish-agent");
+	send_response2(resp);
+	http_free_resp(resp);
+	return 1;
 }
 
-int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
+void http_add_header(struct httpd_response *resp, const char *key, const char *value)
+{
+	struct httpd_header *hdr = malloc(sizeof(struct httpd_header));
+	assert(hdr);
+	assert(key);
+	assert(value);
+	hdr->key = strdup(key);
+	hdr->value = strdup(value);
+	assert(hdr->key);
+	assert(hdr->value);
+	hdr->next = resp->headers;
+	resp->headers = hdr;
+}
+
+
+void http_free_resp(struct httpd_response *resp)
+{
+	struct httpd_header *hdr;
+	struct httpd_header *to_delete;
+	for (hdr = resp->headers; hdr; ) {
+		free(hdr->key);
+		free(hdr->value);
+		to_delete = hdr;
+		hdr = hdr->next;
+		free(to_delete);
+	}
+	free(resp);
+}
+
+struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body)
+{
+	struct httpd_response *resp = malloc(sizeof(struct httpd_response));
+	resp->status = status;
+	resp->connection = conn;
+	resp->data = body;
+	if (!resp->data)
+		resp->ndata = 0;
+	else
+		resp->ndata = strlen(resp->data);
+	resp->headers = NULL;
+	return resp;
+}
+
+int send_response2(struct httpd_response *resp)
 {
 	int ret;
 	struct MHD_Response *MHDresponse;
 	void *data_copy;
-	data_copy = malloc(ndata);
-	memcpy(data_copy, data, ndata);
-	MHDresponse = MHD_create_response_from_data(ndata,
+	struct httpd_header *hdr;
+	data_copy = malloc(resp->ndata);
+	memcpy(data_copy, resp->data, resp->ndata);
+	MHDresponse = MHD_create_response_from_data(resp->ndata,
 			data_copy, MHD_YES, MHD_NO);
 	assert(MHDresponse);
+	for (hdr = resp->headers; hdr; hdr = hdr->next)
+		MHD_add_response_header(MHDresponse, hdr->key, hdr->value);
 
-	ret = MHD_queue_response (connection, status, MHDresponse);
+	ret = MHD_queue_response (resp->connection, resp->status, MHDresponse);
 	assert(ret == 1);
 	MHD_destroy_response (MHDresponse);
+	return ret;
+}
+static int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
+{
+	struct httpd_response *resp = http_mkresp(connection, status, NULL);
+	int ret;
+	resp->data = data;
+	resp->ndata = ndata;
+	ret = send_response2(resp);
+	http_free_resp(resp);
 	return ret;
 }
 

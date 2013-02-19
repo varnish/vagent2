@@ -363,7 +363,12 @@ static unsigned int vlog_reply(struct httpd_request *request, void *data)
 	VSB_printf(vlog->answer, "\n] }\n");
 	assert(VSB_finish(vlog->answer) == 0);
 	if (VSB_len(vlog->answer) > 1) {
-		send_response(request->connection, 200, VSB_data(vlog->answer), VSB_len(vlog->answer));
+		struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+		resp->data = VSB_data(vlog->answer);
+		resp->ndata = VSB_len(vlog->answer);
+		http_add_header(resp,"Content-Type","application/json");
+		send_response2(resp);
+		http_free_resp(resp);
 	} else {
 		send_response_fail(request->connection, "FAIL");
 	}

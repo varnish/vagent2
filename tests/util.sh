@@ -194,5 +194,6 @@ test_json() {
 	    cat "$NAME"
 	fi
 	inc
-
+	lwp-request -m GET -ed "http://${PASS}@localhost:${AGENT_PORT}/$1" | grep -q 'Content-Type: application/json'
+	if [ "x$?" = "x0" ]; then pass; else fail "json failed content-type check: $1 failed"; fi
 }

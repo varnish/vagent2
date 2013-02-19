@@ -62,8 +62,11 @@ static unsigned int vac_register_reply(struct httpd_request *request, void *data
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t *vret = send_curl( vdata);
+	struct httpd_response *resp = http_mkresp(request->connection, vret->status, vret->answer);
 	logger( vdata->logger, "curl response: status=%d answer=%s", vret->status, vret->answer); 
-	send_response(request->connection, vret->status, vret->answer, strlen(vret->answer) );
+	send_response2(resp);
+	http_free_resp(resp);
+	free(vret->answer);
 	free(vret);
 	return 0;	
 }

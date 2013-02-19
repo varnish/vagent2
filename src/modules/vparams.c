@@ -239,9 +239,11 @@ static void param_json(struct httpd_request *request, struct vparams_priv_t *vpa
 	ipc_run(vparams->vadmin, &vret, "param.show -l");
 	if (vret.status == 200) {
 		tmp = vparams_show_json(vret.answer);
-		assert(tmp);
-		send_response_ok(request->connection, tmp);
+		struct httpd_response *resp = http_mkresp(request->connection, 200, tmp);
+		http_add_header(resp,"Content-Type","application/json");
+		send_response2(resp);
 		free(tmp);
+		http_free_resp(resp);
 	} else {
 		send_response_fail(request->connection, vret.answer);
 	}

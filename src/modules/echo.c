@@ -48,9 +48,12 @@ struct echo_priv_t {
 static unsigned int echo_reply(struct httpd_request *request, void *data)
 {
 	struct echo_priv_t *echo = data;
-
+	struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+	resp->data = request->data;
+	resp->ndata = request->ndata;
 	logger(echo->logger, "Responding to request");
-	send_response(request->connection, 200, request->data, request->ndata);
+	send_response2(resp);
+	http_free_resp(resp);
 	return 0;
 }
 

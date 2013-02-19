@@ -55,6 +55,7 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	char *buffer = NULL;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
+	struct httpd_response *resp;
 	struct html_priv_t *html;
 	GET_PRIV(data, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
@@ -84,7 +85,11 @@ static unsigned int html_reply(struct httpd_request *request, void *data)
 	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret>0);
 	assert(ret==sbuf.st_size);
-	send_response(request->connection, 200, buffer, ret);
+	resp = http_mkresp(request->connection, 200, NULL);
+	resp->data = buffer;
+	resp->ndata = ret;
+	send_response2(resp);
+	http_free_resp(resp);
 	out:
 	if (fd >= 0)
 		close(fd);

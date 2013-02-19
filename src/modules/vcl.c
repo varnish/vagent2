@@ -303,7 +303,12 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			} else {
 				json = vcl_list_json(vret.answer);
 				assert(VSB_finish(json) == 0);
-				send_response(request->connection,200, VSB_data(json),VSB_len(json));
+				struct httpd_response *resp = http_mkresp(request->connection, 200, NULL);
+				resp->data = VSB_data(json);
+				resp->ndata = VSB_len(json); 
+				http_add_header(resp, "Content-Type", "application/json");
+				send_response2(resp);
+				http_free_resp(resp);
 				VSB_clear(json);
 				VSB_delete(json);
 			}
@@ -318,7 +323,9 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 		assert(ret>0);
 		status = vcl_store(request, vcl, &vret, core, cmd);
 		free(cmd);
-		send_response(request->connection,status, vret.answer, strlen(vret.answer));
+		struct httpd_response *resp = http_mkresp(request->connection, status, vret.answer);
+		send_response2(resp);
+		http_free_resp(resp);
 		free(vret.answer);
 		return 0;
 	} else if (request->method == M_PUT) {
@@ -326,12 +333,15 @@ static unsigned int vcl_reply(struct httpd_request *request, void *data)
 			if (strlen(request->url) >= 6) {
 				status = vcl_store(request, vcl, &vret, core,
 					           request->url + strlen("/vcl/"));
-				send_response(request->connection,status,
-						     vret.answer, strlen(vret.answer));
+				struct httpd_response *resp = http_mkresp(request->connection, status, vret.answer);
+				send_response2(resp);
+				http_free_resp(resp);
 				free(vret.answer);
 				return 0;
 			} else {
-				send_response(request->connection, 400, "Bad URL?", strlen("Bad URL?"));
+				struct httpd_response *resp = http_mkresp(request->connection, 400, "Bad URL?");
+				send_response2(resp);
+				http_free_resp(resp);
 				return 0;
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {

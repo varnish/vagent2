@@ -78,14 +78,31 @@ struct httpd_request {
 	unsigned int ndata;
 };
 
+struct httpd_header {
+	char *key;
+	char *value;
+	struct httpd_header *next;
+};
+
+struct httpd_response {
+	struct MHD_Connection *connection;
+	struct httpd_header *headers;
+	int status;
+	const void *data;
+	unsigned int ndata;
+};
+
+void http_add_header(struct httpd_response *resp, const char *key, const char *value);
+void http_free_resp(struct httpd_response *resp);
+struct httpd_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body);
 /*
  * Use send_response during a callback to .... send a response.
  *
  * Note that this technically /queues/ the response, which means that the
  * client might not receive the data right away.
  */
-int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata);
 
+int send_response2(struct httpd_response *resp);
 /*
  * Various shortcuts for send_response().
  */
