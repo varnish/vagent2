@@ -73,7 +73,6 @@ static size_t senddata( void *ptr, size_t size, size_t nmemb, void *userdata)
 			private->pos += tmp;
 		}
 	}
-	logger(private->logger, "Writing %d bytes of data. Buffer: %d*%d", tmp, size, nmemb);
 	return tmp;
 }
 
