@@ -10,7 +10,7 @@ init_misc
 start_varnish
 DUMMY_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 export DUMMY_PORT
-./core.sh 2>/dev/null >/dev/null &
+./core.sh &
 dummypid=$!
 
 # test 1 & 2 - correct URL
