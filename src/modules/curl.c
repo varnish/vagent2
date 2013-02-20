@@ -76,13 +76,15 @@ static size_t senddata( void *ptr, size_t size, size_t nmemb, void *userdata)
 	return tmp;
 }
 
-static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
+static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
+{
 	struct curl_priv_t *private = priv;
 	CURL *curl;
 	CURLcode res;
         struct curl_slist *slist=NULL;
 	void *data = NULL;
 	char *c_length = NULL;
+	int asnret;
 
 	if( url == NULL || url[0] == '\0') {
 		ret->answer = strdup("VAC url is not supplied. Please do so with the -z argument.");
@@ -92,7 +94,6 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	
 	data = index(url,'\n');
 	if (data) {
-		int asnret;
 		*(char *)data = '\0';
 		private->data = (char *)data + 1;
 		private->ndata = strlen(private->data);
@@ -113,6 +114,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 	if(curl) {
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2);
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
 		curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
@@ -121,10 +123,10 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, senddata);
 			curl_easy_setopt(curl, CURLOPT_READDATA, private);
 		}
-		
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK) {
-			ret->answer = strdup("Something went wrong. Incorrect URL?");
+			asnret = asprintf(&ret->answer,"Curl callback failed with status code %d", res);
+			assert(asnret > 0);
 			ret->status = 500;
 			logger( private->logger, "%s", ret->answer);
 		} else {
@@ -141,7 +143,8 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret) {
 		free(c_length);
 }
 
-void curl_init( struct agent_core_t *core) {
+void curl_init( struct agent_core_t *core)
+{
 	struct curl_priv_t *private  =  malloc( sizeof(struct curl_priv_t) ) ;	
 	struct agent_plugin_t *plug;
 	plug = plugin_find( core, "curl");

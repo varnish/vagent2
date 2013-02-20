@@ -106,7 +106,7 @@ void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 	ipc_write(handle, buffer, 10);
 	ipc_write(handle, data, len);
 
-	VCLI_ReadResult(handle, &ret->status, &ret->answer, 2.0);
+	VCLI_ReadResult(handle, &ret->status, &ret->answer, 5.0);
 }
 
 /*
