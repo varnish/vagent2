@@ -78,9 +78,6 @@ cli_write(int sock, const char *s)
  *
  * Run on every connect, must do some cleanup.
  *
- * XXX: It writes to stdout in addition to the logger because the logger
- * may not be operational yet. Not sure if this makes sense... At any rate,
- * the required bit is to write to the logger.
  */
 static int
 n_arg_sock(struct agent_core_t *core)
@@ -94,7 +91,6 @@ n_arg_sock(struct agent_core_t *core)
 	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
 	if (VSM_Open(vsd, 1)) {
 		logger(vadmin->logger,"Couldn't open VSM");
-		fprintf(stderr, "Couldn't open VSM\n");
 		VSM_Delete(vsd);
 		vsd = NULL;
 	}
@@ -110,7 +106,6 @@ n_arg_sock(struct agent_core_t *core)
 		}
 		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
 		if (p == NULL)  {
-			fprintf(stderr, "No -T arg in shared memory\n");
 			logger(vadmin->logger, "No -T arg in shared memory.");
 			return (-1);
 		}
@@ -274,10 +269,8 @@ vadmin_init(struct agent_core_t *core)
 		if (core->config->T_arg != NULL || core->config->S_arg != NULL) {
 			return ;
 		}
-		n_arg_sock(core);
 	} else if (core->config->T_arg == NULL) {
 		core->config->n_arg = strdup("");
-		n_arg_sock(core);
 	} else {
 		assert(core->config->T_arg != NULL);
 	}

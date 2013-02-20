@@ -55,7 +55,6 @@ static void *vping_run(void *data)
 	plug = plugin_find(core,"vping");
 	ping = (struct vping_priv_t *) plug->data;
 
-	logger(ping->logger, "Health check starting at 30 second intervals");
 	while (1) {
 		sleep(30);
 		ipc_run(ping->vadmin_sock, &vret, "ping");

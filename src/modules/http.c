@@ -65,6 +65,7 @@ struct http_priv_t {
 struct connection_info_struct {
 	char answerstring[RCV_BUFFER];
 	int progress;
+	int authed;
 };
 
 static char *make_help(struct http_priv_t *http)
@@ -173,6 +174,7 @@ int send_response2(struct http_response *resp)
 	MHD_destroy_response (MHDresponse);
 	return ret;
 }
+
 static int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
 {
 	struct http_response *resp = http_mkresp(connection, status, NULL);
@@ -277,6 +279,29 @@ static void log_request(struct MHD_Connection *connection,
 #endif
 }
 
+static int check_auth(struct MHD_Connection *connection, struct agent_core_t *core, struct connection_info_struct *con_info)
+{
+	char *auth = NULL;
+	char base64pw[1024];
+	assert(con_info);
+	if (con_info->authed == 0) {
+		auth = http_get_header(connection, "Authorization");
+		/*
+		 * XXX: Should be stored somewhere...
+		 */
+		base64_encode(BASE64, core->config->userpass, strlen(core->config->userpass), base64pw, sizeof(base64pw));
+		if (!auth || strncmp(auth,"Basic ", strlen("Basic ")) || strcmp(auth + strlen("Basic "), base64pw)) {
+			send_auth_response(connection);
+			if (auth)
+				free(auth);
+			return 1;
+		}
+		if (auth)
+			free(auth);
+		con_info->authed = 1;
+	}
+	return 0;
+}
 
 static int answer_to_connection (void *cls, struct MHD_Connection *connection,
                       const char *url, const char *method,
@@ -288,8 +313,7 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	struct agent_plugin_t *plug;
 	struct http_request request;
 	struct connection_info_struct *con_info = NULL;
-	char *auth = NULL;
-	char base64pw[1024];
+	int ret;
 
 	(void)version;
 	plug = plugin_find(core,"http");
@@ -303,27 +327,21 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 		assert(con_info);
 		con_info->answerstring[0] = '\0';
 		con_info->progress = 0;
+		con_info->authed = 0;
 		*con_cls = con_info;
 		return MHD_YES;
 	}
+	con_info = *con_cls;
 	assert(core->config->userpass);
-	auth = http_get_header(connection, "Authorization");
-	/*
-	 * XXX: Should be stored somewhere...
-	 */
-	base64_encode(BASE64, core->config->userpass, strlen(core->config->userpass), base64pw, sizeof(base64pw));
-	if (!auth || strncmp(auth,"Basic ", strlen("Basic ")) || strcmp(auth + strlen("Basic "), base64pw)) {
-		send_auth_response(connection);
-		if (auth)
-			free(auth);
-		return MHD_YES;
-	}
-	if (auth)
-		free(auth);
+
+	
 
 	log_request(connection, http, method, url);
 
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
+		ret = check_auth(connection, core, con_info);
+		if (ret == 1)
+			return MHD_YES;
 		if (!strcmp(method,"DELETE")) {
 			request.method = M_DELETE;
 		} else {
@@ -338,8 +356,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 
 	if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
-		assert(con_info == NULL);
-		con_info = *con_cls;
 
 		if (*upload_data_size != 0) {
 			if (*upload_data_size + con_info->progress >= RCV_BUFFER)
@@ -351,6 +367,9 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 
 			return MHD_YES;
 		} else if (NULL != con_info->answerstring){
+			ret = check_auth(connection, core, con_info);
+			if (ret == 1)
+				return MHD_YES;
 			if (!strcmp(method,"POST")) {
 				request.method = M_POST;
 			} else {
@@ -403,8 +422,6 @@ static void *http_run(void *data)
 		logger(http->logger, "HTTP failed to start on port %d. Agent already running?",port);
 		sleep(1);
 		exit(1);
-	} else {
-		logger(http->logger,"HTTP started");
 	}
 
 	/*

@@ -7,4 +7,5 @@ TESTS = ban.sh \
 	status.sh \
 	vcl.sh \
 	vdirect.sh \
+	authorize.sh \
 	echo.sh
