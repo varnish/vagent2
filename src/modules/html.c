@@ -67,16 +67,18 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	assert(ret>0);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
-		logger(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
+		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
 		send_response_fail(request->connection, "stat() was not happy");
 		goto out;
 	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
+		warnlog(html->logger, "open() failed for %s: %s", path, strerror(errno));
 		send_response_fail(request->connection, "open() was not happy");
 		goto out;
 	}
 	if (!S_ISREG(sbuf.st_mode)) {
+		warnlog(html->logger, "%s isn't a regular file.", path);
 		send_response_fail(request->connection, "not a file");
 		goto out;
 	}

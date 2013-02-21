@@ -419,7 +419,7 @@ static void *http_run(void *data)
                              MHD_OPTION_NOTIFY_COMPLETED, request_completed,
                              NULL, MHD_OPTION_END);
 	if (!d) {
-		logger(http->logger, "HTTP failed to start on port %d. Agent already running?",port);
+		warnlog(http->logger, "HTTP failed to start on port %d. Agent already running?",port);
 		sleep(1);
 		exit(1);
 	}

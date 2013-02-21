@@ -48,6 +48,7 @@
  */
 struct logger_priv_t {
 	int debug;
+	int loglevel;
 };
 
 /*
@@ -58,15 +59,19 @@ static int logger_open=0;
 static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct logger_priv_t *log = (struct logger_priv_t *) private;
+	int loglevel;
 	assert(log);
+	loglevel = msg[0] - '0';
+	ret->status = 200;
+	ret->answer = strdup("OK");
+	if (loglevel > log->loglevel)
+		return ;
+	msg++;
 
 	if (log->debug)
 		printf("LOGGER: %s\n",msg);
 	else
 		syslog(LOG_INFO,"%s",msg);
-	
-	ret->status = 200;
-	ret->answer = strdup("OK");
 }
 
 void assert_fail(const char *expr, const char *file, int line, const char *func)
@@ -92,6 +97,7 @@ void logger_init(struct agent_core_t *core)
 	struct logger_priv_t *priv = malloc(sizeof(struct logger_priv_t));
 	plug = plugin_find(core,"logger");
 
+	priv->loglevel = core->config->loglevel;
 	if (core->config->d_arg) {
 		priv->debug = 1;
 		logger_open = 0;

@@ -20,7 +20,7 @@ SYNOPSIS
                       [-S file] [-T host:port] [-t timeout] [-h]
                       [-P pidfile] [-V] [-u user] [-g group]
                       [-z http://vac_register_url]
-                      [-K agentsecretfile]
+                      [-K agentsecretfile] [-q] [-v]
 
 DESCRIPTION
 ===========
@@ -83,6 +83,10 @@ OPTIONS
 -u user     User to run as. Defaults to nobody.
 
 -g group    Group to run as. Defaults to the primary group of the user.
+
+-q          Quiet mode. Only log/output warnings/errors.
+
+-v          Verbose mode. Be extra chatty, including all CLI chatter.
 
 -z vac_register_url
             Specify the callback vac register url. 

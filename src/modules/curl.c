@@ -106,8 +106,8 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 	}
 
 	
-	logger( private->logger, "Issuing curl command with url=%s. %s", url, data ?
-			"Request body present" : "No request body");
+	debuglog(private->logger, "Issuing curl command with url=%s. %s", url, 
+		 data ? "Request body present" : "No request body");
 
 	curl = curl_easy_init();
 
@@ -128,7 +128,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 			asnret = asprintf(&ret->answer,"Curl callback failed with status code %d", res);
 			assert(asnret > 0);
 			ret->status = 500;
-			logger( private->logger, "%s", ret->answer);
+			warnlog( private->logger, "%s", ret->answer);
 		} else {
 			ret->status = 200;
 			ret->answer = strdup("OK");
@@ -137,7 +137,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 	} else {
 		ret->answer = strdup("Unable to instantiate libcurl.");
 		ret->status = 500;
-		logger( private->logger, "%s", ret->answer);
+		warnlog( private->logger, "%s", ret->answer);
 	}
 	if (c_length)
 		free(c_length);

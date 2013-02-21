@@ -75,7 +75,7 @@ static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret
 		logger(private->logger, "Not registering with the VAC. Unknown vac url. Try using -z");
 		return -1;
 	}
-	logger( private->logger, "registering with the vac: %s", private->vac_url);
+	logger( private->logger, "Registering with the vac: %s", private->vac_url);
 	generate_json(private);
 	ipc_run(private->curl, vret, "%s\n%s", private->vac_url ? private->vac_url : "", VSB_data(private->vsb_out));
 	return 0;	
@@ -93,7 +93,7 @@ static unsigned int vac_register_reply(struct http_request *request, void *data)
 		return 0;
 	}
 	resp = http_mkresp(request->connection, vret.status, vret.answer);
-	logger( vdata->logger, "curl response: status=%d answer=%s", vret.status, vret.answer); 
+	logger( vdata->logger, "Curl response: status=%d answer=%s", vret.status, vret.answer); 
 	send_response2(resp);
 	http_free_resp(resp);
 	free(vret.answer);
@@ -112,7 +112,7 @@ static void *vac_register(void *data)
 	private = plug->data;
 	ret = send_curl( private, &vret);
 	if (ret == 0) {
-		logger( private->logger, "Response received from curl: status=%d answer=%s", vret.status, vret.answer);
+		debuglog( private->logger, "Response received from curl: status=%d answer=%s", vret.status, vret.answer);
 		free(vret.answer);
 	} else {
 		logger(private->logger, "Couldn't register with the VAC");

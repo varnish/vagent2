@@ -90,7 +90,7 @@ n_arg_sock(struct agent_core_t *core)
 	vsd = VSM_New();
 	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
 	if (VSM_Open(vsd, 1)) {
-		logger(vadmin->logger,"Couldn't open VSM");
+		warnlog(vadmin->logger,"Couldn't open VSM");
 		VSM_Delete(vsd);
 		vsd = NULL;
 	}
@@ -101,19 +101,19 @@ n_arg_sock(struct agent_core_t *core)
 		core->config->T_arg = strdup(core->config->T_arg_orig);
 	} else {		
 		if (vsd == NULL) {
-			logger(vadmin->logger,"No -T arg and no shmlog readable.");
+			warnlog(vadmin->logger,"No -T arg and no shmlog readable.");
 			return -1;
 		}
 		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
 		if (p == NULL)  {
-			logger(vadmin->logger, "No -T arg in shared memory.");
+			warnlog(vadmin->logger, "No -T arg in shared memory.");
 			return (-1);
 		}
 		core->config->T_arg = strdup(p);
 	}
 
 	if (core->config->S_arg == NULL && !vsd) {
-		logger(vadmin->logger, "No shmlog and no -S arg. Unknown if authentication will work.");
+		warnlog(vadmin->logger, "No shmlog and no -S arg. Unknown if authentication will work.");
 	}
 	if (vsd && core->config->S_arg == NULL) {
 		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
@@ -146,19 +146,19 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	char buf[CLI_AUTH_RESPONSE_LEN + 1];
 	n_arg_sock(core);
 	if (core->config->T_arg == NULL) {
-		logger(vadmin->logger, "No T-arg (Administration port) available. Varnishadm-commands wont work.");
+		warnlog(vadmin->logger, "No T-arg (Administration port) available. Varnishadm-commands wont work.");
 		return (-1);
 	}
 	vadmin->sock = VSS_open(vadmin->logger, core->config->T_arg, core->config->timeout);
 	if (vadmin->sock < 0) {
-		logger(vadmin->logger, "Connection failed (%s)", core->config->T_arg);
+		warnlog(vadmin->logger, "Connection failed (%s)", core->config->T_arg);
 		return (-1);
 	}
 
 	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status == CLIS_AUTH) {
 		if (core->config->S_arg == NULL) {
-			logger(vadmin->logger, "Authentication required");
+			warnlog(vadmin->logger, "Authentication required and no -S arg found");
 			assert(close(vadmin->sock) == 0);
 			return(-1);
 		}
@@ -168,7 +168,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 			lseek(vadmin->s_arg_fd, 0, SEEK_SET);
 		}
 		if (vadmin->s_arg_fd < 0) {
-			logger(vadmin->logger, "Cannot open \"%s\": %s",
+			warnlog(vadmin->logger, "Cannot open \"%s\": %s",
 			    core->config->S_arg, strerror(errno));
 			assert(close(vadmin->sock) == 0);
 			return (-1);
@@ -181,14 +181,14 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		cli_write(vadmin->sock, "\n");
 		(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 		if (status != CLIS_OK) {
-			logger(vadmin->logger, "Failed authentication.");
+			warnlog(vadmin->logger, "Failed authentication.");
 			assert(close(vadmin->s_arg_fd) == 0);
 			vadmin->s_arg_fd = -1;
 		}
 
 	}
 	if (status != CLIS_OK) {
-		logger(vadmin->logger, "Rejected %u\n%s", status, answer);
+		warnlog(vadmin->logger, "Rejected %u\n%s", status, answer);
 		assert(close(vadmin->sock) == 0);
 		return (-1);
 	}
@@ -197,7 +197,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	cli_write(vadmin->sock, "ping\n");
 	(void)VCLI_ReadResult(vadmin->sock, &status, &answer, core->config->timeout);
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
-		logger(vadmin->logger, "No pong received from server");
+		warnlog(vadmin->logger, "No pong received from server");
 		assert(close(vadmin->sock) == 0);
 		return(-1);
 	}
@@ -215,7 +215,7 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	assert(cmd);
 	nret = cli_write(sock, cmd);
 	if (!nret) {
-		logger(vadmin->logger, "Communication error with varnishd.");
+		warnlog(vadmin->logger, "Communication error with varnishd.");
 		ret->status = 400;
 		ret->answer = strdup("Varnishd disconnected");
 		vadmin->state = 0;
@@ -223,15 +223,15 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	}
 	nret = cli_write(sock, "\n");
 	if (!nret) {
-		logger(vadmin->logger, "Communication error with varnishd.");
+		warnlog(vadmin->logger, "Communication error with varnishd.");
 		ret->status = 400;
 		ret->answer = strdup("Varnishd disconnected");
 		vadmin->state = 0;
 		return;
 	}
-	logger(vadmin->logger, "Running %s",cmd);
+	debuglog(vadmin->logger, "Running %s",cmd);
 	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
-	logger(vadmin->logger, "Got: %d ",ret->status);
+	debuglog(vadmin->logger, "Got: %d ",ret->status);
 }
 
 static void

@@ -93,19 +93,19 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 	assert(fd>0);
 	fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	if (fd < 0) {
-		logger(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
+		warnlog(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
 		free(path);
 		return -1;
 	}
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
-		logger(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
+		warnlog(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
 		free(path);
 		close(fd);
 		return -1;
 	}
 	if (!(S_ISREG(sbuf.st_mode))) {
-		logger(logfd, "\"%s\" is not a regular file.", path);
+		warnlog(logfd, "\"%s\" is not a regular file.", path);
 		free(path);
 		close(fd);
 		return -1;
@@ -119,14 +119,14 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 	assert(fd>0);
 	ret = unlink(path2);
 	if (ret && errno != ENOENT) {
-		logger(logfd, "unlink of %s failed, leaving temp file %s in place. Dunno quite what to do. errno: %d(%s)", path2, path, errno, strerror(errno));
+		warnlog(logfd, "unlink of %s failed, leaving temp file %s in place. Dunno quite what to do. errno: %d(%s)", path2, path, errno, strerror(errno));
 		free(path);
 		free(path2);
 		return -1;
 	}
 	ret = rename(path, path2);
 	if (ret) {
-		logger(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", path, path2, errno, strerror(errno));
+		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", path, path2, errno, strerror(errno));
 		free(path);
 		free(path2);
 		return -1;
@@ -155,22 +155,22 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 	
 	ret = stat(buf, &sbuf);
 	if (ret < 0) {
-		logger(logfd, "Failed to stat() %s: %s", active, strerror(errno));
+		warnlog(logfd, "Failed to stat() %s: %s", active, strerror(errno));
 		return -1;
 	}
 	if (!(S_ISREG(sbuf.st_mode))) {
-		logger(logfd, "%s is not a regular file?", active);
+		warnlog(logfd, "%s is not a regular file?", active);
 		return -1;
 	}
 	ret = unlink(active);
 	if (ret && errno != ENOENT) {
-		logger(logfd, "Failed to unlink %s: %s", active, strerror(errno));
+		warnlog(logfd, "Failed to unlink %s: %s", active, strerror(errno));
 		return -1;
 	}
 
 	ret = link(buf, active);
 	if (ret!=0) {
-		logger(logfd, "Failed to link %s->%s: %s", buf, active, strerror(errno));
+		warnlog(logfd, "Failed to link %s->%s: %s", buf, active, strerror(errno));
 		return -1;
 	}
 	return 0;
@@ -185,7 +185,7 @@ static int vcl_store(struct http_request *request,
 	int ret;
 	assert(request->data);
 	if (request->ndata == 0) {
-		logger(vcl->logger, "vcl.inline with ndata == 0");
+		warnlog(vcl->logger, "vcl.inline with ndata == 0");
 		vret->status = 400;
 		vret->answer = strdup("No VCL found");
 		return 500;
@@ -204,14 +204,14 @@ static int vcl_store(struct http_request *request,
 		logger(vcl->logger, "VCL stored OK");
 		ret = vcl_persist(vcl->logger, id, request->data, core);
 		if (ret) {
-			logger(vcl->logger, "vcl.inline OK, but persisting to disk failed. Errno: %d", errno);
+			warnlog(vcl->logger, "vcl.inline OK, but persisting to disk failed. Errno: %d", errno);
 			free(vret->answer);
 			vret->answer = strdup("VCL stored in varnish OK, but persisting to disk failed.");
 			return 500;
 		}
 		return 201;
 	} else {
-		logger(vcl->logger, "vcl.inline failed");
+		warnlog(vcl->logger, "vcl.inline failed");
 		return 500;
 	}
 }

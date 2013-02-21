@@ -48,6 +48,7 @@ struct agent_config_t {
 	char *K_arg;
 
 	int d_arg; // 0 - fork. 1 - foreground.
+	int loglevel;
 	char *c_arg; // Listening port for incoming requests
 	char *p_arg; // Persistence directory
 	char *H_arg; // HTML directory
@@ -107,10 +108,31 @@ extern int threads_started;
 	if (threads_started == 0) \
 		printf("%s (%s:%d): " fmt "\n" , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 	else {\
-		ipc_run(l, &logger_thing_int, "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		ipc_run(l, &logger_thing_int, "2%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
 		free(logger_thing_int.answer); \
 	} \
 } while(0)
+
+#define warnlog(l,fmt,...) do { \
+	struct ipc_ret_t logger_thing_int; \
+	if (threads_started == 0) \
+		printf("%s (%s:%d): " fmt "\n" , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+	else {\
+		ipc_run(l, &logger_thing_int, "1%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		free(logger_thing_int.answer); \
+	} \
+} while(0)
+
+#define debuglog(l,fmt,...) do { \
+	struct ipc_ret_t logger_thing_int; \
+	if (threads_started == 0) \
+		printf("%s (%s:%d): " fmt "\n" , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+	else {\
+		ipc_run(l, &logger_thing_int, "3%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
+		free(logger_thing_int.answer); \
+	} \
+} while(0)
+
 void assert_fail(const char *expr, const char *file, int line, const char *func);
 
 #define assert(expr) \

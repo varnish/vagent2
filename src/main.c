@@ -115,6 +115,8 @@ static void usage(const char *argv0)
 	"-h                    Prints this.\n"
 	"-u user               User to run as(default: nobody)\n"
 	"-g group              Group to run as (default: user's primary or nogroup)\n"
+	"-q                    Quiet mode. Only log/output warnings and errors\n"
+	"-v                    Verbose mode. Output everything.\n"
 	"-K agentsecretfile    File containing username:password for authentication\n"
 	"-z http://host:port   VAC interface.\n"
 	"\n"
@@ -141,8 +143,15 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->P_arg = NULL;
 	core->config->vac_arg= NULL;
 	core->config->K_arg = strdup("/etc/varnish/agent_secret");
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:K:")) != -1) {
+	core->config->loglevel = 2;
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:K:qv")) != -1) {
 		switch (opt) {
+		case 'q':
+			core->config->loglevel = 1;
+			break;
+		case 'v':
+			core->config->loglevel = 3;
+			break;
 		case 'K':
 			core->config->K_arg = optarg;
 			break;
