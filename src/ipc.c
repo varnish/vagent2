@@ -175,6 +175,9 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	data = malloc(length+1);
 	assert(data);
 	i = read(fd, data, length);
+	if (i != length) {
+		fprintf(stderr,"Wanted %d data, got %d", length, i);
+	}
 	assert(i == length);
 	data[length] = '\0';
 	ipc->cb(ipc->priv, data, &ret);
