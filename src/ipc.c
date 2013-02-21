@@ -164,7 +164,7 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	struct ipc_ret_t ret;
 	int length = 0;
 	char *data;
-	int i;
+	int i, oldi;
 
 	i = read(fd, buffer, 10);
 	assert(i == 10);
@@ -174,7 +174,11 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
 	
 	data = malloc(length+1);
 	assert(data);
-	i = read(fd, data, length);
+	for (i = 0, oldi = 0; i < length; ) {
+		i += read(fd, data + i, length - i);
+		assert(i != oldi);
+	}
+		
 	if (i != length) {
 		fprintf(stderr,"Wanted %d data, got %d", length, i);
 	}
