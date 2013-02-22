@@ -258,8 +258,8 @@ static void v_daemon(struct pidfh **pfh)
 {
 	int ret;
 #ifdef __APPLE__
-	printf("Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
-	printf("Consider using -d to run in foreground instead.\n");
+	logger(-1, "Daemonizing is not guaranteed to not kill kittens on Mac OS X.\n");
+	logger(-1, "Consider using -d to run in foreground instead.\n");
 #endif
 	ret = daemon(0,0);
 	if (ret == -1) {
@@ -299,7 +299,7 @@ static void sandbox(struct agent_core_t *core)
 		ret = setuid(pw->pw_uid);
 		assert(ret == 0);
 	} else {
-		warnx("Not running as root, no priv-sep");
+		logger(-1, "Not running as root, no priv-sep");
 	}
 }
 
@@ -322,7 +322,7 @@ int main(int argc, char **argv)
 
 	sandbox(&core);
 	if (core.config->d_arg)
-		warnx("Plugins initialized. -d argument given, so not forking.");
+		logger(-1, "Plugins initialized. -d argument given, so not forking.");
 	else
 		v_daemon(&pfh);
 		
