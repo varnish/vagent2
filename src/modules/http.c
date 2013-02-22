@@ -358,8 +358,11 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
 
 		if (*upload_data_size != 0) {
-			if (*upload_data_size + con_info->progress >= RCV_BUFFER)
-				return send_response_fail (connection,"Buffer exceeded");
+			if (*upload_data_size + con_info->progress >= RCV_BUFFER) {
+				warnlog(http->logger, "Client input exceeded buffer size of %u bytes. Dropping client.", RCV_BUFFER);
+
+				 return MHD_NO;
+			}
 			memcpy(con_info->answerstring + con_info->progress,
 				upload_data, *upload_data_size);
 			con_info->progress += *upload_data_size;
