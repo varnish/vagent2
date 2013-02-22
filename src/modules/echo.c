@@ -51,6 +51,10 @@ static unsigned int echo_reply(struct http_request *request, void *data)
 	struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = request->data;
 	resp->ndata = request->ndata;
+	if (request->method == M_PUT || request->method == M_POST) {
+		if (((char *)request->data)[request->ndata] == '\0' && strlen((char *)request->data) == request->ndata)
+			debuglog(echo->logger, "Data being printed: \n%s", (char *)request->data);
+	}
 	logger(echo->logger, "Responding to request");
 	send_response2(resp);
 	http_free_resp(resp);
