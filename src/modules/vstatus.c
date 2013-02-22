@@ -83,6 +83,14 @@ static unsigned int vstatus_stop(struct http_request *request, void *data)
 	return 0;
 }
 
+static unsigned int vstatus_ping(struct http_request *request, void *data)
+{
+	struct vstatus_priv_t *vstatus;
+	GET_PRIV(data, vstatus);
+	run_and_respond(vstatus->vadmin,request->connection,"ping");
+	return 0;
+}
+
 static unsigned int vstatus_start(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
@@ -138,6 +146,7 @@ vstatus_init(struct agent_core_t *core)
 	http_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
 	http_register_url(core, "/version", M_GET, vstatus_version, core);
 	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
+	http_register_url(core, "/ping", M_GET, vstatus_ping, core);
 }
 
 
