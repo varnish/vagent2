@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 2.1
+Version: 2.2
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -46,6 +46,8 @@ rm -rf %{buildroot}
 #fi
 
 %changelog
+* Fri Feb 22 2013 Kristian Lyngstøl <kristian@bohemians.org> - 2.2-1
+- Release
 * Wed Jan 30 2013 Kristian Lyngstol <kristian@bohemians.org> - 2.1-1
 - 2.1 dev version
 * Fri Jan 18 2013 Lasse Karstensen <lkarsten@varnish-software.com> - 2.0-1

@@ -1,3 +1,26 @@
+Version 2.2
+===========
+
+Released: 2013-02-22
+
+* Add VAC callback module, using -z argument
+* Add curl module
+* Allow building with --with-rst2man (Thanks to Robson Peixoto
+  <robsonpeixoto@gmail.com>)
+* Log client IP for older microhttpd-versions
+* Stats: Push stats on request
+* Simplified plugin creation
+* Add /vdirect for raw varnishadm commands
+* Fix broken "file not found" handling for /html
+* Handle -S option and file permissions better. Agent shouldn't need read
+  permission on the secret file as long as it's started as root.
+* Add basic authentication, storing username and password in
+  /etc/varnish/agent_secret
+* Add variable length varnishtop to frontend
+* Reduce startup time drastically
+* Add verbose- and quiet-mode
+* Fix assert-error during errorhandling of too large requests.
+* Numerous internal IPC-related fixes.
 
 Version 2.1
 ===========
