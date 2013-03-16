@@ -7,7 +7,7 @@ Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish > 3.0
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel
+BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils
 
 %description
 Varnish Agent software that runs on all caches managed by Varnish
