@@ -7,6 +7,7 @@ Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish > 3.0
+BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel
 
 %description
 Varnish Agent software that runs on all caches managed by Varnish
@@ -46,6 +47,8 @@ rm -rf %{buildroot}
 #fi
 
 %changelog
+* Sat Mar 16 2013 Patricio Bruna <pbruna@itlinux.cl> - 2.2-1
+- Added dependencies for rpmbuild
 * Fri Feb 22 2013 Kristian Lyngstøl <kristian@bohemians.org> - 2.2-1
 - Release
 * Wed Jan 30 2013 Kristian Lyngstol <kristian@bohemians.org> - 2.1-1
