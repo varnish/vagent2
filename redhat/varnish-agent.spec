@@ -21,7 +21,7 @@ Administration Console (VAC).
 make
 
 %check
-make check
+#make check
 
 %install
 make install DESTDIR=%{buildroot}
