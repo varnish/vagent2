@@ -269,7 +269,6 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	int ret;
 	int status;
         char *activevcl = NULL   ;
-        char *vclentry  ;
         char *result = NULL;
 
 	assert(core);
@@ -286,8 +285,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
                         if (vret.status == 400) {
                                 send_response_fail(request->connection, vret.answer);
                         } else {
-                                vclentry = vret.answer;
-                                result = strtok(vclentry,"\n");
+                                result = strtok(vret.answer,"\n"); 
 
                                 while (result != NULL) {
                                  if ( !strncmp("active",result,6) ) {
@@ -298,8 +296,13 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
                                  }
                                  result = strtok(NULL,"\n");
                                 }
-                                strcpy(vret.answer,activevcl);
-                                send_response_ok(request->connection, vret.answer);
+
+                                if (activevcl == NULL) { 
+                                  send_response_fail(request->connection, "No active VCL");
+                                } else { 
+                                  strcpy(vret.answer,activevcl);
+                                  send_response_ok(request->connection, vret.answer);
+                                }
                         }
                         free(vret.answer);
                         return 0;
@@ -417,7 +420,7 @@ void vcl_init(struct agent_core_t *core)
 	mk_help(core, priv);
 	http_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
 	http_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
-	http_register_url(core, "/vclactive/", M_GET , vcl_reply, core);
+	http_register_url(core, "/vclactive", M_GET , vcl_reply, core);
 	http_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }

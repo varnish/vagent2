@@ -58,6 +58,7 @@ mkdir $TMPDIR/vcl/boot.vcl
 test_it_fail PUT vcldeploy/foo2 "" "Deployed ok, but NOT PERSISTED."
 rm -rf $TMPDIR/vcl/boot.vcl
 test_it PUT vcldeploy/foo2 "" ""
+test_it GET vclactive/ "" "foo2"
 
 if diff -q data/smallvcl $TMPDIR/vcl/boot.vcl; then pass; else fail "boot.vcl isnt data/smallvcl"; fi
 inc
