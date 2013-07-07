@@ -69,6 +69,7 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 		"POST /vcl/ - Upload a new VCL, named dynamically. (vcl.inline).\n"
 		"PUT /vcl/vclname - Upload a new VCL with the specified name.\n"
 		"DELETE /vcl/vclname - Discard a named VCL (vcl.discard)\n"
+		"GET /vclactive/ - Get the name of the active vcl config\n"
 		"PUT /vcldeploy/vclname - Deploy the vcl (e.g: vcl.use)\n\n"
 		"VCL is saved to '%s/<name>.auto.vcl'.\n"
 		"A successful vcl.deploy through the agent will update\n"
@@ -267,6 +268,9 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	char *cmd;
 	int ret;
 	int status;
+        char *activevcl = NULL   ;
+        char *vclentry  ;
+        char *result = NULL;
 
 	assert(core);
 
@@ -277,7 +281,29 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	assert(vcl);
 
 	if (request->method == M_GET) {
-		if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
+                 if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {
+                        ipc_run(vcl->vadmin,&vret,"vcl.list");
+                        if (vret.status == 400) {
+                                send_response_fail(request->connection, vret.answer);
+                        } else {
+                                vclentry = vret.answer;
+                                result = strtok(vclentry,"\n");
+
+                                while (result != NULL) {
+                                 if ( !strncmp("active",result,6) ) {
+                                   activevcl = strtok(result," ");
+                                   activevcl = strtok(NULL," ");
+                                   activevcl = strtok(NULL," ");
+                                   break ;
+                                 }
+                                 result = strtok(NULL,"\n");
+                                }
+                                strcpy(vret.answer,activevcl);
+                                send_response_ok(request->connection, vret.answer);
+                        }
+                        free(vret.answer);
+                        return 0;
+                } else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
 				send_response_fail(request->connection, vret.answer);
@@ -391,6 +417,7 @@ void vcl_init(struct agent_core_t *core)
 	mk_help(core, priv);
 	http_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
 	http_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
+	http_register_url(core, "/vclactive/", M_GET , vcl_reply, core);
 	http_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }
