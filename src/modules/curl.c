@@ -81,7 +81,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 	struct curl_priv_t *private = priv;
 	CURL *curl;
 	CURLcode res;
-        struct curl_slist *slist=NULL;
+	struct curl_slist *slist=NULL;
 	void *data = NULL;
 	char *c_length = NULL;
 	int asnret;
@@ -91,7 +91,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		ret->status = 500;
 		return;
 	}
-	
+
 	data = index(url,'\n');
 	if (data) {
 		*(char *)data = '\0';
@@ -105,8 +105,8 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		slist = curl_slist_append(slist, "Transfer-Encoding:");
 	}
 
-	
-	debuglog(private->logger, "Issuing curl command with url=%s. %s", url, 
+
+	debuglog(private->logger, "Issuing curl command with url=%s. %s", url,
 		 data ? "Request body present" : "No request body");
 
 	curl = curl_easy_init();
@@ -144,7 +144,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 
 void curl_init( struct agent_core_t *core)
 {
-	struct curl_priv_t *private  =  malloc( sizeof(struct curl_priv_t) ) ;	
+	struct curl_priv_t *private = malloc(sizeof(struct curl_priv_t));
 	struct agent_plugin_t *plug;
 	plug = plugin_find( core, "curl");
 	assert(plug);
