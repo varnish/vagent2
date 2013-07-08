@@ -86,7 +86,6 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
  */
 static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
 	int ret;
-	struct stat sbuf;
 	_cleanup_free_ char *tmpfile = NULL;
 	_cleanup_free_ char *target = NULL;
 	_cleanup_close_ int fd = -1;
