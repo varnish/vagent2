@@ -40,6 +40,7 @@
 #include <string.h>
 #include <time.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -172,6 +173,18 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 	return 0;
 }
 
+/* Check if something is a valid C identifier. */
+
+static int valid_c_ident(const char *ident)
+{
+	while (*ident != '\0') {
+		if (!isalnum(*ident) && *ident != '_')
+			return 0;
+		ident++;
+	}
+	return 1;
+}
+
 static int vcl_store(struct http_request *request,
 		      struct vcl_priv_t *vcl,
 		      struct ipc_ret_t *vret,
@@ -189,9 +202,12 @@ static int vcl_store(struct http_request *request,
 	assert(request->ndata > 0);
 	assert(id);
 	assert(strlen(id)>0);
-	assert(index(id,'\n') == NULL);
-	assert(index(id,'\r') == NULL);
-	assert(index(id,' ') == NULL);
+
+	if (! valid_c_ident(id)) {
+		vret->status = 400;
+		vret->answer = strdup("VCL name is not valid");
+		return 500;
+	}
 	const char *end = (((char*)request->data)[request->ndata-1] == '\n') ? "" : "\n";
 
 	ipc_run(vcl->vadmin, vret, "vcl.inline %s << __EOF_%s__\n%s%s__EOF_%s__",
