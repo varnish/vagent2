@@ -81,58 +81,50 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 }
 
 /*
- * Store VCL to disk if possible. Returns bytes written.
+ * Store VCL to disk if possible. Returns 0 if all went well, -1 on error.
  *
  * XXX: The moving-into-place is a best effort thing.
  */
 static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
-	int fd, ret;
-	char *path, *path2;
+	int ret;
 	struct stat sbuf;
-	fd = asprintf(&path, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
-	assert(fd>0);
+	_cleanup_free_ char *path = NULL;
+	_cleanup_free_ char *path2 = NULL;
+	_cleanup_close_ int fd = -1;
+
+	ret = asprintf(&path, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
+	assert(ret > 0);
 	fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	if (fd < 0) {
 		warnlog(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
-		free(path);
 		return -1;
 	}
-	ret = stat(path, &sbuf);
+	ret = fstat(path, &sbuf);
 	if (ret < 0) {
 		warnlog(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
-		free(path);
-		close(fd);
 		return -1;
 	}
 	if (!(S_ISREG(sbuf.st_mode))) {
 		warnlog(logfd, "\"%s\" is not a regular file.", path);
-		free(path);
-		close(fd);
 		return -1;
 	}
 	ret = write(fd, (const void *)vcl, strlen(vcl));
-	assert(ret>0);
-	ret = 0;
+	assert(ret > 0);
 	fsync(fd);
 	close(fd);
-	fd = asprintf(&path2, "%s/%s.auto.vcl", core->config->p_arg, id);
-	assert(fd>0);
+	fd = -1;
+	ret = asprintf(&path2, "%s/%s.auto.vcl", core->config->p_arg, id);
+	assert(ret > 0);
 	ret = unlink(path2);
 	if (ret && errno != ENOENT) {
 		warnlog(logfd, "unlink of %s failed, leaving temp file %s in place. Dunno quite what to do. errno: %d(%s)", path2, path, errno, strerror(errno));
-		free(path);
-		free(path2);
 		return -1;
 	}
 	ret = rename(path, path2);
 	if (ret) {
 		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", path, path2, errno, strerror(errno));
-		free(path);
-		free(path2);
 		return -1;
 	}
-	free(path);
-	free(path2);
 	return 0;
 }
 

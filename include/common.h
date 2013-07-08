@@ -30,6 +30,8 @@
 #define COMMON_H
 
 #include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 /*
  * Configuration, handled by main for now.
@@ -123,5 +125,18 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 
 #define assert(expr) \
   	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
+
+static inline void closep(int *fd) {
+	if (*fd >= 0)
+		close(*fd);
+}
+
+static inline void freep(void *p) {
+	free(*(void**) p);
+}
+
+#define _cleanup_(x) __attribute__((cleanup(x)))
+#define _cleanup_free_ _cleanup_(freep)
+#define _cleanup_close_ _cleanup_(closep)
 
 #endif
