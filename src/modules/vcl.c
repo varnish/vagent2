@@ -124,21 +124,22 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 }
 
 /*
- * XXX: This logic does not cover what happens if we freeze/crash/burn/etc
- * between unlink() and link()...
+ * Set the link for the active VCL.
  */
 static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 {
 	int ret;
 	char buf[1024];
 	char active[1024];
+	char active_tmp[1024];
 	struct stat sbuf;
 	/*
 	 * FIXME: need to move things into place to avoid disaster if we
 	 * crash during update, leaving no active vcl in place.
 	 */
-	sprintf(buf, "%s/%s.auto.vcl", core->config->p_arg, id);
-	sprintf(active, "%s/boot.vcl", core->config->p_arg);
+	snprintf(buf, sizeof buf, "%s/%s.auto.vcl", core->config->p_arg, id);
+	snprintf(active_tmp, sizeof active_tmp, "%s/boot.vcl.tmp", core->config->p_arg);
+	snprintf(active, sizeof active, "%s/boot.vcl", core->config->p_arg);
 
 	ret = stat(buf, &sbuf);
 	if (ret < 0) {
@@ -149,17 +150,25 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 		warnlog(logfd, "%s is not a regular file?", active);
 		return -1;
 	}
-	ret = unlink(active);
+
+	ret = unlink(active_tmp);
 	if (ret && errno != ENOENT) {
-		warnlog(logfd, "Failed to unlink %s: %s", active, strerror(errno));
+		warnlog(logfd, "Failed to unlink %s: %s", active_tmp, strerror(errno));
 		return -1;
 	}
 
-	ret = link(buf, active);
-	if (ret!=0) {
-		warnlog(logfd, "Failed to link %s->%s: %s", buf, active, strerror(errno));
+	ret = link(buf, active_tmp);
+	if (ret != 0) {
+		warnlog(logfd, "Failed to link %s->%s: %s", buf, active_tmp, strerror(errno));
 		return -1;
 	}
+
+	ret = rename(active_tmp, active);
+	if (ret) {
+		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", active_tmp, active, errno, strerror(errno));
+		return -1;
+	}
+
 	return 0;
 }
 
