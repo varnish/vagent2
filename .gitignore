@@ -1,27 +1,33 @@
+# editor stuff
+*~
+.*.swp
+
+# auto* bits
 Makefile.in
+Makefile
 aclocal.m4
 autom4te.cache/
 config.h.in
-config.h.in~
 configure
 depcomp
 install-sh
 missing
-src/Makefile.in
-Makefile
 config.h
 config.log
 config.status
-src/.deps/
-src/Makefile
+.deps/
 stamp-h1
-src/*.o
-src/varnish-agent
 tags
-src/.*.swp
-include/.*.swp
 compile
 tests/tmp
+test-driver
+
+# Compile bits
+src/*.o
+src/varnish-agent
 varnish-agent.1
-tests/*.log
 include/vcs_version.h
+
+# Test stuff
+tests/*.log
+tests/*.trs
