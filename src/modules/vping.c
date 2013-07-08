@@ -51,7 +51,7 @@ static void *vping_run(void *data)
 	struct agent_plugin_t *plug;
 	struct vping_priv_t *ping;
 	struct ipc_ret_t vret;
-	
+
 	plug = plugin_find(core,"vping");
 	ping = (struct vping_priv_t *) plug->data;
 
@@ -85,7 +85,7 @@ vping_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vping_priv_t *priv = malloc(sizeof(struct vping_priv_t));
 	plug = plugin_find(core,"vping");
-	
+
 	priv->vadmin_sock = ipc_register(core,"vadmin");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;

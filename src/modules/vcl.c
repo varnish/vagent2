@@ -144,7 +144,7 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 	 */
 	sprintf(buf, "%s/%s.auto.vcl", core->config->p_arg, id);
 	sprintf(active, "%s/boot.vcl", core->config->p_arg);
-	
+
 	ret = stat(buf, &sbuf);
 	if (ret < 0) {
 		warnlog(logfd, "Failed to stat() %s: %s", active, strerror(errno));
@@ -297,7 +297,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 				assert(VSB_finish(json) == 0);
 				struct http_response *resp = http_mkresp(request->connection, 200, NULL);
 				resp->data = VSB_data(json);
-				resp->ndata = VSB_len(json); 
+				resp->ndata = VSB_len(json);
 				http_add_header(resp, "Content-Type", "application/json");
 				send_response2(resp);
 				http_free_resp(resp);
@@ -324,7 +324,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			if (strlen(request->url) >= 6) {
 				status = vcl_store(request, vcl, &vret, core,
-					           request->url + strlen("/vcl/"));
+				                   request->url + strlen("/vcl/"));
 				struct http_response *resp = http_mkresp(request->connection, status, vret.answer);
 				send_response2(resp);
 				http_free_resp(resp);
@@ -375,7 +375,7 @@ void vcl_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vcl_priv_t *priv = malloc(sizeof(struct vcl_priv_t));
 	plug = plugin_find(core,"vcl");
-	
+
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;

@@ -99,7 +99,7 @@ void vban_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vban_priv_t *priv = malloc(sizeof(struct vban_priv_t));
 	plug = plugin_find(core,"vban");
-	
+
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;

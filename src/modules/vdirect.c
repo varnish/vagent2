@@ -42,8 +42,8 @@
 #include <string.h>
 
 
-#define DIRECT_HELP\
-        "You can issue verbatim varnish CLI commands (varnishadm) by posting a single line\n"\
+#define DIRECT_HELP \
+	"You can issue verbatim varnish CLI commands (varnishadm) by posting a single line\n" \
 	"to /direct.\n"
 
 struct vdirect_priv_t {
@@ -73,7 +73,7 @@ vdirect_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vdirect_priv_t *priv = malloc(sizeof(struct vdirect_priv_t));
 	plug = plugin_find(core,"vdirect");
-	
+
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;

@@ -197,7 +197,7 @@ static int push_stats(struct vstat_priv_t *vstat)
 	pthread_mutex_unlock(&vstat->lck);
 	assert(VSB_finish(vstat->vsb_timer) == 0);
 	if (vstat->push_url)
-		ipc_run(vstat->curl, &vret,  
+		ipc_run(vstat->curl, &vret,
 			"%s\n%s",vstat->push_url ? vstat->push_url : "http://localhost:8133/",
 			VSB_data(vstat->vsb_timer));
 	VSB_clear(vstat->vsb_timer);
@@ -262,7 +262,7 @@ vstat_init(struct agent_core_t *core)
 	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
 	plug = plugin_find(core,"vstat");
 	assert(plug);
-	
+
 	priv->vd = VSM_New();
 	priv->open = 0;
 	priv->push_url = NULL;

@@ -44,7 +44,7 @@
  *
  * Second: The -k logic works as |head, not tail, when combined with -d.
  *
- * Third: -k and -d in varnishlog is broken completely: 
+ * Third: -k and -d in varnishlog is broken completely:
  * kristian@freud:~$ varnishlog -d -k 100   | wc -l
  * 10554
  *

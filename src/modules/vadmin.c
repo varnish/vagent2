@@ -99,7 +99,7 @@ n_arg_sock(struct agent_core_t *core)
 		if (core->config->T_arg)
 			free(core->config->T_arg);
 		core->config->T_arg = strdup(core->config->T_arg_orig);
-	} else {		
+	} else {
 		if (vsd == NULL) {
 			warnlog(vadmin->logger,"No -T arg and no shmlog readable.");
 			return -1;

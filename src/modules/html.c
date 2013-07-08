@@ -108,7 +108,7 @@ html_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct html_priv_t *priv = malloc(sizeof(struct html_priv_t));
 	plug = plugin_find(core,"html");
-	
+
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = NULL;

@@ -334,8 +334,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	con_info = *con_cls;
 	assert(core->config->userpass);
 
-	
-
 	log_request(connection, http, method, url);
 
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
