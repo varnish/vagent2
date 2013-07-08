@@ -65,7 +65,7 @@ cli_write(int sock, const char *s)
 	int i, l;
 
 	i = strlen(s);
-	l = write (sock, s, i);
+	l = write(sock, s, i);
 	if (i == l)
 		return 1;
 	perror("Write error CLI socket");
@@ -256,7 +256,7 @@ vadmin_init(struct agent_core_t *core)
 
 	v  = plugin_find(core, "vadmin");
 	v->ipc->cb = read_cmd;
-	vadmin = malloc(sizeof(struct vadmin_config_t ));
+	vadmin = malloc(sizeof(struct vadmin_config_t));
 	v->data = vadmin;
 	v->ipc->priv = core;
 	v->start = ipc_start;

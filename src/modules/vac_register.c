@@ -75,7 +75,7 @@ static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret
 		logger(private->logger, "Not registering with the VAC. Unknown vac url. Try using -z");
 		return -1;
 	}
-	logger( private->logger, "Registering with the vac: %s", private->vac_url);
+	logger(private->logger, "Registering with the vac: %s", private->vac_url);
 	generate_json(private);
 	ipc_run(private->curl, vret, "%s\n%s", private->vac_url ? private->vac_url : "", VSB_data(private->vsb_out));
 	return 0;
@@ -86,14 +86,14 @@ static unsigned int vac_register_reply(struct http_request *request, void *data)
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
-	int ret = send_curl( vdata, &vret);
+	int ret = send_curl(vdata, &vret);
 	struct http_response *resp;
 	if (ret != 0) {
 		send_response_fail(request->connection, "Couldn't register.");
 		return 0;
 	}
 	resp = http_mkresp(request->connection, vret.status, vret.answer);
-	logger( vdata->logger, "Curl response: status=%d answer=%s", vret.status, vret.answer);
+	logger(vdata->logger, "Curl response: status=%d answer=%s", vret.status, vret.answer);
 	send_response2(resp);
 	http_free_resp(resp);
 	free(vret.answer);
@@ -110,9 +110,9 @@ static void *vac_register(void *data)
 	plug = plugin_find(core,"vac_register");
 	assert(plug);
 	private = plug->data;
-	ret = send_curl( private, &vret);
+	ret = send_curl(private, &vret);
 	if (ret == 0) {
-		debuglog( private->logger, "Response received from curl: status=%d answer=%s", vret.status, vret.answer);
+		debuglog(private->logger, "Response received from curl: status=%d answer=%s", vret.status, vret.answer);
 		free(vret.answer);
 	} else {
 		logger(private->logger, "Couldn't register with the VAC");
@@ -128,10 +128,10 @@ static pthread_t *vac_register_start(struct agent_core_t *core, const char *name
 	return thread;
 }
 
-void vac_register_init( struct agent_core_t *core) {
-	struct vac_register_priv_t *private  =  malloc( sizeof(struct vac_register_priv_t) ) ;
+void vac_register_init(struct agent_core_t *core) {
+	struct vac_register_priv_t *private  =  malloc(sizeof(struct vac_register_priv_t)) ;
 	struct agent_plugin_t *plug;
-	plug = plugin_find( core, "vac_register");
+	plug = plugin_find(core, "vac_register");
 	assert(plug);
 
 	//initialise the private data structure
