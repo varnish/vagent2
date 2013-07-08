@@ -4,8 +4,8 @@ Varnish Agent installation instructions
 Build requirements
 ------------------
 
-* Varnish 3.0 (Preferred: 3.0.3). The varnishapi development files must be
-  available. E.g: apt-get install libvarnishapi-dev
+* Varnish 3.0 (Preferred: 3.0.3 or newer). The varnishapi development
+  files must be available. E.g: apt-get install libvarnishapi-dev
 * libmicrohttpd (apt-get install libmicrohttpd-dev)
 * pkg-config
 * Common build environment (C compiler, make, etc).
