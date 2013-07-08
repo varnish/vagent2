@@ -2,6 +2,7 @@
 
 set -e
 
+TMPDIR="$(mktemp -d)"
 SRCDIR="$(dirname $0)/"
 
 PATH=/usr/sbin:/sbin:$PATH
