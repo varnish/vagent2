@@ -99,7 +99,7 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 		warnlog(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
 		return -1;
 	}
-	ret = fstat(path, &sbuf);
+	ret = fstat(fd, &sbuf);
 	if (ret < 0) {
 		warnlog(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
 		return -1;
