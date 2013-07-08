@@ -50,9 +50,10 @@ struct html_priv_t {
 
 static unsigned int html_reply(struct http_request *request, void *data)
 {
-	int ret, fd=-1;
-	char *path = NULL;
-	char *buffer = NULL;
+	int ret;
+	_cleanup_close_ int fd = -1;
+	_cleanup_free_ char *path = NULL;
+	_cleanup_free_ char *buffer = NULL;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
 	struct http_response *resp;
@@ -69,18 +70,18 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	if (ret < 0) {
 		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
 		send_response_fail(request->connection, "stat() was not happy");
-		goto out;
+		return 0;
 	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		warnlog(html->logger, "open() failed for %s: %s", path, strerror(errno));
 		send_response_fail(request->connection, "open() was not happy");
-		goto out;
+		return 0;
 	}
 	if (!S_ISREG(sbuf.st_mode)) {
 		warnlog(html->logger, "%s isn't a regular file.", path);
 		send_response_fail(request->connection, "not a file");
-		goto out;
+		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
 	assert(buffer);
@@ -92,13 +93,6 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	resp->ndata = ret;
 	send_response2(resp);
 	http_free_resp(resp);
-	out:
-	if (fd >= 0)
-		close(fd);
-	if (buffer)
-		free(buffer);
-	if (path)
-		free(path);
 	return 0;
 }
 

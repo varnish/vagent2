@@ -281,7 +281,7 @@ static void log_request(struct MHD_Connection *connection,
 
 static int check_auth(struct MHD_Connection *connection, struct agent_core_t *core, struct connection_info_struct *con_info)
 {
-	char *auth = NULL;
+	_cleanup_free_ char *auth = NULL;
 	char base64pw[1024];
 	assert(con_info);
 	if (con_info->authed == 0) {
@@ -292,12 +292,8 @@ static int check_auth(struct MHD_Connection *connection, struct agent_core_t *co
 		base64_encode(BASE64, core->config->userpass, strlen(core->config->userpass), base64pw, sizeof(base64pw));
 		if (!auth || strncmp(auth,"Basic ", strlen("Basic ")) || strcmp(auth + strlen("Basic "), base64pw)) {
 			send_auth_response(connection);
-			if (auth)
-				free(auth);
 			return 1;
 		}
-		if (auth)
-			free(auth);
 		con_info->authed = 1;
 	}
 	return 0;
