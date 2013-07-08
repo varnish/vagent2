@@ -139,8 +139,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		ret->status = 500;
 		warnlog( private->logger, "%s", ret->answer);
 	}
-	if (c_length)
-		free(c_length);
+	free(c_length);
 }
 
 void curl_init( struct agent_core_t *core)
