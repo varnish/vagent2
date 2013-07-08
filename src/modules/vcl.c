@@ -83,46 +83,42 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 /*
  * Store VCL to disk if possible. Returns 0 if all went well, -1 on error.
  *
- * XXX: The moving-into-place is a best effort thing.
  */
 static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
 	int ret;
 	struct stat sbuf;
-	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *path2 = NULL;
+	_cleanup_free_ char *tmpfile = NULL;
+	_cleanup_free_ char *target = NULL;
 	_cleanup_close_ int fd = -1;
 
-	ret = asprintf(&path, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
+	ret = asprintf(&target, "%s/%s.auto.vcl", core->config->p_arg, id);
 	assert(ret > 0);
-	fd = open(path, O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+
+	ret = asprintf(&tmpfile, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
+	assert(ret > 0);
+
+	ret = unlink(tmpfile);
+	if (ret < 0 && errno != ENOENT) {
+		warnlog(logfd, "Removing temporary file '%s' failed: %s", tmpfile, strerror(errno));
+		return -1;
+	}
+
+	fd = open(tmpfile, O_CREAT | O_WRONLY | O_TRUNC | O_EXCL, S_IRWXU);
 	if (fd < 0) {
-		warnlog(logfd, "Failed to open %s for writing: %s", path, strerror(errno));
+		warnlog(logfd, "Failed to open %s for writing: %s", tmpfile, strerror(errno));
 		return -1;
 	}
-	ret = fstat(fd, &sbuf);
-	if (ret < 0) {
-		warnlog(logfd, "stat(\"%s\", &sbuf) returned %d. Errno: %d", path, ret, errno);
-		return -1;
-	}
-	if (!(S_ISREG(sbuf.st_mode))) {
-		warnlog(logfd, "\"%s\" is not a regular file.", path);
-		return -1;
-	}
+
 	ret = write(fd, (const void *)vcl, strlen(vcl));
 	assert(ret > 0);
-	fsync(fd);
-	close(fd);
+	ret = fsync(fd);
+	assert(ret >= 0);
+	ret = close(fd);
+	assert(ret >= 0);
 	fd = -1;
-	ret = asprintf(&path2, "%s/%s.auto.vcl", core->config->p_arg, id);
-	assert(ret > 0);
-	ret = unlink(path2);
-	if (ret && errno != ENOENT) {
-		warnlog(logfd, "unlink of %s failed, leaving temp file %s in place. Dunno quite what to do. errno: %d(%s)", path2, path, errno, strerror(errno));
-		return -1;
-	}
-	ret = rename(path, path2);
+	ret = rename(tmpfile, target);
 	if (ret) {
-		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", path, path2, errno, strerror(errno));
+		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", tmpfile, target, errno, strerror(errno));
 		return -1;
 	}
 	return 0;
