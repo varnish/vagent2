@@ -87,25 +87,25 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
  */
 static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
 	int ret;
-	_cleanup_free_ char *tmpfile = NULL;
+	_cleanup_free_ char *tempfile = NULL;
 	_cleanup_free_ char *target = NULL;
 	_cleanup_close_ int fd = -1;
 
 	ret = asprintf(&target, "%s/%s.auto.vcl", core->config->p_arg, id);
 	assert(ret > 0);
 
-	ret = asprintf(&tmpfile, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
+	ret = asprintf(&tempfile, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
 	assert(ret > 0);
 
-	ret = unlink(tmpfile);
+	ret = unlink(tempfile);
 	if (ret < 0 && errno != ENOENT) {
-		warnlog(logfd, "Removing temporary file '%s' failed: %s", tmpfile, strerror(errno));
+		warnlog(logfd, "Removing temporary file '%s' failed: %s", tempfile, strerror(errno));
 		return -1;
 	}
 
-	fd = open(tmpfile, O_CREAT | O_WRONLY | O_TRUNC | O_EXCL, S_IRWXU);
+	fd = open(tempfile, O_CREAT | O_WRONLY | O_TRUNC | O_EXCL, S_IRWXU);
 	if (fd < 0) {
-		warnlog(logfd, "Failed to open %s for writing: %s", tmpfile, strerror(errno));
+		warnlog(logfd, "Failed to open %s for writing: %s", tempfile, strerror(errno));
 		return -1;
 	}
 
@@ -116,9 +116,9 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 	ret = close(fd);
 	assert(ret >= 0);
 	fd = -1;
-	ret = rename(tmpfile, target);
+	ret = rename(tempfile, target);
 	if (ret) {
-		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", tmpfile, target, errno, strerror(errno));
+		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", tempfile, target, errno, strerror(errno));
 		return -1;
 	}
 	return 0;
