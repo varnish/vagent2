@@ -4,13 +4,13 @@ AUTOMAKE_OPTIONS=-Wno-portability -Wno-override
 
 # html/
 webrootdir = $(pkgdatadir)/html
-webroot_DATA = $(wildcard html/*.html html/*.js)
-webrootcssdir = $(pkgdatadir)/html/bootstrap/css
-webrootcss_DATA = $(wildcard html/bootstrap/css/*.css)
-webrootjsdir = $(pkgdatadir)/html/bootstrap/js
-webrootjs_DATA = $(wildcard html/bootstrap/js/*.js)
-webrootimgdir = $(pkgdatadir)/html/bootstrap/img
-webrootimg_DATA = $(wildcard html/bootstrap/img/*.png)
+webroot_DATA = $(wildcard html/*.html)
+webrootcssdir = $(pkgdatadir)/html/css
+webrootcss_DATA = $(wildcard html/css/*.css)
+webrootjsdir = $(pkgdatadir)/html/js
+webrootjs_DATA = $(wildcard html/js/*.js)
+webrootimgdir = $(pkgdatadir)/html/img
+webrootimg_DATA = $(wildcard html/img/*.png)
 
 install-data-local:
 	$(install_sh) -d -m 0755 $(DESTDIR)$(localstatedir)/varnish-agent
