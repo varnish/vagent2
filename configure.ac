@@ -7,7 +7,7 @@ AC_INIT([varnish-agent], [2.2])
 AC_CONFIG_SRCDIR([src/main.c])
 AM_CONFIG_HEADER(config.h)
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign parallel-tests])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign parallel-tests subdir-objects])
 
 # Check for rst utilities
 AC_ARG_WITH([rst2man],
