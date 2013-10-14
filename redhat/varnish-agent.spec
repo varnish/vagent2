@@ -25,26 +25,25 @@ make check
 
 %install
 make install DESTDIR=%{buildroot}
-#install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-agent
-#install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
+install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-agent
+install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
 
 %clean
 rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
-/**
-#%config(noreplace) /etc/init.d/varnish-agent
-#%config(noreplace) /etc/sysconfig/varnish-agent
+%config(noreplace) /etc/init.d/varnish-agent
+%config(noreplace) /etc/sysconfig/varnish-agent
 
-#%post
-#/sbin/chkconfig --add varnish-agent
+%post
+/sbin/chkconfig --add varnish-agent
 
-#%preun
-#if [ $1 -lt 1 ]; then
-#/sbin/service varnish-agent stop > /dev/null 2>&1
-#/sbin/chkconfig --del varnish-agent
-#fi
+%preun
+if [ $1 -lt 1 ]; then
+/sbin/service varnish-agent stop > /dev/null 2>&1
+/sbin/chkconfig --del varnish-agent
+fi
 
 %changelog
 * Sat Mar 16 2013 Patricio Bruna <pbruna@itlinux.cl> - 2.2-1
