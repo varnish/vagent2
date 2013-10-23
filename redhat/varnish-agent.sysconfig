@@ -1,9 +1,8 @@
-# Agent for the Varnish Administration Console v2.
+# Configuration file for Varnish Agent.
+# 
+# /etc/init.d/varnish-agent expects the variable $DAEMON_OPTS to be
+# set from this shell script fragment.
+#
+# See varnish-agent(1) for an overview of valid settings.
 
-#vcl_dir="/etc/varnish"
-#html_dir="/usr/share/varnish-agent/html"
-#sec_file="/etc/varnish/secret"
-#timeout="30"
-#port=6085
-#keyfile="/etc/varnish/agent_secret"
-#listenaddr="http://0.0.0.0:$port"
+DAEMON_OPTS=""

@@ -32,23 +32,12 @@ lockfile="/var/lock/subsys/varnish-agent"
 # Include varnish defaults
 [ -e /etc/sysconfig/varnish-agent ] && . /etc/sysconfig/varnish-agent
 
-vcl_dir=${vcl_dir:-"/etc/varnish"}
-html_dir=${html_dir:-"/var/varnish-agent/html"}
-sec_file=${sec_file:-"/etc/varnish/secret"}
-timeout=${timeout:-30}
-port=${port:-6085}
-keyfile=${keyfile:-"/etc/varnish/agent_secret"}
-listenaddr=${listenaddr:-"http://0.0.0.0:$port"}
-DAEMON_OPTS="-p $vcl_dir -H $html_dir -S $sec_file \
--T 127.0.0.1:6082 -t $timeout -c $port -K $keyfile \
--z $listenaddr -q"
-
 start() {
     if [ ! -x $exec ]; then
         echo $exec not found
         exit 5
     fi
-    echo -n "Starting Varnish Agent 2: "
+    echo -n "Starting Varnish Agent: "
     daemon --pidfile $pidfile $exec -P $pidfile "$DAEMON_OPTS" > /dev/null 2>&1
     retval=$?
     if [ $retval -eq 0 ]; then
@@ -63,7 +52,7 @@ start() {
 }
 
 stop() {
-    echo -n "Stopping Varnish agent: "
+    echo -n "Stopping Varnish Agent: "
     killproc -p $pidfile $prog
     retval=$?
     echo
