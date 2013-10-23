@@ -292,32 +292,32 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	assert(vcl);
 
 	if (request->method == M_GET) {
-                 if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {
-                        ipc_run(vcl->vadmin,&vret,"vcl.list");
-                        if (vret.status == 400) {
-                                send_response_fail(request->connection, vret.answer);
-                        } else {
-                                result = strtok(vret.answer,"\n"); 
-
-                                while (result != NULL) {
-                                 if ( !strncmp("active",result,6) ) {
-                                   activevcl = strtok(result," ");
-                                   activevcl = strtok(NULL," ");
-                                   activevcl = strtok(NULL," ");
-                                   break ;
-                                 }
-                                 result = strtok(NULL,"\n");
-                                }
-
-                                if (activevcl == NULL) { 
-                                  send_response_fail(request->connection, "No active VCL");
-                                } else { 
-                                  strcpy(vret.answer,activevcl);
-                                  send_response_ok(request->connection, vret.answer);
-                                }
-                        }
-                        free(vret.answer);
-                        return 0;
+		if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {
+			ipc_run(vcl->vadmin,&vret,"vcl.list");
+			if (vret.status == 400) {
+				send_response_fail(request->connection, vret.answer);
+			} else {
+				result = strtok(vret.answer,"\n"); 
+				
+				while (result != NULL) {
+					if ( !strncmp("active",result,6) ) {
+						activevcl = strtok(result," ");
+						activevcl = strtok(NULL," ");
+						activevcl = strtok(NULL," ");
+						break ;
+					}
+					result = strtok(NULL,"\n");
+				}
+				
+				if (activevcl == NULL) { 
+					send_response_fail(request->connection, "No active VCL");
+				} else { 
+					strcpy(vret.answer,activevcl);
+					send_response_ok(request->connection, vret.answer);
+				}
+			}
+			free(vret.answer);
+			return 0;
                 } else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
