@@ -1,0 +1,8 @@
+# Configuration file for Varnish Agent.
+# 
+# /etc/init.d/varnish-agent expects the variable $DAEMON_ARGS to be
+# set from this shell script fragment.
+#
+# See varnish-agent(1) for an overview of valid settings.
+
+DAEMON_ARGS=""
