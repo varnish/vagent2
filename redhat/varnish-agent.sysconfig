@@ -1,0 +1,9 @@
+# Agent for the Varnish Administration Console v2.
+
+#vcl_dir="/etc/varnish"
+#html_dir="/usr/share/varnish-agent/html"
+#sec_file="/etc/varnish/secret"
+#timeout="30"
+#port=6085
+#keyfile="/etc/varnish/agent_secret"
+#listenaddr="http://0.0.0.0:$port"
