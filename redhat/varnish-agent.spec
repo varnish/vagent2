@@ -33,6 +33,9 @@ rm -rf %{buildroot}
 
 %files
 %defattr(-,root,root,-)
+%{_bindir}/varnish-agent
+%{_mandir}/man1/varnish-agent.1.gz
+%{_datadir}/varnish-agent/html
 %config(noreplace) /etc/init.d/varnish-agent
 %config(noreplace) /etc/sysconfig/varnish-agent
 
