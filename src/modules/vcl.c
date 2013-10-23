@@ -280,8 +280,8 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	char *cmd;
 	int ret;
 	int status;
-        char *activevcl = NULL   ;
-        char *result = NULL;
+	char *activevcl = NULL;
+	char *result = NULL;
 
 	assert(core);
 
@@ -318,7 +318,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			}
 			free(vret.answer);
 			return 0;
-                } else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
+		} else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
 				send_response_fail(request->connection, vret.answer);
