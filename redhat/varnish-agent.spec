@@ -40,6 +40,9 @@ rm -rf %{buildroot}
 %config(noreplace) /etc/sysconfig/varnish-agent
 
 %post
+test -f /etc/varnish/agent_secret || \
+    (echo "varnish:$(head -c 8 /dev/urandom | base64)" > /etc/varnish/agent_secret \
+    && chmod 0600 /etc/varnish/agent_secret)
 /sbin/chkconfig --add varnish-agent
 
 %preun
