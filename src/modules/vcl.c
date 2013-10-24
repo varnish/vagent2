@@ -280,8 +280,6 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	char *cmd;
 	int ret;
 	int status;
-	char *activevcl = NULL;
-	char *result = NULL;
 
 	assert(core);
 
@@ -297,16 +295,18 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			if (vret.status == 400) {
 				send_response_fail(request->connection, vret.answer);
 			} else {
-				result = strtok(vret.answer,"\n"); 
-				
+				char *activevcl = NULL;
+				char *saveptr = NULL;
+				char *result = strtok_r(vret.answer, "\n", &saveptr);
+
 				while (result != NULL) {
-					if ( !strncmp("active",result,6) ) {
-						activevcl = strtok(result," ");
-						activevcl = strtok(NULL," ");
-						activevcl = strtok(NULL," ");
+					if (!strncmp("active", result, 6)) {
+						activevcl = strtok_r(result, " ", &saveptr);
+						activevcl = strtok_r(NULL, " ", &saveptr);
+						activevcl = strtok_r(NULL, " ", &saveptr);
 						break ;
 					}
-					result = strtok(NULL,"\n");
+					result = strtok_r(NULL, "\n", &saveptr);
 				}
 				
 				if (activevcl == NULL) { 
