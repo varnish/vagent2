@@ -7,9 +7,9 @@ Varnish Agent
 -------------
 
 :Manual section: 1
-:Authors: Kristian Lyngstøl, Yves Hwang
-:Date: 2013-02-06
-:Version: 2.2
+:Authors: Kristian Lyngstøl, Yves Hwang, Dag Haavi Finstad
+:Date: 2013-24-10
+:Version: 2.2.0
 
 SYNOPSIS
 ========
