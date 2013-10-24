@@ -6,6 +6,9 @@ set -e
 case ${1:-} in
        configure)
        install -o nobody -g nogroup -d /var/lib/varnish-agent
+       test -f /etc/varnish/agent_secret || \
+	   (echo "varnish:$(head -c 8 /dev/urandom | base64)" > /etc/varnish/agent_secret && \
+	   chmod 0600 /etc/varnish/agent_secret)
        ;;
 esac
 
