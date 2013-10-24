@@ -105,7 +105,9 @@ static char *make_help(struct http_priv_t *http)
 
 static int send_auth_response(struct MHD_Connection *connection)
 {
-	struct http_response *resp = http_mkresp(connection, 401, "Authorize, please");
+	struct http_response *resp = http_mkresp(connection, 401, "Authorize, please.\n\n" \
+	    "If Varnish Agent was installed from packages, the /etc/varnish/agent_secret " \
+	    "file contains generated credentials.");
 	http_add_header(resp, "WWW-Authenticate", "Basic realm=varnish-agent");
 	send_response2(resp);
 	http_free_resp(resp);
