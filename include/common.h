@@ -44,6 +44,7 @@ struct agent_config_t {
 	char *T_arg;
 	char *T_arg_orig;
 	char *S_arg;
+	int S_arg_fd;
 	char *n_arg;
 	char *u_arg;
 	char *g_arg;
