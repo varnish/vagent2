@@ -27,6 +27,7 @@ make check
 make install DESTDIR=%{buildroot}
 install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-agent
 install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
+touch %{buildroot}/etc/varnish/agent_secret
 
 %clean
 rm -rf %{buildroot}
@@ -38,6 +39,7 @@ rm -rf %{buildroot}
 %{_datadir}/varnish-agent/html
 %config(noreplace) /etc/init.d/varnish-agent
 %config(noreplace) /etc/sysconfig/varnish-agent
+%ghost %attr(600, -, -) /etc/varnish/agent_secret
 
 %post
 test -f /etc/varnish/agent_secret || \
@@ -52,6 +54,8 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Mon Oct 28 2013 Dridi Boukelmoune <dridi.boukelmoune@gmail.com> - 2.2-1
+- Added /etc/varnish/agent_secret in the files list
 * Sat Mar 16 2013 Patricio Bruna <pbruna@itlinux.cl> - 2.2-1
 - Added dependencies for rpmbuild
 * Fri Feb 22 2013 Kristian Lyngstøl <kristian@bohemians.org> - 2.2-1
