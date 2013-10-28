@@ -167,6 +167,14 @@ test_it_fail() {
 	inc
 }
 
+test_it_first_line_fail() {
+	FOO=$( (lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3"; rc=$?) | head -1)
+	if [ "x$rc" != "x0" ]; then pass; else fail "$*: $FOO"; fi
+	inc
+	if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
+	inc
+}
+
 test_it_long() {
 	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
