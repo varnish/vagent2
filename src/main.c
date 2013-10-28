@@ -41,6 +41,7 @@
 #define daemon I_hate_you_so_much_right_now
 #endif
 #define _GNU_SOURCE
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -131,6 +132,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	assert(core->config != NULL);
 	core->config->n_arg = NULL;
 	core->config->S_arg = NULL;
+	core->config->S_arg_fd = -1;
 	core->config->T_arg = NULL;
 	core->config->g_arg = NULL;
 	core->config->u_arg = NULL;
@@ -171,7 +173,11 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			core->config->n_arg = optarg;
 			break;
 		case 'S':
+			// avoid fd leak
+			if (core->config->S_arg_fd > 0)
+				close(core->config->S_arg_fd);
 			core->config->S_arg = optarg;
+			core->config->S_arg_fd = open(optarg, O_RDONLY);
 			break;
 		case 'T':
 			core->config->T_arg_orig = optarg;

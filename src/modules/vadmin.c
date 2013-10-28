@@ -162,7 +162,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 			assert(close(vadmin->sock) == 0);
 			return(-1);
 		}
-		if (vadmin->s_arg_fd == -1) {
+		if (vadmin->s_arg_fd < 0) {
 			vadmin->s_arg_fd = open(core->config->S_arg, O_RDONLY);
 		} else {
 			lseek(vadmin->s_arg_fd, 0, SEEK_SET);
@@ -262,7 +262,7 @@ vadmin_init(struct agent_core_t *core)
 	v->start = ipc_start;
 	vadmin->sock = -1;
 	vadmin->state = 0;
-	vadmin->s_arg_fd = -1;
+	vadmin->s_arg_fd = core->config->S_arg_fd;
 	vadmin->logger = ipc_register(core, "logger");
 
 	if (core->config->n_arg != NULL) {
