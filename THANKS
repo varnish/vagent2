@@ -2,7 +2,7 @@
 Some of the many people to thank:
 
 * Poul-Henning Kamp, for showing me countless smart tricks to employ, and
-  also a little bit for writing Vanrish Cache.
+  also a little bit for writing Varnish Cache.
 * Martin Blix Grydeland, for the original varnish-agent and words of wisdom
   when it comes to varnishapi usage.
 * Tollef Fog Heen, for poking automake-stuff and jenkins and whatnot until

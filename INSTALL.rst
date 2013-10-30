@@ -37,9 +37,7 @@ On RHEL6 you need the EPEL package libmicrohttpd-devel.
 Running
 -------
 
-The agent does not require any arguments to run under normal conditions. If
-your ``varnishd`` is using a ``-n`` argument, the agent will need the same
-``-n`` argument.
+See README.rst (or the manual) for what arguments the agent accepts.
 
 The Debian packaging provides an init script for convenience.
 
