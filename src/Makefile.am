@@ -1,3 +1,4 @@
+AUTOMAKE_OPTIONS=subdir-objects
 AM_CPPFLAGS = -I$(top_srcdir)/include
 AM_CFLAGS = -Wall -Werror -Wstrict-prototypes -Wmissing-prototypes -Wpointer-arith -Wreturn-type -Wcast-qual -Wwrite-strings  -Wswitch -Wshadow -Wcast-align -Wunused-parameter -Wchar-subscripts -Winline -Wnested-externs -Wredundant-decls -Wformat -Wextra -Wno-missing-field-initializers -Wno-sign-compare -fstack-protector-all
 
