@@ -338,12 +338,13 @@ int main(int argc, char **argv)
 	threads_started = 1;
 	for (plug = core.plugins; plug != NULL; plug = plug->next) {
 		if (plug->start != NULL)
-			plug->start(&core, plug->name);
+			plug->thread = plug->start(&core, plug->name);
 	}
 	threads_started = 2;
 	for (plug = core.plugins; plug; plug = plug->next) {
 		if (plug->thread) {
 			pthread_join(*plug->thread, NULL);
+			free(plug->thread);
 		}
 	}
 	/*
