@@ -131,8 +131,8 @@ start_agent() {
 	AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 	echo -e "\tAgent port: $AGENT_PORT"
 	ARGS="$ARGS -K ${TMPDIR}/agent-secret"
-	echo -e "\tAgent arguments:  ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
-	$ORIGPWD/../src/varnish-agent ${N_ARG} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
+	echo -e "\tAgent arguments: -n ${TMPDIR} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
+	$ORIGPWD/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
 
 	pidwait agent
 }
