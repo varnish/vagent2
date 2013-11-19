@@ -383,7 +383,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 void vlog_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vlog_priv_t *priv = malloc(sizeof(struct vlog_priv_t));
+	struct vlog_priv_t *priv = calloc(1, sizeof(struct vlog_priv_t));
 	plug = plugin_find(core,"vlog");
 	assert(plug);
 	plug->data = priv;
