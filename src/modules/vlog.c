@@ -348,17 +348,16 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		free(limit);
 	VSB_printf(vlog->answer, "{ \"log\": [");
 	ret = VSL_Open(vlog->vd, 1);
-	assert(!ret);
+	if (ret) {
+		send_response_fail(request->connection, "Error in opening shmlog");
+		goto cleanup;
+	}
 
 	if (tag == NULL) {
 		do_order(vlog);
 	} else {
 		do_unorder(vlog);
 	}
-	if (tag)
-		free(tag);
-	if (itag)
-		free(itag);
 
 	VSB_printf(vlog->answer, "\n] }\n");
 	assert(VSB_finish(vlog->answer) == 0);
@@ -372,6 +371,10 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 	} else {
 		send_response_fail(request->connection, "FAIL");
 	}
+
+ cleanup:
+	free(tag);
+	free(itag);
 	VSB_clear(vlog->answer);
 	VSB_delete(vlog->answer);
 	VSM_Delete(vlog->vd);

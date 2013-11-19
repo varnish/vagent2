@@ -5,8 +5,13 @@ if [ "$(basename $PWD)" != "tests" ]; then
 	exit 1
 fi
 . util.sh
-init_all
+init_misc
+start_agent
 
+test_it_fail GET status "" "Varnishd disconnected"
+test_it_fail GET log "" "Error in opening shmlog"
+
+start_varnish
 is_running
 test_it_long GET log "" "\"tag\":"
 test_it_fail GET log/0 "" "Not a number"
