@@ -27,6 +27,7 @@ make check
 make install DESTDIR=%{buildroot}
 install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-agent
 install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
+mkdir -p %{buildroot}/etc/varnish
 touch %{buildroot}/etc/varnish/agent_secret
 
 %clean
