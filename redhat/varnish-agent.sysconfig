@@ -6,3 +6,6 @@
 # See varnish-agent(1) for an overview of valid settings.
 
 DAEMON_OPTS=""
+
+# an example of vac callback
+# DAEMON_OPTS="-z http://vac_server/api/rest/register"
