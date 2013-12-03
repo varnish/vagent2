@@ -3,7 +3,7 @@
 
 AC_PREREQ(2.61)
 AC_COPYRIGHT([Copyright (c) 2012-2013 Varnish Software])
-AC_INIT([varnish-agent], [2.2])
+AC_INIT([varnish-agent], [2.2.0])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 

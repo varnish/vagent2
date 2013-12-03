@@ -1,6 +1,6 @@
-varnish-agent (2.2) unstable; urgency=low
+varnish-agent (2.2.0) unstable; urgency=low
 
-  * Release 2.2
+  * Release 2.2.0
   * Stability fixes
   * Basic Authentication
   * Misc
