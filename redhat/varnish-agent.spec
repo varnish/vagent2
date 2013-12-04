@@ -17,7 +17,7 @@ Administration Console (VAC).
 %setup
 
 %build
-./configure --prefix=/usr
+./configure --prefix=/usr --localstatedir=/var/lib
 make
 
 %check
