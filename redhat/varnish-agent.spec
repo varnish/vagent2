@@ -29,6 +29,7 @@ install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-a
 install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
 mkdir -p %{buildroot}/etc/varnish
 touch %{buildroot}/etc/varnish/agent_secret
+mkdir -p %{buildroot}%{_localstatedir}/varnish-agent
 
 %clean
 rm -rf %{buildroot}
@@ -41,6 +42,7 @@ rm -rf %{buildroot}
 %config(noreplace) /etc/init.d/varnish-agent
 %config(noreplace) /etc/sysconfig/varnish-agent
 %ghost %attr(600, -, -) /etc/varnish/agent_secret
+%ghost %attr(-, varnish, varnish) %{_localstatedir}/varnish-agent
 
 %post
 test -f /etc/varnish/agent_secret || \
