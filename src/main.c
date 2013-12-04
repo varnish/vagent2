@@ -114,8 +114,8 @@ static void usage(const char *argv0)
 	"-P pidfile            Write pidfile.\n"
 	"-V                    Print version.\n"
 	"-h                    Prints this.\n"
-	"-u user               User to run as(default: nobody)\n"
-	"-g group              Group to run as (default: user's primary or nogroup)\n"
+	"-u user               User to run as(default: varnish)\n"
+	"-g group              Group to run as (default: varnish)\n"
 	"-q                    Quiet mode. Only log/output warnings and errors\n"
 	"-v                    Verbose mode. Output everything.\n"
 	"-K agentsecretfile    File containing username:password for authentication\n"
@@ -285,9 +285,9 @@ static void sandbox(struct agent_core_t *core)
 	int ret;
 	struct passwd *pw;
 	if (geteuid() == 0) {
-		pw = getpwnam(core->config->u_arg ? core->config->u_arg : "nobody");
+		pw = getpwnam(core->config->u_arg ? core->config->u_arg : "varnish");
 		if (pw == NULL) {
-			errx(1,"%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "nobody");
+			errx(1,"%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "varnish");
 		}
 
 		if (!core->config->g_arg) {
@@ -295,9 +295,9 @@ static void sandbox(struct agent_core_t *core)
 			assert(ret == 0);
 		} else {
 			struct group *gr;
-			gr = getgrnam(core->config->g_arg);
+			gr = getgrnam(core->config->g_arg ? core->config->g_arg : "varnish");
 			if (gr == NULL) {
-				errx(1,"%s is not a valid group\n", core->config->g_arg);
+				errx(1,"%s is not a valid group\n", core->config->g_arg ? core->config->g_arg : "varnish");
 			}
 			ret = setgid(gr->gr_gid);
 			assert(ret == 0);

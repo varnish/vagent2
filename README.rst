@@ -79,9 +79,9 @@ OPTIONS
 
 -h          Print help.
 
--u user     User to run as. Defaults to nobody.
+-u user     User to run as. Defaults to varnish.
 
--g group    Group to run as. Defaults to the primary group of the user.
+-g group    Group to run as. Defaults to varnish.
 
 -q          Quiet mode. Only log/output warnings/errors.
 
