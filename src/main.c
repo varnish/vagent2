@@ -202,7 +202,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			exit(1);
 			break;
 		case 'z':
-			core->config->vac_arg = optarg;
+			core->config->vac_arg = strdup(optarg);
 			break;
 		}
 	}

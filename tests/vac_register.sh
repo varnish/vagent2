@@ -46,5 +46,13 @@ stop_agent > /dev/null
 export ARGS=""
 start_agent > /dev/null
 test_it_fail POST vac_register "" "VAC url is not supplied. Please do so with the -z argument."
+stop_agent > /dev/null
+
+# test 11, 12, 13 & 14 - url update.
+# expected results: 
+export ARGS=""
+start_agent > /dev/null
+test_it_fail POST vac_register "" "VAC url is not supplied. Please do so with the -z argument."
+test_it POST vac_register "http://localhost:${DUMMY_PORT}/" "OK"
 
 kill $dummypid

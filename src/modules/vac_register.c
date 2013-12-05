@@ -86,6 +86,17 @@ static unsigned int vac_register_reply(struct http_request *request, void *data)
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
+
+	if (request->ndata) {
+		assert(request->data);
+		free(vdata->vac_url);
+		vdata->vac_url = malloc(request->ndata + 1);
+		assert(vdata->vac_url != NULL);
+		memcpy(vdata->vac_url, request->data, request->ndata);
+		vdata->vac_url[request->ndata] = '\0';
+		logger(vdata->logger, "Set new VAC URL: %s", vdata->vac_url);
+	}
+	
 	int ret = send_curl(vdata, &vret);
 	struct http_response *resp;
 	if (ret != 0) {
