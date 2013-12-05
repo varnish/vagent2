@@ -78,7 +78,7 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 
 	va_start(ap, fmt);
 	iret = vasprintf(&buffer, fmt, ap);
-	assert(iret>0);
+	assert(iret >= 0);
 	va_end(ap);
 	ipc_run(vadmin, &vret, "%s", buffer);
 	free(buffer);

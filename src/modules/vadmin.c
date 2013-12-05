@@ -32,6 +32,7 @@
 #include <sys/socket.h>
 #include <pthread.h>
 
+#include <ctype.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -211,8 +212,21 @@ static void
 vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 {
 	int sock = vadmin->sock;
+	char *p;
 	int nret;
 	assert(cmd);
+
+	for (p = cmd; *p; p++) {
+		if (!isspace(*p))
+			break;
+	}
+
+	if (*p == '\0') {
+		/* cmd is all whitespace */
+		ret->answer = strdup("");
+		return;
+	}
+	
 	nret = cli_write(sock, cmd);
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
@@ -229,7 +243,7 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 		vadmin->state = 0;
 		return;
 	}
-	debuglog(vadmin->logger, "Running %s",cmd);
+	debuglog(vadmin->logger, "Running '%s'",cmd);
 	(void)VCLI_ReadResult(sock, &ret->status, &ret->answer, 2000);
 	debuglog(vadmin->logger, "Got: %d ",ret->status);
 }
