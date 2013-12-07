@@ -10,6 +10,8 @@ TMPDIR="${TMPDIR:-$(mktemp -d)}"
 SRCDIR="${SRCDIR:-"."}"
 ORIGPWD="${ORIGPWD:-"."}"
 VARNISH_PID="${TMPDIR}/varnish.pid"
+BACKEND_PID="${TMPDIR}/backend.pid"
+BACKEND_LOG="${TMPDIR}/backend.log"
 PASS="${PASS:-agent:test}"
 
 inc() {
@@ -31,29 +33,42 @@ pass() {
 	echo "$*"
 }
 
+stop_backend() {
+	backendpid="$(cat "$BACKEND_PID")"
+	if [ -z "$backendpid" ]; then
+		fail "NO BACKEND_PID? Damn..."
+	else
+		echo -e "\tStopping the backend($backendpid)"
+		kill $backendpid
+	fi
+}
+
 stop_varnish() {
 	varnishpid="$(cat "$VARNISH_PID")"
 	if [ -z "$varnishpid" ]; then
-		fail "NO VARNISHPID? Bad stuff..."
+		fail "NO VARNISH_PID? Bad stuff..."
+	else
+		echo -e "\tStopping varnish($varnishpid)"
+		kill $varnishpid
 	fi
-	echo -e "\tStopping varnish($varnishpid)"
-	kill $varnishpid
 }
 
 stop_agent() {
 	agentpid=$(cat ${TMPDIR}/agent.pid)
-	if [ -z $agentpid ]; then
+	if [ -z "$agentpid" ]; then
 		fail "Stopping agent but no agent pid found. BORK"
+	else
+		echo -e "\tStopping agent($agentpid)"
+		kill $agentpid
+		pidwaitinverse $agentpid
 	fi
-	echo -e "\tStopping agent($agentpid)"
-	kill $agentpid
-	pidwaitinverse $agentpid
 }
 
 cleanup() {
-    echo Stopping varnishd and the agent
-    stop_varnish
+    echo Stopping varnishd, the agent and the backend
     stop_agent
+    stop_varnish
+    stop_backend
     echo Cleaning up
     rm -rf ${TMPDIR}
 }
@@ -109,13 +124,33 @@ pidwaitinverse() {
 	echo -e "\tPidwaitinverse took $I iterations"
 }
 
+start_backend() {
+       echo "Starting backend:"
+       python -u empty_response_backend.py 0 >$BACKEND_LOG 2>&1 &
+       backendpid=$(jobs -p %+)
+       echo $backendpid >$BACKEND_PID
+       echo -e "\tStarted the backend. Pid $backendpid"
+       for i in $(seq 10); do
+              sleep 1
+              backendport=$(grep -F 'Serving HTTP' $BACKEND_LOG | awk '{print $6}')
+              [ -n "$backendport" ] && break
+       done
+       if [ -z "$backendport" ]; then
+               echo -e "\tFailed to bind in a timely fashion"
+               exit 1
+       fi
+       echo -e "\tListening to *:$backendport"
+       echo "backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
+}
+
 start_varnish() {
 	head -c 16 /dev/urandom > "$TMPDIR/secret"
-	printf "${INDENT}Starting varnishd\n\n"
+	printf "${INDENT}Starting varnishd:\n\n"
 	varnishd -f "${SRCDIR}/data/boot.vcl" \
 	    -P "$VARNISH_PID" \
 	    -n "$TMPDIR" \
 	    -p auto_restart=off \
+	    -p ban_lurker_sleep=10 \
 	    -a 127.0.0.1:0 \
 	    -T 127.0.0.1:0 \
 	    -s malloc,50m \
@@ -139,6 +174,7 @@ start_agent() {
 
 init_all() {
 	init_misc
+	start_backend
 	start_varnish
 	start_agent
 }

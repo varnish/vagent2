@@ -1,1 +1,1 @@
-backend default { .host = "kly.no"; }
+backend default { .host = "localhost"; }

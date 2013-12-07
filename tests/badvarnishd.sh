@@ -7,6 +7,7 @@ PHASE=1
 VARNISH_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
 
 init_password
+start_backend
 phase() {
 	now=$(date +%s)
 	echo
@@ -122,5 +123,6 @@ test_it GET status "" "Child in state stopped"
 phase "Cleanup"
 stop_agent
 stop_varnish
+stop_backend
 rm -fr $TMPDIR
 exit $ret
