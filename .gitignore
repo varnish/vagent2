@@ -16,6 +16,7 @@ config.h
 config.log
 config.status
 .deps/
+.dirstamp
 stamp-h1
 tags
 compile
