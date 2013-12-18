@@ -6,7 +6,7 @@ ret=0
 
 AGENT_PORT="${AGENT_PORT:-6085}"
 VARNISH_PORT="${VARNISH_PORT:-80}"
-TMPDIR="${TMPDIR:-$(mktemp -d)}"
+TMPDIR="${TMPDIR:-$(mktemp -d -t vagent.XXXXXXXX)}"
 SRCDIR="${SRCDIR:-"."}"
 ORIGPWD="${ORIGPWD:-"."}"
 VARNISH_PID="${TMPDIR}/varnish.pid"
@@ -86,7 +86,7 @@ init_misc() {
 
 pidwait() {
 	I=1
-	for a in $(seq 1 5); do
+	for a in x x x x x; do
 		pid="$(cat "${TMPDIR}/${1}.pid")"
 		if [ ! -z "$pid" ]; then
 			break
@@ -114,7 +114,7 @@ pidwaitinverse() {
 		return
 	fi
 	I=1
-	for a in $(seq 1 5); do
+	for a in x x x x x; do
 		if ! kill -0 $1; then
 			break
 		fi
@@ -130,7 +130,7 @@ start_backend() {
        backendpid=$(jobs -p %+)
        echo $backendpid >$BACKEND_PID
        echo -e "\tStarted the backend. Pid $backendpid"
-       for i in $(seq 10); do
+       for i in x x x x x x x x x x; do
               sleep 1
               backendport=$(grep -F 'Serving HTTP' $BACKEND_LOG | awk '{print $6}')
               [ -n "$backendport" ] && break

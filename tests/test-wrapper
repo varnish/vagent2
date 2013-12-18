@@ -2,7 +2,7 @@
 
 set -e
 
-TMPDIR="$(mktemp -d)"
+TMPDIR="$(mktemp -d -t vagent.XXXXXXXX)"
 SRCDIR="$(dirname $0)/"
 
 PATH=/usr/sbin:/sbin:$PATH
