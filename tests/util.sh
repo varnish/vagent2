@@ -80,6 +80,7 @@ init_password() {
 init_misc() {
 	trap 'cleanup' EXIT
 	mkdir -p ${TMPDIR}/vcl
+	cp ${SRCDIR}/data/boot.vcl ${TMPDIR}/boot.vcl
 	init_password
 }
 
@@ -146,7 +147,7 @@ start_backend() {
 start_varnish() {
 	head -c 16 /dev/urandom > "$TMPDIR/secret"
 	printf "${INDENT}Starting varnishd:\n\n"
-	varnishd -f "${SRCDIR}/data/boot.vcl" \
+	varnishd -f "${TMPDIR}/boot.vcl" \
 	    -P "$VARNISH_PID" \
 	    -n "$TMPDIR" \
 	    -p auto_restart=off \
