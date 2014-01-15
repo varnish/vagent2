@@ -9,7 +9,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish > 3.0
 
 %if 0%{?el5}
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish > 3.0 perl-libwww-perl nc python-demjson
+BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish > 3.0 perl-libwww-perl nc python-demjson
 %else
 BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish > 3.0 perl-libwww-perl nc python-demjson
 %endif
