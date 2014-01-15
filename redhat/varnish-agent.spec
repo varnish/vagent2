@@ -18,10 +18,10 @@ Administration Console (VAC).
 
 %build
 ./configure --prefix=/usr --localstatedir=/var/lib
-make
+make VERBOSE=1
 
 %check
-make check
+make check VERBOSE=1
 
 %install
 make install DESTDIR=%{buildroot}
