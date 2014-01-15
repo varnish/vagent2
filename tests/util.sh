@@ -240,7 +240,7 @@ test_it_long_file_fail() {
 	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <"$3")
 	if [ "x$?" = "x1" ]; then pass; else fail "$*: $FOO"; fi
 	inc
-	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
+	if echo $FOO | egrep -q "$4";then pass; else fail "$*: $FOO"; fi
 	inc
 }
 
@@ -248,7 +248,7 @@ test_it_long_content_fail() {
 	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
-	if echo $FOO | egrep -q "$4"; then fail "$*: $FOO"; else pass; fi
+	if echo $FOO | grep -q "$4"; then fail "$*: $FOO"; else pass; fi
 	inc
 }
 
