@@ -29,6 +29,13 @@ var agent = {
 	varnishtoplength: 5
 };
 
+function urlPrefix() {
+    var pattern = /\/html\//;
+    var index = window.location.href.match(pattern).index;
+    var prefix = window.location.href.substr(0, index);
+    return prefix;
+}
+
 function clog(text)
 {
 	if(agent.debug) {
@@ -103,7 +110,7 @@ function reset_status()
 	var stat;
 	$.ajax({
 		type: "GET",
-		url: "/status",
+		url: urlPrefix() + "/status",
 		dataType: "text",
 		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
@@ -152,7 +159,7 @@ function uploadVCL()
    	out_clear();
 	$.ajax({
 		type: "PUT",
-		url: "/vcl/" + id,
+		url: urlPrefix() + "/vcl/" + id,
 		timeout: agent.globaltimeout,
 		contentType: "application/xml",
 		data: vcl,
@@ -181,7 +188,7 @@ function loadVCL()
 	assertText(id);
 	$.ajax({
 		type: "GET",
-		url: "/vcl/" + id,
+		url: urlPrefix() + "/vcl/" + id,
 		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) { },
 		error: function( jqXHR, textStatus, errorThrown) {
@@ -212,7 +219,7 @@ function listVCL()
 {
 	$.ajax({
 		type: "GET",
-		url: "/vcljson/",
+		url: urlPrefix() + "/vcljson/",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -251,7 +258,7 @@ function list_params()
 {
 	$.ajax({
 		type: "GET",
-		url: "/paramjson/",
+		url: urlPrefix() + "/paramjson/",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -350,7 +357,7 @@ function saveParam()
 
 	$.ajax({
 		type: "PUT",
-		url: "/param/"+pname,
+		url: urlPrefix() + "/param/"+pname,
 		timeout: agent.globaltimeout,
 		contentType: "application/xml",
 		data: pval,
@@ -383,7 +390,7 @@ function deployVCL()
 	assertText(id);
 	$.ajax({
 		type: "PUT",
-		url: "/vcldeploy/" + id,
+		url: urlPrefix() + "/vcldeploy/" + id,
 		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
@@ -421,7 +428,7 @@ function discardVCL()
 
 	$.ajax({
 		type: "DELETE",
-		url: "/vcl/" + id,
+		url: urlPrefix() + "/vcl/" + id,
 		timeout: agent.globaltimeout,
 		success: function (data, textStatus, jqXHR) {
 			agent.out = jqXHR.responseText;
@@ -449,7 +456,7 @@ function stop()
 {
 	$.ajax({
 		type: "PUT",
-		url: "/stop/",
+		url: urlPrefix() + "/stop/",
 		timeout: agent.globaltimeout,
 		complete: function( jqXHR, textStatus) {
 			var doc = jqXHR.responseText;
@@ -463,7 +470,7 @@ function start()
 {
 	$.ajax({
 		type: "PUT",
-		url: "/start",
+		url: urlPrefix() + "/start",
 		timeout: agent.globaltimeout,
 		complete: function( jqXHR, textStatus) {
 			var doc = jqXHR.responseText;
@@ -486,7 +493,7 @@ function update_stats()
 	assert(d != null);
 	$.ajax({
 		type: "GET",
-		url: "/stats",
+		url: urlPrefix() + "/stats",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -535,7 +542,7 @@ function updateTop()
 	assertText(tag);
 	$.ajax({
 		type: "GET",
-		url: "/log/1/" + tag,
+		url: urlPrefix() + "/log/1/" + tag,
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -574,7 +581,7 @@ function banSmart()
 	assertText(banUrl);
 	$.ajax({
 		type: "POST",
-		url: "/ban" + banUrl,
+		url: urlPrefix() + "/ban" + banUrl,
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -593,7 +600,7 @@ function banList()
 {
 	$.ajax({
 		type: "GET",
-		url: "/ban",
+		url: urlPrefix() + "/ban",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -611,7 +618,7 @@ function panicShow()
 {
 	$.ajax({
 		type: "GET",
-		url: "/panic",
+		url: urlPrefix() + "/panic",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -635,7 +642,7 @@ function panicTest()
 {
 	$.ajax({
 		type: "POST",
-		url: "/direct",
+		url: urlPrefix() + "/direct",
 		data: "debug.panic.worker",
 		timeout: agent.globaltimeout,
 		dataType: "text",
@@ -657,7 +664,7 @@ function panicClear()
 {
 	$.ajax({
 		type: "DELETE",
-		url: "/panic",
+		url: urlPrefix() + "/panic",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
@@ -677,7 +684,7 @@ function getVersion()
 {
 	$.ajax({
 		type: "GET",
-		url: "/version",
+		url: urlPrefix() + "/version",
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
