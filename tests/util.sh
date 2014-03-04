@@ -141,7 +141,7 @@ start_backend() {
                exit 1
        fi
        echo -e "\tListening to *:$backendport"
-       echo "backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
+       echo "vcl 4.0; backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
 }
 
 start_varnish() {
