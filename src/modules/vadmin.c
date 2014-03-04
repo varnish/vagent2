@@ -93,7 +93,7 @@ n_arg_sock(struct agent_core_t *core)
 	vsm = VSM_New();
 	assert(VSM_n_Arg(vsm, core->config->n_arg) == 1);
 	if (VSM_Open(vsm)) {
-		warnlog(vadmin->logger,"Couldn't open VSM");
+		warnlog(vadmin->logger,"Couldn't open VSM: %s", VSM_Error(vsm));
 		VSM_Delete(vsm);
 		vsm = NULL;
 	}
