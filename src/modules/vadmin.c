@@ -43,7 +43,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <varnishapi.h>
+#include "vapi/vsl.h"
+#include <vapi/vsm.h>
 #include <vcli.h>
 
 #include "common.h"
@@ -83,17 +84,18 @@ cli_write(int sock, const char *s)
 static int
 n_arg_sock(struct agent_core_t *core)
 {
-	struct VSM_data *vsd;
+	struct VSM_data *vsm;
 	struct vadmin_config_t *vadmin;
 	char *p;
+	struct VSM_fantom vt;
 	GET_PRIV(core, vadmin);
 
-	vsd = VSM_New();
-	assert(VSL_Arg(vsd, 'n', core->config->n_arg));
-	if (VSM_Open(vsd, 1)) {
+	vsm = VSM_New();
+	assert(VSM_n_Arg(vsm, core->config->n_arg) == 1);
+	if (VSM_Open(vsm)) {
 		warnlog(vadmin->logger,"Couldn't open VSM");
-		VSM_Delete(vsd);
-		vsd = NULL;
+		VSM_Delete(vsm);
+		vsm = NULL;
 	}
 
 	if (core->config->T_arg_orig) {
@@ -101,34 +103,38 @@ n_arg_sock(struct agent_core_t *core)
 			free(core->config->T_arg);
 		core->config->T_arg = strdup(core->config->T_arg_orig);
 	} else {
-		if (vsd == NULL) {
+		if (vsm == NULL) {
 			warnlog(vadmin->logger,"No -T arg and no shmlog readable.");
 			return -1;
 		}
-		p = VSM_Find_Chunk(vsd, "Arg", "-T", "", NULL);
-		if (p == NULL)  {
-			warnlog(vadmin->logger, "No -T arg in shared memory.");
+
+		if (!VSM_Get(vsm, &vt, "Arg", "-T", "")) {
+			warnlog(vadmin->logger, "No -T arg in shared memory\n");
+			VSM_Delete(vsm);
 			return (-1);
 		}
-		core->config->T_arg = strdup(p);
+
+		assert(vt.b);
+		core->config->T_arg = strdup(vt.b);
 	}
 
-	if (core->config->S_arg == NULL && !vsd) {
+	if (core->config->S_arg == NULL && !vsm) {
 		warnlog(vadmin->logger, "No shmlog and no -S arg. Unknown if authentication will work.");
 	}
-	if (vsd && core->config->S_arg == NULL) {
-		p = VSM_Find_Chunk(vsd, "Arg", "-S", "", NULL);
-		if (p != NULL)
-			core->config->S_arg = strdup(p);
+	if (vsm && core->config->S_arg == NULL) {
+		if (VSM_Get(vsm, &vt, "Arg", "-S", "")) {
+			assert(vt.b);
+			core->config->S_arg = strdup(vt.b);
+		}
 	}
 
+	if (vsm)
+		VSM_Delete(vsm);
+	
 	p = strchr(core->config->T_arg, '\n');
 	if (p) {
-		assert(p);
 		*p = '\0';
 	}
-	if (vsd)
-		VSM_Delete(vsd);
 	logger(vadmin->logger, "-T argument computed to: %s", core->config->T_arg ? core->config->T_arg : "(null)");
 	return (1);
 }

@@ -23,8 +23,6 @@ varnish_agent_SOURCES = \
 	modules/vparams.c \
 	modules/vcl.c \
 	modules/html.c \
-	modules/vstat.c \
-	modules/vlog.c \
 	modules/vban.c \
 	modules/curl.c \
 	modules/vdirect.c \
@@ -34,4 +32,4 @@ varnish_agent_LDADD = \
 	@VARNISHAPI_LIBS@ \
 	@MICROHTTPD_LIBS@ \
 	${PTHREAD_LIBS} ${NET_LIBS} \
-	${LIBCURL_LIBS}
+	${LIBCURL_LIBS} ${LIBM}

@@ -36,6 +36,9 @@ NET_LIBS="${LIBS}"
 LIBS="${save_LIBS}"
 AC_SUBST(NET_LIBS)
 
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+
 AC_PROG_CC
 AM_PROG_CC_C_O
 AGENT_PERSIST_DIR='${localstatedir}/varnish-agent'
