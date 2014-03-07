@@ -46,7 +46,7 @@ PLUGIN(html)
 PLUGIN(vadmin)
 PLUGIN(vparams)
 PLUGIN(vban)
-/* PLUGIN(vstat) */
+PLUGIN(vstat)
 /* PLUGIN(vlog) */
 PLUGIN(curl)
 PLUGIN(vac_register)
