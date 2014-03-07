@@ -24,6 +24,7 @@ varnish_agent_SOURCES = \
 	modules/vcl.c \
 	modules/html.c \
 	modules/vban.c \
+	modules/vstat.c \
 	modules/curl.c \
 	modules/vdirect.c \
 	modules/vac_register.c
