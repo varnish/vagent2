@@ -62,8 +62,6 @@ struct vstat_priv_t {
 	const struct VSC_C_main *VSC_C_main;
 	struct vsb *vsb_http;
 	struct vsb *vsb_timer;
-	/* time_t now; */
-	/* int last_uptime; */
 	char *push_url;
 	pthread_mutex_t lck;
 };
