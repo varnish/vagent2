@@ -129,7 +129,9 @@ n_arg_sock(struct agent_core_t *core)
 	}
 	if (vsd)
 		VSM_Delete(vsd);
-	logger(vadmin->logger, "-T argument computed to: %s", core->config->T_arg ? core->config->T_arg : "(null)");
+	logger(vadmin->logger, "Using -T argument from %s: %s",
+	    core->config->T_arg_orig ? "command line" : "shmlog",
+	    core->config->T_arg ? core->config->T_arg : "(null)");
 	return (1);
 }
 
