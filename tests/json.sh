@@ -7,12 +7,12 @@ init_all
 test_json vcljson/
 test_json paramjson/
 test_json stats
-test_json log/100/RxURL
+test_json log/100/ReqURL
 
 test_it_long GET vcl/ "" "active"
-test_json log/100/CLI
+test_json log/100
 
 GET http://localhost:${VARNISH_PORT}/meh > /dev/null
-test_json log/100/RxUrl
+test_json log/100/ReqURL
 
 exit $ret
