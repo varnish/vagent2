@@ -156,6 +156,21 @@ start_varnish() {
 	    -T 127.0.0.1:0 \
 	    -s malloc,50m \
 	    -S "$TMPDIR/secret"
+
+	FOO=""
+	for i in x x x x x x x x x x; do
+	    FOO=$(varnishadm -n "$TMPDIR" status)
+	    if echo $FOO 2>/dev/null | grep -q "running"; then
+		break
+	    fi
+	    sleep 1
+	done
+
+	if ! echo $FOO | grep -q "running"; then
+	    echo "Unable to start Varnish."
+	    exit 1
+	fi
+
 	pidwait varnish
 	VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
 	export VARNISH_PORT AGENT_PORT
