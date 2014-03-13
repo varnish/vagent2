@@ -112,7 +112,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 	curl = curl_easy_init();
 
 	if(curl) {
-		curl_easy_setopt(curl, CURLOPT_INTERFACE, "0.0.0.0");
+		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2);
