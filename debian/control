@@ -1,7 +1,7 @@
 Source: varnish-agent
-Section: web
+Section: varnish-3.0/web
 Priority: optional
-Maintainer: Kristian Lyngstol <kristian@bohemians.org>
+Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
                netcat-openbsd,
 	       libvarnishapi-dev (>= 3.0),
