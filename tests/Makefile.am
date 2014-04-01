@@ -3,7 +3,6 @@ TESTS = ban.sh \
 	arguments.sh \
 	buffers.sh \
 	vac_register.sh \
-	badvarnishd.sh \
 	json.sh \
 	log.sh \
 	status.sh \
