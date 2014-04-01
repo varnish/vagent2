@@ -94,10 +94,11 @@ struct vlog_req_priv {
 
 static int vlog_cb_func(struct VSL_data *vsl,
     struct VSL_transaction * const trans[], void *priv) {
+	int i;
 	struct vlog_req_priv *vrp = priv;
 	struct VSL_transaction *t;
 
-	for (int i = 0; (t = trans[i]) != NULL && vrp->entries < vrp->limit; ++i) {
+	for (i = 0; (t = trans[i]) != NULL && vrp->entries < vrp->limit; ++i) {
 		while (VSL_Next(t->c) && vrp->entries < vrp->limit) {
 			if (!VSL_Match(vsl, t->c)) {
 				continue;
