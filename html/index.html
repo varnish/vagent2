@@ -143,14 +143,14 @@
 	      (e.g: cache misses), what web servers you are using (e.g:
 	      Server headers), etc.</p>
 	      <select id="varnishtop-sel" onChange="updateTop()">
-    	        <option value="TxURL">Cache misses</option>
-	        <option value="RxURL">Requested URLs</option>
-	        <option value="TxStatus">Response codes sent</option>
-	        <option value="RxHeader/^Vary:">Vary headers received</option>
-	        <option value="TxHeader/^Vary:">Vary headers sent</option>
-	        <option value="RxHeader/^Server:">Server headers received</option>
-	        <option value="RxHeader/^Host:">Host headers received</option>
-	        <option value="TxHeader/^Content-Type:">Content type</option>
+    	        <option value="BereqURL">Cache misses</option>
+	        <option value="ReqURL">Requested URLs</option>
+	        <option value="RespStatus">Response codes sent</option>
+	        <option value="BerespHeader/^Vary:">Vary headers received</option>
+	        <option value="RespHeader/^Vary:">Vary headers sent</option>
+	        <option value="BerespHeader/^Server:">Server headers received</option>
+	        <option value="ReqHeader/^Host:">Host headers received</option>
+	        <option value="RespHeader/^Content-Type:">Content type</option>
 	      </select>
 	      <div class="input-append">
 	      <input size="4" cols="4" min="1" max="1000" maxlength="4" type="number" value="5" id="varnishtoplength" onchange="varnishtopChange()">
