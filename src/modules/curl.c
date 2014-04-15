@@ -117,12 +117,14 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		curl_easy_setopt(curl, CURLOPT_URL, url);
 		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2);
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
-		curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
 		if (data) {
+			curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, senddata);
 			curl_easy_setopt(curl, CURLOPT_READDATA, private);
+		} else {
+			curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
 		}
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK) {
