@@ -124,7 +124,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, senddata);
 			curl_easy_setopt(curl, CURLOPT_READDATA, private);
 		} else {
-			curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
+			curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 		}
 		res = curl_easy_perform(curl);
 		if(res != CURLE_OK) {
