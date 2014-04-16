@@ -5,4 +5,6 @@
 # 16.04.2014
 
 echo "Executing all integration test cases."
-for s in $(pwd)/testcases/*;do [ -x $s ] && $s || : ;done
+echo "... ensure this is executed from the root folder of vagent2"
+pwd
+for s in $(pwd)/tests/integration/testcases/*;do [ -x $s ] && $s || : ;done
