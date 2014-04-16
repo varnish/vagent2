@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Yves Hwang
+# yveshwang@gmail.com
+# 16.04.2014
+
+VAGRANTFILE_API_VERSION = "2"
+
+$centos5_script = <<SCRIPT
+    rpm --nosignature -Uvh http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
+    rpm --nosignature -Uvh http://repo.varnish-cache.org/redhat/varnish-3.0/el5/noarch/varnish-release/varnish-release-3.0-1.el5.centos.noarch.rpm
+    yum update -y
+    yum upgrade -y
+    yum install varnish- y
+    yum install varnish-agent -y
+    yum install nc -y
+SCRIPT
+
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    config.vm.define :centos5 do |centos5|
+        centos5.vm.box = "centos5"
+        centos5.vm.box_url = "http://tag1consulting.com/files/centos-5.8-x86-64-minimal.box"
+        centos5.vm.provision :shell, :inline => $centos5_script
+    end
+end
+
