@@ -21,7 +21,8 @@ $centos5_script = <<SCRIPT
     yum install python-docutils -y
     yum install perl-libwww-perl -y
     yum install python-demjson -y
-    yum install nc -y    
+    yum install nc -y
+    yum install git -y
     curl ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.63.tar.gz -O
     tar xf autoconf-2.63.tar.gz
     mkdir aconf
