@@ -36,7 +36,11 @@ NET_LIBS="${LIBS}"
 LIBS="${save_LIBS}"
 AC_SUBST(NET_LIBS)
 
-AC_CHECK_LIBM
+save_LIBS="${LIBS}"
+LIBS=""
+AC_CHECK_LIB([m],[cos])
+LIBM="${LIBS}"
+LIBS="${save_LIBS}"
 AC_SUBST(LIBM)
 
 AC_PROG_CC
