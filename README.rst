@@ -9,7 +9,7 @@ Varnish Agent
 :Manual section: 1
 :Authors: Kristian Lyngstøl, Yves Hwang, Dag Haavi Finstad
 :Date: 25-04-2014
-:Version: 3.0.0
+:Version: 4.0.0
 
 SYNOPSIS
 ========
@@ -167,4 +167,4 @@ COPYRIGHT
 This document is licensed under the same license as the Varnish Agent
 itself. See LICENSE for details.
 
-* Copyright 2012-2013 Varnish Software AS
+* Copyright 2012-2014 Varnish Software AS

@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 3.0.0
+Version: 4.0.0
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -63,7 +63,7 @@ fi
 
 %changelog
 * Fri Apr 25 2014 Yves Hwang <yveshwang@gmail.com> - 3.0.0
-- Compatible with varnish > 3.0.5
+- Compatible with varnish >= 4.0.0
 - #109 Do not set CURLOPT_NOBODY if we have data to send.
 - #108 libcurl issues HEAD instead of PUT in rhel5
 
