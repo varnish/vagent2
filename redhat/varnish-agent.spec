@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 2.2.0
+Version: 3.0.0
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -62,13 +62,22 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Fri Apr 25 2014 Yves Hwang <yveshwang@gmail.com> - 3.0.0
+- Compatible with varnish > 3.0.5
+- #109 Do not set CURLOPT_NOBODY if we have data to send.
+- #108 libcurl issues HEAD instead of PUT in rhel5
+
 * Mon Oct 28 2013 Dridi Boukelmoune <dridi.boukelmoune@gmail.com> - 2.2-1
 - Added /etc/varnish/agent_secret in the files list
+
 * Sat Mar 16 2013 Patricio Bruna <pbruna@itlinux.cl> - 2.2-1
 - Added dependencies for rpmbuild
+
 * Fri Feb 22 2013 Kristian Lyngstøl <kristian@bohemians.org> - 2.2-1
 - Release
+
 * Wed Jan 30 2013 Kristian Lyngstol <kristian@bohemians.org> - 2.1-1
 - 2.1 dev version
+
 * Fri Jan 18 2013 Lasse Karstensen <lkarsten@varnish-software.com> - 2.0-1
 - Initial version.

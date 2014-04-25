@@ -1,3 +1,11 @@
+varnish-agent (3.0.0) unstable; urgency=low
+
+  * Compatible with varnish > 3.0.5
+  * #109 Do not set CURLOPT_NOBODY if we have data to send.
+  * #108 libcurl issues HEAD instead of PUT in rhel5
+
+ -- Yves Hwang <yveshwang@gmail.com>  Fri, 25 Apr 2014 10:12:14 +0200
+
 varnish-agent (2.2.0) unstable; urgency=low
 
   * Release 2.2.0
