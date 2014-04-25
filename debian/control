@@ -1,7 +1,7 @@
 Source: varnish-agent
-Section: web
+Section: varnish-3.0/web
 Priority: optional
-Maintainer: Kristian Lyngstol <kristian@bohemians.org>
+Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
                netcat-openbsd,
 	       libvarnishapi-dev (>= 4.0.0),
@@ -11,7 +11,8 @@ Build-Depends: debhelper (>= 7),
 	       varnish (>= 4.0.0),
 	       libcurl4-gnutls-dev | libcurl-dev,
 	       libwww-perl,
-	       python-demjson
+	       python-demjson,
+           net-tools
 Standards-Version: 3.8.1
 
 Package: varnish-agent

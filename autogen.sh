@@ -19,7 +19,7 @@ fi
 
 set -ex
 
-aclocal
+aclocal -I /usr/share/aclocal
 autoheader
 automake --add-missing --copy --foreign
 autoconf
