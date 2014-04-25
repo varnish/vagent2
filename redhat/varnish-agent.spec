@@ -7,7 +7,6 @@ Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish >= 4.0.0
-Requires: libedit-devel
 
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish >= 4.0.0 perl-libwww-perl nc python-demjson libedit-devel
