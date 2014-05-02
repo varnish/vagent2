@@ -210,6 +210,8 @@ static void *ipc_loop(void *data)
 	}
 	while (1) {
 		ret = poll(fds, ipc->nlisteners, -1);
+		if (ret == -1 && errno == EINTR)
+			continue;
 		assert(ret > 0);
 		for (i=0; i < ipc->nlisteners; i++) {
 			if (fds[i].revents & POLLIN) {
