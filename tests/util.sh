@@ -96,7 +96,7 @@ pidwait() {
             if [ ! -z "$2" ]; then
                 # wait for the port also
                 port_check="$(netstat -la | grep $2 | wc -l)";
-                if [ port_check -eq 1 ]; then
+                if [ $port_check -eq 1 ]; then
                     echo listening port $2 found.
                     break
                 fi
