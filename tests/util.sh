@@ -91,9 +91,9 @@ pidwait() {
     I=1
     for a in x x x x x; do
         pid="$(cat "${TMPDIR}/${1}.pid")"
-        if [ ! -z "$pid" ]; then
+        if [ -n "$pid" ]; then
             # pid is established, check port
-            if [ ! -z "$2" ]; then
+            if [ -n "$2" ]; then
                 # wait for the port also
                 port_check="$(netstat -la | grep $2 | wc -l)";
                 if [ $port_check -eq 1 ]; then
