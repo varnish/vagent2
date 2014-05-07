@@ -95,7 +95,7 @@ pidwait() {
             # pid is established, check port
             if [ -n "$2" ]; then
                 # wait for the port also
-                port_check="$(netstat -la | grep $2 | wc -l)";
+                port_check="$(netstat -nlpt | awk '{print $4;}' | egrep ":${2}$" | wc -l)";
                 if [ $port_check -eq 1 ]; then
                     echo listening port $2 found.
                     break
