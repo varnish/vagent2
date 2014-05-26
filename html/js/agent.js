@@ -487,9 +487,49 @@ function status()
 	reset_status();
 }
 
+function verify_varnish_stat(version, data) {
+	if (data == null)
+		return false;
+	if( version.indexOf("4.") != -1 )
+		return ((data["MAIN.client_req"] !=null)
+			|| (data["MAIN.client_req_411"] != null)
+			|| (data["MAIN.client_req_413"] != null)
+			|| (data["MAIN.client_req_417"] != null)
+			|| (data["MAIN.client_req_400"] != null));
+	else
+		return (data.client_req != null);
+}
+
+
+function calculate_client_req(version, now, previous) {
+	if( verify_varnish_stat(version, previous)) {
+		if( version.indexOf("4.") != -1 ) {
+			return (now["MAIN.client_req"].value - previous["MAIN.client_req"].value)
+				+ (now["MAIN.client_req_400"].value - previous["MAIN.client_req_400"].value)
+				+ (now["MAIN.client_req_411"].value - previous["MAIN.client_req_411"].value)
+				+ (now["MAIN.client_req_413"].value - previous["MAIN.client_req_413"].value)
+				+ (now["MAIN.client_req_417"].value - previous["MAIN.client_req_417"].value);
+		} else {
+			return now.client_req.value - previous.client_req.value;
+		}
+	}
+	else {
+		if( version.indexOf("4.") != -1 ) {
+			return now["MAIN.client_req"].value
+				+ now["MAIN.client_req_400"]
+				+ now["MAIN.client_req_411"]
+				+ now["MAIN.client_req_413"]
+				+ now["MAIN.client_req_417"];
+		} else {
+			return now.client_req.value;
+		}
+	}
+}
+
 function update_stats()
 {
 	var d = document.getElementById("stats-btn");
+    var version = document.getElementById("agentVersion").innerHTML;
 	assert(d != null);
 	$.ajax({
 		type: "GET",
@@ -505,14 +545,9 @@ function update_stats()
 			var n_req = 0;
 			var n_n_req = 0;
 			for (i = 3; agent.stats[i-1] != null; i--) {
-				if (agent.stats[i] == null)
+				if(!verify_varnish_stat(version, agent.stats[i]))
 					break;
-				if (agent.stats[i]["MAIN.client_req"] == null)
-					break;
-				if (agent.stats[i-1] != null && agent.stats[i-1]["MAIN.client_req"] != null)
-					n_req += agent.stats[i]["MAIN.client_req"].value - agent.stats[i-1]["MAIN.client_req"].value;
-				else
-					n_req += agent.stats[i]["MAIN.client_req"].value;
+				n_req += calculate_client_req(version, agent.stats[i], agent.stats[i-1]);
 				n_n_req++;
 			}
 			if (n_n_req>0)
