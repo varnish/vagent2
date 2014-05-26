@@ -501,17 +501,18 @@ function update_stats()
 				agent.stats[i] = agent.stats[i+1];
 				}
 			agent.stats[3] = JSON.parse(data);
+            
 			var n_req = 0;
 			var n_n_req = 0;
 			for (i = 3; agent.stats[i-1] != null; i--) {
 				if (agent.stats[i] == null)
 					break;
-				if (agent.stats[i].client_req == null)
+				if (agent.stats[i]["MAIN.client_req"] == null)
 					break;
-				if (agent.stats[i-1] != null && agent.stats[i-1].client_req != null)
-					n_req += agent.stats[i].client_req.value - agent.stats[i-1].client_req.value;
+				if (agent.stats[i-1] != null && agent.stats[i-1]["MAIN.client_req"] != null)
+					n_req += agent.stats[i]["MAIN.client_req"].value - agent.stats[i-1]["MAIN.client_req"].value;
 				else
-					n_req += agent.stats[i].client_req.value;
+					n_req += agent.stats[i]["MAIN.client_req"].value;
 				n_n_req++;
 			}
 			if (n_n_req>0)
