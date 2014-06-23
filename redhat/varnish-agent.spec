@@ -6,7 +6,7 @@ License: BSD
 Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: varnish > 3.0
+Requires: varnish > 3.0, varnish < 4.0
 
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish > 3.0 perl-libwww-perl nc python-demjson
