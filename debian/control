@@ -4,14 +4,14 @@ Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
                netcat-openbsd,
-	       libvarnishapi-dev (>= 3.0),
-	       pkg-config,
-	       libmicrohttpd-dev,
-	       python-docutils,
-	       varnish (>= 3.0.2) | varnish-plus (>=3.0.3plus),
-	       libcurl4-gnutls-dev | libcurl-dev,
-	       libwww-perl,
-	       python-demjson,
+               libvarnishapi-dev (>= 3.0),
+               pkg-config,
+               libmicrohttpd-dev,
+               python-docutils,
+               varnish (>= 3.0.2) | varnish-plus (>=3.0.3plus),
+               libcurl4-gnutls-dev | libcurl-dev,
+               libwww-perl,
+               python-demjson,
            net-tools
 Standards-Version: 3.8.1
 
