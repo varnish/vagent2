@@ -24,7 +24,7 @@ tests/tmp
 test-driver
 
 # Compile bits
-src/*.o
+**.o
 src/varnish-agent
 varnish-agent.1
 include/vcs_version.h
