@@ -21,7 +21,7 @@ may behave considerably differently.
 Build instructions
 ------------------
 
-For git only::
+Installing from git repo only::
 
 	 $ ./autogen.sh
 
@@ -91,12 +91,13 @@ Console (VAC).
 
 VAC is typically installed on a separate server to varnishd/varnish-agent; 
 to register the varnish-agent with VAC, the -z flag needs to be set either 
-on the command line or in /etc/defaults/varnish-agent in the form
+on the command line or in /etc/defaults/varnish-agent, in the form
 	DAEMON_OPTS="-z http://vac-server-name/api/rest/register"
 
 If this is successful, the varnish-cache instance should be listed in the 
-VAC UI under the Configure tab. To associate the cache with a cache group, 
-drag and drop the instance from the list on the left-hand side to the group entry.
+VAC UI under the Configure tab. To associate the cache with a cache group 
+and start using it, drag and drop the instance from the list on the left-hand side 
+to the group entry.
 
 If the varnishd instance is receiving requests, statistics should be visible in 
 the VAC UI after a short lag.
