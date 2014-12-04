@@ -62,6 +62,9 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Thu Dec 4 2014 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.0
+- Tag release 3.0.0
+
 * Fri Apr 25 2014 Yves Hwang <yveshwang@gmail.com> - 2.2.1
 - Compatible with varnish >= 3.0.5
 - #109 Do not set CURLOPT_NOBODY if we have data to send.

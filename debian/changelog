@@ -1,3 +1,9 @@
+varnish-agent (3.0.0) unstable; urgency=low
+
+  * Tag release 3.0.0.
+
+ -- Dag Haavi Finstad <daghf@varnish-software.com>  Thu, 04 Dec 2014 14:19:21 +0100
+
 varnish-agent (2.2.1+nmu1) unstable; urgency=low
 
   * Debian packaging file update to support Varnish Cache Plus.
