@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 7),
 	       pkg-config,
 	       libmicrohttpd-dev,
 	       python-docutils,
-	       varnish (>= 4.0) | varnish-plus (>= 4.0),
+	       varnish | varnish-plus,
 	       libcurl4-gnutls-dev | libcurl-dev,
 	       libwww-perl,
 	       python-demjson,
@@ -17,6 +17,6 @@ Standards-Version: 3.8.1
 
 Package: varnish-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, varnish (>= 4.0.0)
+Depends: ${shlibs:Depends}, ${misc:Depends}, varnish
 Description: Varnish Agent
 
