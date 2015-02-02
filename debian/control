@@ -4,12 +4,11 @@ Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
                netcat-openbsd,
-               libvarnishapi-dev (>= 3.0),
+               libvarnishapi-dev,
                pkg-config,
                libmicrohttpd-dev,
                python-docutils,
-               varnish (>= 3.0.2) | varnish-plus (>=3.0.3plus),
-               varnish (< 4.0.0) | varnish-plus (<4.0.0r1),
+               varnish,
                libcurl4-gnutls-dev | libcurl-dev,
                libwww-perl,
                python-demjson,
@@ -18,6 +17,6 @@ Standards-Version: 3.8.1
 
 Package: varnish-agent
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, varnish (>= 3.0.2) | varnish-plus (>=3.0.3plus), varnish (< 4.0.0) | varnish-plus (< 4.0.0r1)
+Depends: ${shlibs:Depends}, ${misc:Depends}, varnish
 Description: Varnish Agent
 
