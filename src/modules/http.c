@@ -172,7 +172,6 @@ int send_response2(struct http_response *resp)
 		MHD_add_response_header(MHDresponse, hdr->key, hdr->value);
 
 	ret = MHD_queue_response (resp->connection, resp->status, MHDresponse);
-	assert(ret == 1);
 	MHD_destroy_response (MHDresponse);
 	return ret;
 }
@@ -318,7 +317,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	http = (struct http_priv_t *) plug->data;
 	assert(plug);
 	assert(http);
-
 
 	if (NULL == *con_cls) {
 		con_info = malloc (sizeof (struct connection_info_struct));
