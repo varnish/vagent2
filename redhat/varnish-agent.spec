@@ -7,6 +7,13 @@ Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+Requires(post): systemd-units
+Requires(post): systemd-sysv
+Requires(preun): systemd-units
+Requires(postun): systemd-units
+BuildRequires: systemd-units
+%endif
 
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish perl-libwww-perl nc python-demjson
@@ -30,8 +37,13 @@ make check VERBOSE=1
 
 %install
 make install DESTDIR=%{buildroot}
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+install -D redhat/varnish-agent.service %{buildroot}%{_unitdir}/varnish-agent.service
+install -D redhat/varnish-agent.params %{buildroot}%{_sysconfdir}/varnish/varnish-agent.params
+%else
 install -D redhat/varnish-agent.sysconfig   %{buildroot}/etc/sysconfig/varnish-agent
 install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agent
+%endif
 mkdir -p %{buildroot}/etc/varnish
 touch %{buildroot}/etc/varnish/agent_secret
 mkdir -p %{buildroot}/var/lib/varnish-agent
@@ -44,8 +56,13 @@ rm -rf %{buildroot}
 %{_bindir}/varnish-agent
 %{_mandir}/man1/varnish-agent.1.gz
 %{_datadir}/varnish-agent/html
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+%{_unitdir}/varnish-agent.service
+%config(noreplace)%{_sysconfdir}/varnish/varnish-agent.params
+%else
 %config(noreplace) /etc/init.d/varnish-agent
 %config(noreplace) /etc/sysconfig/varnish-agent
+%endif
 %ghost %attr(600, -, -) /etc/varnish/agent_secret
 %attr(-, varnish, varnish) /var/lib/varnish-agent
 
@@ -53,12 +70,21 @@ rm -rf %{buildroot}
 test -f /etc/varnish/agent_secret || \
     (echo "varnish:$(head -c 8 /dev/urandom | base64)" > /etc/varnish/agent_secret \
     && chmod 0600 /etc/varnish/agent_secret)
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+/bin/systemctl daemon-reload >/dev/null 2>&1 || :
+%else
 /sbin/chkconfig --add varnish-agent
+%endif
 
 %preun
 if [ $1 -lt 1 ]; then
+%if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
+/bin/systemctl --no-reload disable varnish-agent.service > /dev/null 2>&1 || :
+/bin/systemctl stop varnish-agent.service > /dev/null 2>&1 || :
+%else
 /sbin/service varnish-agent stop > /dev/null 2>&1
 /sbin/chkconfig --del varnish-agent
+%endif
 fi
 
 %changelog
