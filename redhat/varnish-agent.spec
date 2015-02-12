@@ -18,7 +18,7 @@ BuildRequires: systemd-units
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish perl-libwww-perl nc python-demjson
 %else
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson
+BuildRequires: libmicrohttpd-devel varnish-libs-devel < 4.0 libcurl-devel python-docutils varnish < 4.0 perl-libwww-perl nc python-demjson
 %endif
 
 %description
