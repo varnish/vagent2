@@ -38,13 +38,14 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-#include <varnishapi.h>
 #include <time.h>
-#include <vsc.h>
+#include <vapi/vsm.h>
+#include <vapi/vsc.h>
 #include <pthread.h>
 #include "vsb.h"
 #include "common.h"
@@ -56,15 +57,11 @@
 
 struct vstat_priv_t {
 	struct VSM_data *vd;
-	int jp;
-	int open;
 	int curl;
 	int logger;
 	const struct VSC_C_main *VSC_C_main;
 	struct vsb *vsb_http;
 	struct vsb *vsb_timer;
-	time_t now;
-	int last_uptime;
 	char *push_url;
 	pthread_mutex_t lck;
 };
@@ -73,27 +70,32 @@ static int
 do_json_cb(void *priv, const struct VSC_point * const pt)
 {
 	uint64_t val;
+	const struct VSC_section *sec;
 	struct vsb *out_vsb = priv;
-	assert(!strcmp(pt->fmt, "uint64_t"));
+
+	if (pt == NULL)
+		return (0);
+	
+	assert(!strcmp(pt->desc->fmt, "uint64_t"));
 	val = *(const volatile uint64_t*)pt->ptr;
-	assert(sizeof(uint64_t) == sizeof(uintmax_t));
+	sec = pt->section;	
 
 	VSB_printf(out_vsb, ",\n\t\"");
 	/* build the JSON key name.  */
-	if (pt->class[0])
-		VSB_printf(out_vsb,"%s.",pt->class);
-	if (pt->ident[0])
-		VSB_printf(out_vsb,"%s.",pt->ident);
-	VSB_printf(out_vsb,"%s\": {", pt->name);
+	if (sec->fantom->type[0])
+		VSB_printf(out_vsb,"%s.", sec->fantom->type);
+	if (sec->fantom->ident[0])
+		VSB_printf(out_vsb,"%s.",sec->fantom->ident);
+	VSB_printf(out_vsb,"%s\": {", pt->desc->name);
 
-	if (strcmp(pt->class, ""))
-		VSB_printf(out_vsb,"\"type\": \"%s\", ", pt->class);
-	if (strcmp(pt->ident, ""))
-		VSB_printf(out_vsb,"\"ident\": \"%s\", ", pt->ident);
+	if (strcmp(sec->fantom->type, ""))
+		VSB_printf(out_vsb,"\"type\": \"%s\", ", sec->fantom->type);
+	if (strcmp(sec->fantom->ident, ""))
+		VSB_printf(out_vsb,"\"ident\": \"%s\", ", sec->fantom->ident);
 
-	VSB_printf(out_vsb, "\"value\": %ju, ", (uintmax_t)val);
-	VSB_printf(out_vsb, "\"flag\": \"%c\",", pt->flag);
-	VSB_printf(out_vsb, "\"description\": \"%s\" }", pt->desc);
+	VSB_printf(out_vsb, "\"value\": %" PRIu64 ", ", val);
+	VSB_printf(out_vsb, "\"flag\": \"%c\", ", pt->desc->flag);
+	VSB_printf(out_vsb, "\"description\": \"%s\" }", pt->desc->sdesc);
 	return (0);
 }
 
@@ -107,32 +109,18 @@ do_json(struct vstat_priv_t *vstat, struct vsb *out_vsb)
 	assert(out_vsb);
 	(void)strftime(time_stamp, 20, "%Y-%m-%dT%H:%M:%S", localtime(&now));
 	VSB_printf(out_vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
-	(void)VSC_Iter(vstat->vd, do_json_cb, out_vsb);
+	(void)VSC_Iter(vstat->vd, NULL, do_json_cb, out_vsb);
 	VSB_printf(out_vsb, "\n}\n");
-}
-
-static void vstat_open(struct vstat_priv_t *vstat)
-{
-	assert(vstat->open == 0);
-	vstat->open = VSC_Open(vstat->vd, 1) == 0 ? 1 : 0;
-	if (vstat->open) {
-		vstat->VSC_C_main = VSC_Main(vstat->vd);
-		assert(vstat->VSC_C_main);
-	}
 }
 
 static int check_reopen(struct vstat_priv_t *vstat)
 {
-	size_t now = time(NULL);
-	if (!vstat->open)
-		return 0;
-	if (now == vstat->now)
-		return 0;
-	if (vstat->last_uptime == vstat->VSC_C_main->uptime)
-		return 1;
-	vstat->last_uptime = vstat->VSC_C_main->uptime;
-	vstat->now = now;
-	return 0;
+	if (VSM_Abandoned(vstat->vd)) {
+		VSM_Close(vstat->vd);
+		return (VSM_Open(vstat->vd) != 0);
+	}
+
+	return (0);
 }
 
 static unsigned int vstat_reply(struct http_request *request, void *data)
@@ -140,24 +128,12 @@ static unsigned int vstat_reply(struct http_request *request, void *data)
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
 	pthread_mutex_lock(&vstat->lck);
-	if (!vstat->open) {
-		vstat_open(vstat);
-	}
 
 	if (check_reopen(vstat)) {
-		if (vstat->open) {
-			VSM_Close(vstat->vd);
-			vstat->open = 0;
-		}
-		vstat_open(vstat);
-	}
-
-	if (!vstat->open) {
 		pthread_mutex_unlock(&vstat->lck);
 		send_response_fail(request->connection, "Couldn't open shmlog");
 		return 0;
 	}
-
 
 	do_json(vstat, vstat->vsb_http);
 	pthread_mutex_unlock(&vstat->lck);
@@ -176,19 +152,8 @@ static int push_stats(struct vstat_priv_t *vstat)
 {
 	struct ipc_ret_t vret;
 	pthread_mutex_lock(&vstat->lck);
-	if (!vstat->open) {
-		vstat_open(vstat);
-	}
 
 	if (check_reopen(vstat)) {
-		if (vstat->open) {
-			VSM_Close(vstat->vd);
-			vstat->open = 0;
-		}
-		vstat_open(vstat);
-	}
-
-	if (!vstat->open) {
 		pthread_mutex_unlock(&vstat->lck);
 		return -1;
 	}
@@ -264,11 +229,7 @@ vstat_init(struct agent_core_t *core)
 	assert(plug);
 
 	priv->vd = VSM_New();
-	priv->open = 0;
 	priv->push_url = NULL;
-	assert(priv->vd);
-	VSC_Setup(priv->vd);
-	priv->jp = 0;
 	priv->vsb_http = NULL;
 	priv->vsb_http = VSB_new_auto();
 	priv->vsb_timer = VSB_new_auto();

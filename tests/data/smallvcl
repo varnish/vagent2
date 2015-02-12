@@ -1,1 +1,1 @@
-backend foo { .host = "localhost"; }
+vcl 4.0; backend foo { .host = "localhost"; }

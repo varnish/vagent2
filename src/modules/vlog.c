@@ -33,33 +33,11 @@
  */
 
 /*
- * XXX: Huge XXX....
+ * This plugin still has its flaws ..
  *
- * The entire varnishlod -d logic is flawed, and I've done little to
- * mitigate it.
- *
- * First: It will read from the beginning of the file (shmlog), and to
- * where-ever varnish is writing to. If varnish just wrapped around, you
- * get almost no data.
- *
- * Second: The -k logic works as |head, not tail, when combined with -d.
- *
- * Third: -k and -d in varnishlog is broken completely:
- * kristian@freud:~$ varnishlog -d -k 100   | wc -l
- * 10554
- *
- * Fourth: As is -k, -d and -i:
- * kristian@freud:~$ varnishlog -d -k 100 -i ReqStart   | wc -l
- * 86
- * kristian@freud:~$ varnishlog -d -k 10 -i ReqStart   | wc -l
- * 85
- *
- * The correct fix for these issues is to fix the API, which Martin is
- * doing for 3.0+1 (4.0? 3.1? 3.14?). The fix may or may not fix -k for -d.
- *
- * As such, this plugin is of limited use. It's made available in it's
- * neutered form to allow frontend testing awaiting the next Varnish
- * release.
+ * We plan on doing a proper vlog module sometime down the line, where we
+ * properly leverage the flexibility of the new logging API in Varnish 4.0.
+ *  
  */
 #include "config.h"
 
@@ -67,10 +45,11 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <varnishapi.h>
+
 #include "common.h"
 #include "http.h"
 #include "ipc.h"
@@ -78,205 +57,69 @@
 #include "vsb.h"
 #include "helpers.h"
 
-struct vlog_priv_t {
-	int logger;
-	struct VSM_data *vd;
-	struct vsb	*ob[65536];
-	unsigned char	flg[65536];
-	enum VSL_tag_e   last[65536];
-	uint64_t       bitmap[65536];
-	struct vsb	*answer;
-	int entries;
-	char *tag;
+#include <vapi/vsm.h>
+#include <vapi/vsl.h>
+
+
+/* Borrow these from vsl_dispatch.c */
+static const char * const vsl_t_names[VSL_t__MAX] = {
+	[VSL_t_unknown]	= "unknown",
+	[VSL_t_sess]	= "sess",
+	[VSL_t_req]	= "req",
+	[VSL_t_bereq]	= "bereq",
+	[VSL_t_raw]	= "raw",
 };
 
-/* Ordering-----------------------------------------------------------*/
+static const char * const vsl_r_names[VSL_r__MAX] = {
+	[VSL_r_unknown]	= "unknown",
+	[VSL_r_http_1]	= "HTTP/1",
+	[VSL_r_rxreq]	= "rxreq",
+	[VSL_r_esi]	= "esi",
+	[VSL_r_restart]	= "restart",
+	[VSL_r_pass]	= "pass",
+	[VSL_r_fetch]	= "fetch",
+	[VSL_r_bgfetch]	= "bgfetch",
+};
 
-/*
- * Print a single line of varnishlog as json, possibly adding a comma.
- *
- * XXX: This concept is slightly flawed. It is global, which means that the
- * comma-logic can mess up. Assume that the first line /read/ is part of a
- * session, but that the first line output is not. If that happens, the
- * first entry output will have a comma prefixed. Plain wrong.
- */
-static void print_entry(struct vlog_priv_t *vlog, int fd,
-			enum VSL_tag_e tag, int type,
-			const char *ptr, unsigned len)
-{
-	if (vlog->entries > 0)
-		VSB_printf(vlog->answer,",");
-	VSB_printf(vlog->answer,"\n");
-	VSB_printf(vlog->answer, "{ \"fd\": \"%d\","
-		   "\"tag\": \"%s\", \"type\":\"%c\","
-		   "\"value\":",
-		   fd, VSL_tags[tag], type);
-	VSB_quote(vlog->answer, ptr, len, 0);
-	VSB_printf(vlog->answer,"}");
-	vlog->entries++;
-}
+struct vlog_priv_t {
+	int logger;
+};
 
-static int local_print(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
-    unsigned spec, const char *ptr, uint64_t bitmap2)
-{
-	struct vlog_priv_t *vlog = priv;
-	int type;
+struct vlog_req_priv {
+	struct vsb *answer;
+	struct VSM_data *vsm;
+	unsigned limit;
+	unsigned entries;
+};
 
-	(void) bitmap2;
-
-	type = (spec & VSL_S_CLIENT) ? 'c' :
-		(spec & VSL_S_BACKEND) ? 'b' : '-';
-
-	if (tag == SLT_Debug) {
-		if (vlog->entries > 0)
-			VSB_printf(vlog->answer,",");
-		VSB_printf(vlog->answer, "\n{ \"fd\": \"%d\","
-			   "\"tag\": \"%s\", \"type\":\"%c\","
-			   "\"value\":\"",
-			   fd, VSL_tags[tag], type);
-		while (len-- > 0) {
-			if (*ptr >= ' ' && *ptr <= '~')
-				VSB_printf(vlog->answer, "%c", *ptr);
-			else
-				VSB_printf(vlog->answer, "%%%02x", (unsigned char)*ptr);
-			ptr++;
-		}
-		VSB_printf(vlog->answer,"\"}");
-		return (0);
-	}
-	print_entry(vlog,fd,tag, type, ptr, len);
-	return (0);
-}
-
-static void
-h_order_finish(struct vlog_priv_t *vlog, int fd)
-{
-	assert(VSB_finish(vlog->ob[fd]) == 0);
-	if (VSB_len(vlog->ob[fd]) > 1 && VSL_Matched(vlog->vd, vlog->bitmap[fd])) {
-		VSB_printf(vlog->answer,"%s", VSB_data(vlog->ob[fd]));
-	}
-	vlog->bitmap[fd] = 0;
-	VSB_clear(vlog->ob[fd]);
-}
-
-static void
-clean_order(struct vlog_priv_t *vlog)
-{
-	unsigned u;
-
-	for (u = 0; u < 65536; u++) {
-		if (vlog->ob[u] == NULL)
-			continue;
-		assert(VSB_finish(vlog->ob[u]) == 0);
-		if (VSB_len(vlog->ob[u]) > 1 && VSL_Matched(vlog->vd, vlog->bitmap[u])) {
-			VSB_printf(vlog->answer,"%s\n", VSB_data(vlog->ob[u]));
-		}
-		vlog->flg[u] = 0;
-		vlog->bitmap[u] = 0;
-		VSB_clear(vlog->ob[u]);
-	}
-}
-
-static int
-h_unorder(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
-    unsigned spec, const char *ptr, uint64_t bm)
-{
-	char type;
-	struct vlog_priv_t *vlog = priv;
-	type = (spec & VSL_S_CLIENT) ? 'c' :
-	    (spec & VSL_S_BACKEND) ? 'b' : '-';
-	local_print(vlog,tag,fd,len,type,ptr,bm);
-	return 0;
-}
-
-static int
-h_order(void *priv, enum VSL_tag_e tag, unsigned fd, unsigned len,
-    unsigned spec, const char *ptr, uint64_t bm)
-{
-	char type;
-	struct vlog_priv_t *vlog = priv;
-
-	/* XXX: Just ignore any fd not inside the bitmap */
-	if (fd >= sizeof vlog->bitmap / sizeof vlog->bitmap[0])
-		return (0);
-
-	vlog->bitmap[fd] |= bm;
-
-	type = (spec & VSL_S_CLIENT) ? 'c' :
-	    (spec & VSL_S_BACKEND) ? 'b' : '-';
-
-	if (!(spec & (VSL_S_CLIENT|VSL_S_BACKEND))) {
-			(void)local_print(vlog, tag, fd, len, spec, ptr, bm);
-		return (0);
-	}
-	if (vlog->ob[fd] == NULL) {
-		vlog->ob[fd] = VSB_new_auto();
-		assert(vlog->ob[fd] != NULL);
-	}
-	if ((tag == SLT_BackendOpen || tag == SLT_SessionOpen ||
-		(tag == SLT_ReqStart &&
-		    vlog->last[fd] != SLT_SessionOpen &&
-		    vlog->last[fd] != SLT_VCL_acl) ||
-		(tag == SLT_BackendXID &&
-		    vlog->last[fd] != SLT_BackendOpen)) &&
-	    VSB_len(vlog->ob[fd]) != 0) {
-		/*
-		 * This is the start of a new request, yet we haven't seen
-		 * the end of the previous one.  Spit it out anyway before
-		 * starting on the new one.
-		 */
-		if (vlog->last[fd] != SLT_SessionClose)
-			VSB_printf(vlog->ob[fd], "{ \"fd\": \"%d\","
-				"\"tag\": \"%s\", \"type\":\"%c\","
-				"\"value\":\"%s\"},\n",
-			    fd, "Interrupted", type, VSL_tags[tag]);
-		h_order_finish(vlog, fd);
-	}
-
-	vlog->last[fd] = tag;
-
-	print_entry(vlog, fd, tag, type, ptr, len);
-	switch (tag) {
-	case SLT_ReqEnd:
-	case SLT_BackendClose:
-	case SLT_BackendReuse:
-	case SLT_StatSess:
-		h_order_finish(vlog, fd);
-		break;
-	default:
-		break;
-	}
-	return (0);
-}
-
-static void
-do_order(struct vlog_priv_t *vlog)
-{
+static int vlog_cb_func(struct VSL_data *vsl,
+    struct VSL_transaction * const trans[], void *priv) {
 	int i;
-		VSL_Select(vlog->vd, SLT_SessionOpen);
-		VSL_Select(vlog->vd, SLT_SessionClose);
-		VSL_Select(vlog->vd, SLT_ReqEnd);
-		VSL_Select(vlog->vd, SLT_BackendOpen);
-		VSL_Select(vlog->vd, SLT_BackendClose);
-		VSL_Select(vlog->vd, SLT_BackendReuse);
-	while (1) {
-		i = VSL_Dispatch(vlog->vd, h_order, vlog);
-		if (i == 0) {
-			clean_order(vlog);
+	struct vlog_req_priv *vrp = priv;
+	struct VSL_transaction *t;
+
+	for (i = 0; (t = trans[i]) != NULL && vrp->entries < vrp->limit; ++i) {
+		while (VSL_Next(t->c) && vrp->entries < vrp->limit) {
+			if (!VSL_Match(vsl, t->c)) {
+				continue;
+			}
+
+			if (vrp->entries != 0)
+				VSB_printf(vrp->answer,",");
+			VSB_printf(vrp->answer,"\n");
+			VSB_printf(vrp->answer, "{ \"vxid\": \"%u\", "
+			    "\"tag\": \"%s\", \"type\": \"%s\", \"reason\": \"%s\", "
+			    "\"value\": ",
+			    t->vxid, VSL_tags[VSL_TAG(t->c->rec.ptr)],
+			    vsl_t_names[t->type], vsl_r_names[t->reason]);
+			VSB_quote(vrp->answer, VSL_CDATA(t->c->rec.ptr),
+			    strlen(VSL_CDATA(t->c->rec.ptr)), 0);
+			VSB_printf(vrp->answer,"}");
+			vrp->entries++;
 		}
-		else if (i < 0)
-			break;
 	}
-	clean_order(vlog);
-}
-static void do_unorder(struct vlog_priv_t *vlog)
-{
-	int i;
-	while (1) {
-		i = VSL_Dispatch(vlog->vd, h_unorder, vlog);
-		if ( i < 0)
-			break;
-	}
+	
+	return (0);
 }
 
 static char *next_slash(const char *p)
@@ -293,78 +136,122 @@ static char *next_slash(const char *p)
 static unsigned int vlog_reply(struct http_request *request, void *data)
 {
 	struct vlog_priv_t *vlog;
-	int ret;
-	char *limit = NULL;
+	struct vlog_req_priv vrp = { .limit = 10 };
+	int disp_status;
 	char *p;
 	char *tag = NULL;
-	char *itag = NULL;
+	char *tag_re = NULL;
+	struct VSL_data *vsl = NULL;
+	struct VSLQ *vslq = NULL;
+	struct VSL_cursor *c = NULL;
+	enum VSL_grouping_e grouping = VSL_g_request;
 	struct agent_core_t *core = data;
-	GET_PRIV(data,vlog);
+	GET_PRIV(data, vlog);
+ 	
 	p = next_slash(request->url + 1);
-
-	assert(vlog->tag==NULL);
-	assert(vlog->answer == NULL);
-
 	if (p) {
-		limit = strdup(p);
-		assert(limit);
-		char *tmp2 = index(limit,'/');
+		char *lim = strdup(p);
+		assert(lim);
+		char *tmp2 = strchr(lim, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 
-		if(!(atoi(limit) > 0)) {
-			free(limit);
-			send_response_fail(request->connection,"Not a number");
+		int j = sscanf(lim, "%u", &vrp.limit);
+		if(j != 1) {
+			free(lim);
+			send_response_fail(request->connection, "Not a number");
 			return 0;
 		}
+
+		free(lim);
 		p = next_slash(p);
 	}
+
 	if (p) {
 		tag = strdup(p);
 		char *tmp2 = index(tag,'/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
+
 	if (p) {
-		itag = strdup(p);
-		char *tmp2 = index(itag,'/');
+		tag_re = strdup(p);
+		char *tmp2 = index(tag_re, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
-	vlog->answer = VSB_new_auto();
-	assert(vlog->answer != NULL);
-	vlog->vd = VSM_New();
-	assert(VSL_Arg(vlog->vd, 'n', core->config->n_arg));
-	VSL_Setup(vlog->vd);
-	VSL_Arg(vlog->vd, 'd', "");
-	if (tag) {
-		VSL_Arg(vlog->vd, 'i', tag);
-		if (itag)
-			VSL_Arg(vlog->vd,'I',itag);
-	} else {
-		VSL_Arg(vlog->vd, 'k', limit ? limit : "10");
-	}
+	
+	vrp.answer = VSB_new_auto();
+	assert(vrp.answer != NULL);
 
-	if (limit)
-		free(limit);
-	VSB_printf(vlog->answer, "{ \"log\": [");
-	ret = VSL_Open(vlog->vd, 1);
-	if (ret) {
-		send_response_fail(request->connection, "Error in opening shmlog");
+	vrp.vsm = VSM_New();
+	assert(vrp.vsm);
+	if (!VSM_n_Arg(vrp.vsm, core->config->n_arg)) {
+		VSB_printf(vrp.answer, "Error in creating shmlog: %s",
+		    VSM_Error(vrp.vsm));
+		VSB_finish(vrp.answer);
+		send_response_fail(request->connection, VSB_data(vrp.answer));
 		goto cleanup;
 	}
 
-	if (tag == NULL) {
-		do_order(vlog);
-	} else {
-		do_unorder(vlog);
+	if (VSM_Open(vrp.vsm) != 0) {
+		VSB_printf(vrp.answer, "Error in opening shmlog: %s",
+		    VSM_Error(vrp.vsm));
+		VSB_finish(vrp.answer);
+		send_response_fail(request->connection, VSB_data(vrp.answer));
+		goto cleanup;
+	}
+	
+	vsl = VSL_New();
+	assert(vsl);
+
+	if (tag) {
+		grouping = VSL_g_raw;
+		
+		if (VSL_Arg(vsl, 'i', tag) < 0) {
+			VSB_printf(vrp.answer, "Unable to specify tag '%s': %s",
+			    tag, VSL_Error(vsl));
+			VSB_finish(vrp.answer);
+			send_response_fail(request->connection, VSB_data(vrp.answer));
+			goto cleanup;
+		}
+		if (tag_re) {
+			VSL_Arg(vsl,'I', tag_re);
+		}
 	}
 
-	VSB_printf(vlog->answer, "\n] }\n");
-	assert(VSB_finish(vlog->answer) == 0);
-	if (VSB_len(vlog->answer) > 1) {
+	c = VSL_CursorVSM(vsl, vrp.vsm,
+	    VSL_COPT_BATCH | VSL_COPT_TAILSTOP);
+	if (c == NULL) {
+		VSB_printf(vrp.answer, "Can't open log (%s)",
+		    VSL_Error(vsl));
+		VSB_finish(vrp.answer);
+		send_response_fail(request->connection, VSB_data(vrp.answer));
+		goto cleanup;
+	}
+
+	
+	vslq = VSLQ_New(vsl, &c, grouping, NULL);
+	if (vslq == NULL) {
+		VSB_clear(vrp.answer);
+		VSB_printf(vrp.answer, "Error in creating query: %s",
+		    VSL_Error(vsl));
+		send_response_fail(request->connection, VSB_data(vrp.answer));
+		goto cleanup;
+	}
+
+	VSB_printf(vrp.answer, "{ \"log\": [");
+
+	do {
+		disp_status = VSLQ_Dispatch(vslq, vlog_cb_func, &vrp);
+	} while (disp_status == 1 && vrp.entries < vrp.limit);
+
+	VSB_printf(vrp.answer, "\n] }\n");
+
+	assert(VSB_finish(vrp.answer) == 0);
+	if (VSB_len(vrp.answer) > 1) {
 		struct http_response *resp = http_mkresp(request->connection, 200, NULL);
-		resp->data = VSB_data(vlog->answer);
-		resp->ndata = VSB_len(vlog->answer);
+		resp->data = VSB_data(vrp.answer);
+		resp->ndata = VSB_len(vrp.answer);
 		http_add_header(resp,"Content-Type","application/json");
 		send_response2(resp);
 		http_free_resp(resp);
@@ -374,12 +261,15 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 
  cleanup:
 	free(tag);
-	free(itag);
-	VSB_clear(vlog->answer);
-	VSB_delete(vlog->answer);
-	VSM_Delete(vlog->vd);
-	vlog->answer = NULL;
-	vlog->entries = 0;
+	free(tag_re);
+	VSB_delete(vrp.answer);
+	if (vslq)
+		VSLQ_Delete(&vslq);
+	if (vsl)
+		VSL_Delete(vsl);
+	if (vrp.vsm)
+		VSM_Delete(vrp.vsm);
+	vrp.answer = NULL;
 	return 0;
 }
 
