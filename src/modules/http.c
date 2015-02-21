@@ -68,6 +68,16 @@ struct connection_info_struct {
 	int authed;
 };
 
+struct http_content_type http_content_types[] = {
+	{".html", "text/html"},
+	{".js",   "text/javascript"},
+	{".css",  "text/css"},
+	{".jpg",  "image/jpeg"},
+	{".jpeg", "image/jpeg"},
+	{".png",  "image/png"},
+	{".gif",  "image/gif"}
+};
+
 static char *make_help(struct http_priv_t *http)
 {
 	char *body;
@@ -477,4 +487,21 @@ void http_init(struct agent_core_t *core)
 	plug->start = http_start;
 	priv->listener = NULL;
 	priv->help_page = NULL;
+}
+
+void http_set_content_type(struct http_response *resp, const char *filepath)
+{
+	char *ext = strrchr(filepath, '.');
+
+	if (ext) {
+		int i;
+
+		for (i = 0; i < sizeof(http_content_types) / sizeof(struct http_content_type); i++) {
+			if (strcmp(ext, http_content_types[i].file_ext) == 0) {
+				http_add_header(resp, "Content-Type", http_content_types[i].content_type);
+
+				break;
+			}
+		}
+	}
 }

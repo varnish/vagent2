@@ -90,6 +90,7 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = buffer;
 	resp->ndata = ret;
+	http_set_content_type(resp, path);
 	send_response2(resp);
 	http_free_resp(resp);
 	return 0;
