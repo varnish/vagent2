@@ -86,7 +86,6 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	buffer = malloc(sbuf.st_size);
 	assert(buffer);
 	ret = read(fd, buffer, sbuf.st_size);
-	assert(ret>0);
 	assert(ret==sbuf.st_size);
 	resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = buffer;
