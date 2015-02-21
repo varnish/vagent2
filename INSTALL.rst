@@ -7,6 +7,7 @@ Build requirements
 * Varnish 3.0 (Preferred: 3.0.3 or newer). The varnishapi development
   files must be available. E.g: apt-get install libvarnishapi-dev
 * libmicrohttpd (apt-get install libmicrohttpd-dev)
+* rst2man (apt-get install docutils-common)
 * pkg-config
 * Common build environment (C compiler, make, etc).
 
