@@ -115,6 +115,7 @@ int send_response2(struct http_response *resp);
 
 int send_response_ok(struct MHD_Connection *connection, const char *data);
 int send_response_fail(struct MHD_Connection *connection, const char *data);
+int send_response_redirect(struct MHD_Connection *connection, const char *url);
 
 /*
  * URL    - the HTTP-protocol URL (e.g: req.url, not including host-header).

@@ -59,6 +59,10 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	struct http_response *resp;
 	struct html_priv_t *html;
 	GET_PRIV(data, html);
+	if (strcmp(request->url, "/html") == 0) {
+		send_response_redirect(request->connection, "/html/");
+		return 0;
+	}
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
 		send_response_fail(request->connection, "Invalid URL");
@@ -106,5 +110,5 @@ html_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = NULL;
-	http_register_url(core, "/html/", M_GET, html_reply, core);
+	http_register_url(core, "/html", M_GET, html_reply, core);
 }
