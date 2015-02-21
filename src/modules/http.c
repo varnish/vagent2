@@ -199,6 +199,17 @@ int send_response_fail(struct MHD_Connection *connection, const char *data)
 	return send_response(connection, 500, data, strlen(data));
 }
 
+int send_response_redirect(struct MHD_Connection *connection, const char *url)
+{
+	assert(url);
+	struct http_response *resp = http_mkresp(connection, 301, NULL);
+	int ret;
+	http_add_header(resp, "Location", url);
+	ret = send_response2(resp);
+	http_free_resp(resp);
+	return ret;
+}
+
 static void request_completed (void *cls, struct MHD_Connection *connection,
 		   void **con_cls, enum MHD_RequestTerminationCode toe)
 {
