@@ -155,6 +155,7 @@ void http_free_resp(struct http_response *resp)
 
 struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 {
+	_cleanup_free_ char *origin;
 	struct http_response *resp = malloc(sizeof(struct http_response));
 	resp->status = status;
 	resp->connection = conn;
@@ -164,6 +165,13 @@ struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const
 	else
 		resp->ndata = strlen(resp->data);
 	resp->headers = NULL;
+	http_add_header(resp, "Access-Control-Allow-Headers", "Authorization, Origin");
+	http_add_header(resp, "Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+	origin = http_get_header(conn, "Origin");
+	if (origin)
+		http_add_header(resp, "Access-Control-Allow-Origin", origin);
+	else
+		http_add_header(resp, "Access-Control-Allow-Origin", "*");
 	return resp;
 }
 
@@ -257,7 +265,7 @@ static int get_key (void *cls, enum MHD_ValueKind kind, const char *key, const c
 	return MHD_YES;
 }
 
-static char *http_get_header(struct MHD_Connection *connection, const char *header)
+char *http_get_header(struct MHD_Connection *connection, const char *header)
 {
 	struct header_finder_t finder;
 	finder.header = header;
@@ -341,6 +349,10 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	assert(core->config->userpass);
 
 	log_request(connection, http, method, url);
+
+	if (0 == strcmp (method, "OPTIONS")) {
+		return send_response_ok(connection, "");
+	}
 
 	if (0 == strcmp (method, "GET") || !strcmp(method, "HEAD") || !strcmp(method,"DELETE")) {
 		ret = check_auth(connection, core, con_info);
