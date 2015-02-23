@@ -178,6 +178,7 @@ struct http_response *
 http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 {
 	struct http_response *resp;
+	char *origin;
 
 	ALLOC_OBJ(resp);
 	resp->status = status;
@@ -185,6 +186,14 @@ http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 	resp->data = body;
 	if (resp->data)
 		resp->ndata = strlen(resp->data);
+	http_add_header(resp, "Access-Control-Allow-Headers",
+	    "Authorization, Origin");
+	http_add_header(resp, "Access-Control-Allow-Methods",
+	    "GET, POST, PUT, DELETE, OPTIONS");
+	origin = http_get_header(conn, "Origin");
+	http_add_header(resp, "Access-Control-Allow-Origin",
+	    origin ? origin : "*");
+	free(origin);
 	return (resp);
 }
 
@@ -348,7 +357,10 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	log_request(connection, http, method, url);
 
-	if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
+	if (!strcmp(method, "OPTIONS")) {
+		/* We need this for preflight requests (CORS). */
+		return (send_response_ok(connection, ""));
+	} else if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
 	    !strcmp(method, "DELETE")) {
 		if (check_auth(connection, core, con_info))
 			return (MHD_YES);
