@@ -496,7 +496,7 @@ void http_set_content_type(struct http_response *resp, const char *filepath)
 	if (ext) {
 		int i;
 
-		for (i = 0; i < sizeof(http_content_types) / sizeof(struct http_content_type); i++) {
+		for (i = 0; i < (int)(sizeof(http_content_types) / sizeof(struct http_content_type)); i++) {
 			if (strcmp(ext, http_content_types[i].file_ext) == 0) {
 				http_add_header(resp, "Content-Type", http_content_types[i].content_type);
 
