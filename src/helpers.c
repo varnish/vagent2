@@ -44,7 +44,7 @@
 #include "http.h"
 
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
-			 int min, int max, const char *fmt, ...)
+			 unsigned min, unsigned max, const char *fmt, ...)
 {
 	struct ipc_ret_t vret;
 	va_list ap;

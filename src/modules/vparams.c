@@ -138,7 +138,7 @@ static char *vparams_show_json(char *raw)
 			i = strlen(word);
 			size_t dlen = strlen("(default)");
 
-			if (i > dlen) {
+			if (i > (int)dlen) {
 				if (strncmp(word + i - dlen, "(default)", dlen) == 0) {
 					i -= dlen;
 					word[i] = '\0';
