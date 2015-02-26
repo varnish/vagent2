@@ -161,10 +161,12 @@ static int push_stats(struct vstat_priv_t *vstat)
 	do_json(vstat, vstat->vsb_timer);
 	pthread_mutex_unlock(&vstat->lck);
 	assert(VSB_finish(vstat->vsb_timer) == 0);
-	if (vstat->push_url)
+	if (vstat->push_url) {
 		ipc_run(vstat->curl, &vret,
 			"%s\n%s",vstat->push_url ? vstat->push_url : "http://localhost:8133/",
 			VSB_data(vstat->vsb_timer));
+		free(vret.answer);
+	}
 	VSB_clear(vstat->vsb_timer);
 	return 0;
 }
