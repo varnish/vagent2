@@ -64,7 +64,7 @@ struct vstat_priv_t {
 	struct vsb *vsb_http;
 	struct vsb *vsb_timer;
 	time_t now;
-	int last_uptime;
+	uint64_t last_uptime;
 	char *push_url;
 	pthread_mutex_t lck;
 };
@@ -123,7 +123,7 @@ static void vstat_open(struct vstat_priv_t *vstat)
 
 static int check_reopen(struct vstat_priv_t *vstat)
 {
-	size_t now = time(NULL);
+	time_t now = time(NULL);
 	if (!vstat->open)
 		return 0;
 	if (now == vstat->now)
