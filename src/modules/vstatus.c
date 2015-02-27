@@ -132,13 +132,14 @@ void
 vstatus_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vstatus_priv_t *priv = malloc(sizeof(struct vstatus_priv_t));
+	struct vstatus_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vstatus");
 
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/status", M_GET, vstatus_reply, core);
 	http_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
 	http_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
@@ -148,5 +149,3 @@ vstatus_init(struct agent_core_t *core)
 	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
 	http_register_url(core, "/ping", M_GET, vstatus_ping, core);
 }
-
-

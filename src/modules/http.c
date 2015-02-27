@@ -445,10 +445,13 @@ int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int (*cb)(struct http_request *request,
 		       void *data), void *data)
 {
-	struct http_listener *listener = malloc(sizeof(struct http_listener));
-	struct agent_plugin_t *plug = plugin_find(core,"http");
-	struct http_priv_t *http = plug->data;
-	assert(listener);
+	struct http_listener *listener;
+	struct agent_plugin_t *plug;
+	struct http_priv_t *http;
+
+	ALLOC_OBJ(listener);
+	plug = plugin_find(core,"http");
+	http = plug->data;
 	assert(http);
 	listener->url = strdup(url);
 	assert(listener->url);
@@ -475,14 +478,13 @@ static pthread_t *http_start(struct agent_core_t *core, const char *name)
 void http_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct http_priv_t *priv = malloc(sizeof(struct http_priv_t));
-	assert(priv);
+	struct http_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"http");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = http_start;
-	priv->listener = NULL;
-	priv->help_page = NULL;
 }
 
 void http_set_content_type(struct http_response *resp, const char *filepath)

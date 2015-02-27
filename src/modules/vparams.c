@@ -332,13 +332,14 @@ void
 vparams_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vparams_priv_t *priv = malloc(sizeof(struct vparams_priv_t));
+	struct vparams_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vparams");
 
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
 	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
 	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));

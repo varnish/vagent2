@@ -97,13 +97,13 @@ static unsigned int vban_reply(struct http_request *request, void *data)
 void vban_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vban_priv_t *priv = malloc(sizeof(struct vban_priv_t));
-	plug = plugin_find(core,"vban");
+	struct vban_priv_t *priv;
 
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"vban");
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
 	http_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
 }

@@ -95,9 +95,10 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 void logger_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct logger_priv_t *priv = malloc(sizeof(struct logger_priv_t));
-	plug = plugin_find(core,"logger");
+	struct logger_priv_t *priv;
 
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"logger");
 	priv->loglevel = core->config->loglevel;
 	if (core->config->d_arg) {
 		priv->debug = 1;

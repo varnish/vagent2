@@ -83,7 +83,9 @@ void
 vping_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vping_priv_t *priv = malloc(sizeof(struct vping_priv_t));
+	struct vping_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vping");
 
 	priv->vadmin_sock = ipc_register(core,"vadmin");

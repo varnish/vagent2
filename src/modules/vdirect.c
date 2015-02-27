@@ -71,13 +71,14 @@ void
 vdirect_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vdirect_priv_t *priv = malloc(sizeof(struct vdirect_priv_t));
+	struct vdirect_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vdirect");
 
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/direct", M_POST, vdirect_reply, core);
 	http_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
 }

@@ -149,14 +149,16 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 
 void curl_init( struct agent_core_t *core)
 {
-	struct curl_priv_t *private = malloc(sizeof(struct curl_priv_t));
+	struct curl_priv_t *priv;
 	struct agent_plugin_t *plug;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find( core, "curl");
 	curl_global_init(CURL_GLOBAL_ALL);
 	
-	private->logger = ipc_register(core, "logger");
-	plug->data = (void *) private;
+	priv->logger = ipc_register(core, "logger");
+	plug->data = (void *) priv;
 	plug->start  = ipc_start;
-	plug->ipc->priv = private;
+	plug->ipc->priv = priv;
 	plug->ipc->cb = issue_curl;
 }

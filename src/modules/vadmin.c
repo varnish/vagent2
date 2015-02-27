@@ -274,9 +274,9 @@ vadmin_init(struct agent_core_t *core)
 	struct vadmin_config_t *vadmin;
 	struct agent_plugin_t *v;
 
+	ALLOC_OBJ(vadmin);
 	v  = plugin_find(core, "vadmin");
 	v->ipc->cb = read_cmd;
-	vadmin = malloc(sizeof(struct vadmin_config_t));
 	v->data = vadmin;
 	v->ipc->priv = core;
 	v->start = ipc_start;

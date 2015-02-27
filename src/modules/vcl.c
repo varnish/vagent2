@@ -421,9 +421,10 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 void vcl_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vcl_priv_t *priv = malloc(sizeof(struct vcl_priv_t));
-	plug = plugin_find(core,"vcl");
+	struct vcl_priv_t *priv;
 
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"vcl");
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;

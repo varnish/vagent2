@@ -226,12 +226,12 @@ void
 vstat_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
+	struct vstat_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vstat");
 
 	priv->vd = VSM_New();
-	priv->push_url = NULL;
-	priv->vsb_http = NULL;
 	priv->vsb_http = VSB_new_auto();
 	priv->vsb_timer = VSB_new_auto();
 	plug->data = priv;
@@ -247,5 +247,4 @@ vstat_init(struct agent_core_t *core)
 	http_register_url(core, "/stats", M_GET, vstat_reply, core);
 	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
 	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
-	return;
 }

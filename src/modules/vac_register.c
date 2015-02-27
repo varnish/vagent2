@@ -139,28 +139,30 @@ static pthread_t *vac_register_start(struct agent_core_t *core, const char *name
 }
 
 void vac_register_init(struct agent_core_t *core) {
-	struct vac_register_priv_t *private  =  malloc(sizeof(struct vac_register_priv_t)) ;
+	struct vac_register_priv_t *priv;
 	struct agent_plugin_t *plug;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core, "vac_register");
 
 	//initialise the private data structure
-	private->logger = ipc_register(core, "logger");
-	private->curl = ipc_register(core, "curl");
-	private->vsb_out = VSB_new_auto();
-	private->core = core;
+	priv->logger = ipc_register(core, "logger");
+	priv->curl = ipc_register(core, "curl");
+	priv->vsb_out = VSB_new_auto();
+	priv->core = core;
 	/**
 	 * XXX: construct the URL based on varnish name, cli setup and vagent's own api location.
          *	pending vac api changes.
 	 *
 	 *	T_arg or T_arg_orig resides in core-config->T_arg for example. name is n_arg
          */
-	private->vac_url = core->config->vac_arg;
+	priv->vac_url = core->config->vac_arg;
 	//chuck the private ds to the plugin so it lives on
-	plug->data = (void *) private;
+	plug->data = (void *) priv;
 
 	//no need to kick it off just yet
 	plug->start = vac_register_start;
 
 	//httpd register
-	http_register_url(core, "/vac_register", M_POST, vac_register_reply, private);
+	http_register_url(core, "/vac_register", M_POST, vac_register_reply, priv);
 }
