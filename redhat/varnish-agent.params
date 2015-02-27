@@ -1,0 +1,11 @@
+# Configuration file for Varnish Agent.
+# 
+# The systemd service expects the variable $DAEMON_OPTS to be set from
+# this shell script fragment.
+#
+# See varnish-agent(1) for an overview of valid settings.
+
+DAEMON_OPTS=""
+
+# an example of vac callback
+# DAEMON_OPTS="-z http://vac_server/api/rest/register"

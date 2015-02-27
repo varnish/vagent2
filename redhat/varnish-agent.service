@@ -1,0 +1,14 @@
+[Unit]
+Description=Varnish Agent
+After=varnish.service
+
+[Service]
+EnvironmentFile=/etc/varnish/varnish-agent.params
+Type=forking
+PIDFile=/var/run/varnish-agent.pid
+ExecStart=/usr/bin/varnish-agent \
+	-P /var/run/varnish-agent.pid \
+	$DAEMON_OPTS
+
+[Install]
+WantedBy=multi-user.target

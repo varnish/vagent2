@@ -3,12 +3,12 @@
 
 AC_PREREQ(2.61)
 AC_COPYRIGHT([Copyright (c) 2012-2014 Varnish Software])
-AC_INIT([varnish-agent], [2.2.1])
+AC_INIT([varnish-agent], [4.0.0])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign parallel-tests subdir-objects])
-AM_SILENT_RULES([yes])
+# AM_SILENT_RULES([yes])
 
 # Check for rst utilities
 AC_ARG_WITH([rst2man],
@@ -35,6 +35,13 @@ AC_CHECK_LIB(nsl, getaddrinfo)
 NET_LIBS="${LIBS}"
 LIBS="${save_LIBS}"
 AC_SUBST(NET_LIBS)
+
+save_LIBS="${LIBS}"
+LIBS=""
+AC_CHECK_LIB([m],[cos])
+LIBM="${LIBS}"
+LIBS="${save_LIBS}"
+AC_SUBST(LIBM)
 
 AC_PROG_CC
 AM_PROG_CC_C_O
@@ -65,7 +72,7 @@ AC_LINK_IFELSE(
 AC_CHECK_FUNCS([dirfd __fpurge getexecname getline sysconf])
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
+PKG_CHECK_MODULES([VARNISHAPI],[varnishapi >= 4.0.0])
 PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
 PKG_CHECK_MODULES([LIBCURL],[libcurl])
 

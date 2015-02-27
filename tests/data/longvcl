@@ -1,3 +1,5 @@
+vcl 4.0;
+
 backend foo {
 	.host = "127.0.0.1";
 }

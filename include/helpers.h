@@ -42,7 +42,7 @@ unsigned int help_reply(struct http_request *request, void *data);
  */
 void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...);
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
-			 int min, int max, const char *fmt, ...);
+			 unsigned min, unsigned max, const char *fmt, ...);
 
 /*
  * Got core, need priv?

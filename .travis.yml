@@ -1,0 +1,17 @@
+language: c
+compiler:
+  - clang
+  - gcc
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install apt-transport-https netcat libcurl4-openssl-dev
+    libmicrohttpd-dev libwww-perl python-demjson python-docutils
+  - curl -s https://repo.varnish-cache.org/ubuntu/GPG-key.txt |
+    sudo apt-key add -
+  - echo "deb https://repo.varnish-cache.org/ubuntu/ precise varnish-4.0" |
+    sudo tee /etc/apt/sources.list.d/varnish-cache.list
+  - sudo apt-get update
+  - sudo apt-get install varnish libvarnishapi-dev
+  - ./autogen.sh
+script:
+  - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check

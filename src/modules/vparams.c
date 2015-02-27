@@ -115,13 +115,15 @@ static char *vparams_show_json(char *raw)
 	while(raw[pos]) {
 		word[i++] = raw[pos];
 		assert(i<510);
-		if (state == 0 && raw[pos] == ' ') {
+		if (state == 0 && (raw[pos] == ' ' || raw[pos] == '\n')) {
 			word[i-1] = '\0';
 			tmp->name = strdup(word);
 			i = 0;
-			while (raw[pos] == ' ')
+			while (raw[pos] == ' ' || raw[pos] == '\n')
 				pos++;
 			word[0] = raw[pos];
+			assert(strncmp("Value is: ", raw+pos, strlen("Value is: ")) == 0);
+			pos += strlen("Value is: ");
 			state = 1;
 			pos--;
 		} else if (state == 1 && (raw[pos] == '\n' || raw[pos] == '[')) {
@@ -134,6 +136,15 @@ static char *vparams_show_json(char *raw)
 				*(term-1) = '\0';
 			}
 			i = strlen(word);
+			size_t dlen = strlen("(default)");
+
+			if (i > (int)dlen) {
+				if (strncmp(word + i - dlen, "(default)", dlen) == 0) {
+					i -= dlen;
+					word[i] = '\0';
+				}
+			}
+			
 			while(word[--i] == ' ');
 			if (word[i] == '"') {
 				assert(word[0] == '"');
@@ -155,11 +166,12 @@ static char *vparams_show_json(char *raw)
 				tmp->unit = strdup(word);
 				i = 0;
 			}
+			
 			if (raw[pos] == '\n')
 				pos++;
-			term = strstr(raw+pos, "Default is ");
+			term = strstr(raw+pos, "Default is: ");
 			assert(term);
-			pos = term-raw + strlen("Default is ");
+			pos = term-raw + strlen("Default is: ");
 			if (raw[pos] == 0x01) {
 				assert(raw[pos+1] == '\n');
 				pos++;
@@ -171,6 +183,14 @@ static char *vparams_show_json(char *raw)
 			assert(raw[pos] == '\n');
 			assert((isprint(word[0]) || i == 0));
 			word[i] = '\0';
+			if (word[i-1] == '"') {
+				assert(word[0] == '"');
+				memmove(word, word+1, i-1);
+				i-=2;
+			}
+			word[i] = '\0';
+			assert(index(word,'"') == NULL);
+
 			tmp->def = strdup(word);
 			i = 0;
 			state = 0;
@@ -207,6 +227,7 @@ static char *vparams_show_json(char *raw)
 		}
 		pos++;
 	}
+	
 	state = asprintf(&out3, "{\n");
 	assert(state);
 	for (tmp = top; tmp != NULL; ) {

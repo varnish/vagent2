@@ -1,9 +1,8 @@
-varnish-agent (2.2.1+nmu1) unstable; urgency=low
+varnish-agent (4.0.0) unstable; urgency=low
 
-  * Debian packaging file update to support Varnish Cache Plus.
-  * Non-maintainer upload.
+  * Compatible with varnish >= 4.0.0
 
- -- Lasse Karstensen <lkarsten@varnish-software.com>  Fri, 04 Jul 2014 13:45:33 +0200
+ -- Yves Hwang <yveshwang@gmail.com>  Mon, 19 May 2014 10:46:14 +0200
 
 varnish-agent (2.2.1) unstable; urgency=low
 

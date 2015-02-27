@@ -92,7 +92,13 @@ struct http_response {
 	unsigned int ndata;
 };
 
+struct http_content_type {
+	const char *file_ext;
+	const char *content_type;
+};
+
 void http_add_header(struct http_response *resp, const char *key, const char *value);
+void http_set_content_type(struct http_response *resp, const char *filepath);
 void http_free_resp(struct http_response *resp);
 struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body);
 /*

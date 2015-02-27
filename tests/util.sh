@@ -154,25 +154,40 @@ start_backend() {
                echo -e "\tWarning: python backend failed to bind in a timely fashion."
        fi
        echo -e "\tListening to *:$backendport"
-       echo "backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
+       echo "vcl 4.0; backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
 }
 
 start_varnish() {
-    head -c 16 /dev/urandom > "$TMPDIR/secret"
-    printf "${INDENT}Starting varnishd:\n\n"
-    varnishd -f "${TMPDIR}/boot.vcl" \
-        -P "$VARNISH_PID" \
-        -n "$TMPDIR" \
-        -p auto_restart=off \
-        -p ban_lurker_sleep=10 \
-        -a 127.0.0.1:0 \
-        -T 127.0.0.1:0 \
-        -s malloc,50m \
-        -S "$TMPDIR/secret"
-    pidwait varnish
-    VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
-    export VARNISH_PORT AGENT_PORT
-    export N_ARG="-n ${TMPDIR}"
+	head -c 16 /dev/urandom > "$TMPDIR/secret"
+	printf "${INDENT}Starting varnishd:\n\n"
+	varnishd -f "${TMPDIR}/boot.vcl" \
+	    -P "$VARNISH_PID" \
+	    -n "$TMPDIR" \
+	    -p auto_restart=off \
+	    -p ban_lurker_sleep=10 \
+	    -a 127.0.0.1:0 \
+	    -T 127.0.0.1:0 \
+	    -s malloc,50m \
+	    -S "$TMPDIR/secret"
+
+	FOO=""
+	for i in x x x x x x x x x x; do
+	    FOO=$(varnishadm -n "$TMPDIR" status)
+	    if echo $FOO 2>/dev/null | grep -q "running"; then
+		break
+	    fi
+	    sleep 1
+	done
+
+	if ! echo $FOO | grep -q "running"; then
+	    echo "Unable to start Varnish."
+	    exit 1
+	fi
+
+	pidwait varnish
+	VARNISH_PORT=$(varnishadm -n "$TMPDIR" debug.listen_address | cut -d\  -f 2)
+	export VARNISH_PORT AGENT_PORT
+	export N_ARG="-n ${TMPDIR}"
 }
 
 start_agent() {

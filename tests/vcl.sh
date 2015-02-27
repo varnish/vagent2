@@ -25,7 +25,7 @@ test_vcl_file() {
 	inc
 	if [ ! -e ${TMPDIR}/vcl/boot.vcl ]; then pass; else fail "VCL boot.vcl exist before deploy"; fi
 	inc
-	test_it PUT vcldeploy/test3 "" ""
+	test_it PUT vcldeploy/test3 "" "VCL 'test3' now active"
 	if [ -e ${TMPDIR}/vcl/boot.vcl ]; then pass; else fail "boot.vcl not created"; fi	
 	inc
 	if diff -q ${TMPDIR}/vcl/boot.vcl $VCL; then pass; else fail "boot.vcl isn't $VCL"; fi
