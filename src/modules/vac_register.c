@@ -81,34 +81,32 @@ static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret
 	return 0;
 }
 
-static unsigned int vac_register_reply(struct http_request *request, void *data)
+static unsigned int
+vac_register_reply(struct http_request *request, void *data)
 {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
+	struct http_response *resp;
+	int ret;
 
 	if (request->ndata) {
-		assert(request->data);
 		free(vdata->vac_url);
-		vdata->vac_url = malloc(request->ndata + 1);
-		assert(vdata->vac_url != NULL);
-		memcpy(vdata->vac_url, request->data, request->ndata);
-		vdata->vac_url[request->ndata] = '\0';
+		DUP_OBJ(vdata->vac_url, request->data, request->ndata);
 		logger(vdata->logger, "Set new VAC URL: %s", vdata->vac_url);
 	}
 	
-	int ret = send_curl(vdata, &vret);
-	struct http_response *resp;
+	ret = send_curl(vdata, &vret);
 	if (ret != 0) {
 		send_response_fail(request->connection, "Couldn't register.");
-		return 0;
+		return (0);
 	}
 	resp = http_mkresp(request->connection, vret.status, vret.answer);
 	logger(vdata->logger, "VAC registration response: status=%d answer=%s", vret.status, vret.answer);
 	send_response2(resp);
 	http_free_resp(resp);
 	free(vret.answer);
-	return 0;
+	return (0);
 }
 
 static void *vac_register(void *data)

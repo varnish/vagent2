@@ -51,20 +51,20 @@ struct vdirect_priv_t {
 	int vadmin;
 };
 
-static unsigned int vdirect_reply(struct http_request *request, void *data)
+static unsigned int
+vdirect_reply(struct http_request *request, void *data)
 {
 	struct vdirect_priv_t *vdirect;
+	char *cmd, *p;
+
 	GET_PRIV(data, vdirect);
-	char *tmp;
-	char *cmd = malloc(request->ndata);
-	memcpy(cmd, request->data, request->ndata);
-	cmd[request->ndata] = '\0';
-	tmp = index(cmd, '\n');
-	if (tmp)
-		*tmp = '\0';
-	run_and_respond(vdirect->vadmin,request->connection,cmd);
+	DUP_OBJ(cmd, request->data, request->ndata);
+	p = index(cmd, '\n');
+	if (p)
+		*p = '\0';
+	run_and_respond(vdirect->vadmin, request->connection, cmd);
 	free(cmd);
-	return 0;
+	return (0);
 }
 
 void

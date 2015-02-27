@@ -151,4 +151,13 @@ do {					\
 	assert((expr) == 0);		\
 } while(0)
 
+#define DUP_OBJ(to, from, len)		\
+do {					\
+	assert((from) != NULL);		\
+	(to) = malloc((len) + 1);	\
+	assert((to) != NULL);		\
+	memcpy((to), (from), (len));	\
+	(to)[(len)] = '\0';		\
+} while(0)
+
 #endif

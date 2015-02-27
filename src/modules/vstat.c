@@ -184,21 +184,20 @@ static unsigned int vstat_push_test(struct http_request *request, void *data)
 
 
 
-static unsigned int vstat_push_url(struct http_request *request, void *data)
+static unsigned int
+vstat_push_url(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
-	GET_PRIV(data,vstat);
+
+	GET_PRIV(data, vstat);
 	pthread_mutex_lock(&vstat->lck);
-	assert(request->data);
 	if (vstat->push_url)
 		free(vstat->push_url);
-	vstat->push_url = malloc(request->ndata + 1);
-	memcpy(vstat->push_url, request->data, request->ndata);
-	vstat->push_url[request->ndata] = '\0';
+	DUP_OBJ(vstat->push_url, request->data, request->ndata);
 	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
 	send_response_ok(request->connection, "Url stored");
 	pthread_mutex_unlock(&vstat->lck);
-	return 0;
+	return (0);
 }
 
 static void *vstat_run(void *data)
