@@ -146,4 +146,9 @@ do {					\
 	assert((to) != NULL);		\
 } while(0)
 
+#define AZ(expr)			\
+do {					\
+	assert((expr) == 0);		\
+} while(0)
+
 #endif
