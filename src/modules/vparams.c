@@ -130,7 +130,7 @@ static char *vparams_show_json(char *raw)
 			assert(i<510);
 			i--;
 			word[i] = '\0';
-			term = rindex(word,'[');
+			term = strrchr(word,'[');
 			if (term) {
 				assert(*(term-1) == ' ');
 				*(term-1) = '\0';
@@ -152,7 +152,7 @@ static char *vparams_show_json(char *raw)
 				i-=2;
 			}
 			word[i+1] = '\0';
-			assert(index(word,'"') == NULL);
+			assert(strchr(word,'"') == NULL);
 
 			tmp->value = strdup(word);
 			i = 0;
@@ -189,7 +189,7 @@ static char *vparams_show_json(char *raw)
 				i-=2;
 			}
 			word[i] = '\0';
-			assert(index(word,'"') == NULL);
+			assert(strchr(word,'"') == NULL);
 
 			tmp->def = strdup(word);
 			i = 0;
@@ -306,7 +306,7 @@ static unsigned int vparams_reply(struct http_request *request, void *data)
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
 		body = strdup(request->data);
-		mark = index(body,'\n');
+		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
 		if (!strcmp(request->url, "/param/")) {

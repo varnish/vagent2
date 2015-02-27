@@ -92,7 +92,7 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		return;
 	}
 
-	data = index(url,'\n');
+	data = strchr(url,'\n');
 	if (data) {
 		*(char *)data = '\0';
 		private->data = (char *)data + 1;

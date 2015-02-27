@@ -88,7 +88,7 @@ static char *get_line(const char *filename)
 	s = fread(buffer, 1, sizeof(buffer), fp);
 	assert(s>0);
 	buffer[s+1] = '\0';
-	tmp = index(buffer,'\n');
+	tmp = strchr(buffer,'\n');
 	if (tmp)
 		*tmp = '\0';
 	fclose(fp);
@@ -213,7 +213,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 		errx(1,"No password present. Put one in %s using \"user:password\" format", core->config->K_arg);
 	}
 	core->config->user = strdup(core->config->userpass);
-	core->config->password = index(core->config->user, ':');
+	core->config->password = strchr(core->config->user, ':');
 	if (core->config->password == NULL || *(core->config->password + 1)== '\0')
 		errx(1, "Username and password string does not contain a colon. Format: \"username:password\"");
 	*core->config->password = '\0';

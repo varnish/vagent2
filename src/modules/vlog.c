@@ -125,7 +125,7 @@ static int vlog_cb_func(struct VSL_data *vsl,
 static char *next_slash(const char *p)
 {
 	char *ret;
-	ret = index(p, '/');
+	ret = strchr(p, '/');
 	if (ret != NULL)
 		ret++;
 	if (ret && *ret == '\0')
@@ -168,14 +168,14 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 
 	if (p) {
 		tag = strdup(p);
-		char *tmp2 = index(tag,'/');
+		char *tmp2 = strchr(tag,'/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
 
 	if (p) {
 		tag_re = strdup(p);
-		char *tmp2 = index(tag_re, '/');
+		char *tmp2 = strchr(tag_re, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}

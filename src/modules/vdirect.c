@@ -59,7 +59,7 @@ vdirect_reply(struct http_request *request, void *data)
 
 	GET_PRIV(data, vdirect);
 	DUP_OBJ(cmd, request->data, request->ndata);
-	p = index(cmd, '\n');
+	p = strchr(cmd, '\n');
 	if (p)
 		*p = '\0';
 	run_and_respond(vdirect->vadmin, request->connection, cmd);

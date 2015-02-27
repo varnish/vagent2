@@ -73,7 +73,7 @@ static unsigned int vban_reply(struct http_request *request, void *data)
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
 		body = strdup(request->data);
-		mark = index(body,'\n');
+		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
 		if (strlen(request->url) == strlen("/ban"))
