@@ -233,15 +233,17 @@ void ipc_init(struct ipc_t *ipc)
 /*
  * Does the actual threading and returns the thread.
  */
-pthread_t *ipc_start(struct agent_core_t *core, const char *name)
+pthread_t *
+ipc_start(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *plug;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	plug = plugin_find(core, name);
+	pthread_t *thread;
 	
-	pthread_create(thread,NULL,(ipc_loop),plug->ipc);
+	ALLOC_OBJ(thread);
+	plug = plugin_find(core, name);
+	AZ(pthread_create(thread, NULL, (ipc_loop), plug->ipc));
 	plug->thread = thread;
-	return thread;
+	return (thread);
 }
 
 /*

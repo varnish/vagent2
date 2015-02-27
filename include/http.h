@@ -97,6 +97,8 @@ struct http_content_type {
 	const char *content_type;
 };
 
+typedef unsigned int (*callback_t)(struct http_request *, void *);
+
 void http_add_header(struct http_response *resp, const char *key, const char *value);
 void http_set_content_type(struct http_response *resp, const char *filepath);
 void http_free_resp(struct http_response *resp);
@@ -130,8 +132,6 @@ int send_response_fail(struct MHD_Connection *connection, const char *data);
  * they don't have overlapping methods.
  */
 int http_register_url(struct agent_core_t *core, const char *url,
-		       unsigned int method,
-		       unsigned int (*cb)(struct http_request *request,
-		       void *data), void *data);
+		       unsigned int method, callback_t cb, void *data);
 
 #endif

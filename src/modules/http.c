@@ -51,7 +51,7 @@
 struct http_listener {
 	char *url;
 	unsigned int method;
-	unsigned int (*cb)(struct http_request *request, void *data);
+	callback_t cb;
 	void *data;
 	struct http_listener *next;
 };
@@ -442,8 +442,8 @@ static void *http_run(void *data)
 
 int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method,
-		       unsigned int (*cb)(struct http_request *request,
-		       void *data), void *data)
+		       callback_t cb,
+		       void *data)
 {
 	struct http_listener *listener;
 	struct agent_plugin_t *plug;
@@ -464,18 +464,20 @@ int http_register_url(struct agent_core_t *core, const char *url,
 	return 1;
 }
 
-static pthread_t *http_start(struct agent_core_t *core, const char *name)
+static pthread_t *
+http_start(struct agent_core_t *core, const char *name)
 {
-	int ret;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	assert(thread);
-	ret = pthread_create(thread,NULL,(*http_run),core);
-	assert(ret == 0);
+	pthread_t *thread;
+
 	(void)name;
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (*http_run), core));
+	return (thread);
 }
 
-void http_init(struct agent_core_t *core)
+void
+http_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct http_priv_t *priv;

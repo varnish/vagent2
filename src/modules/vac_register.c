@@ -130,15 +130,20 @@ static void *vac_register(void *data)
 	return NULL;
 }
 
-static pthread_t *vac_register_start(struct agent_core_t *core, const char *name)
+static pthread_t *
+vac_register_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(vac_register),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (vac_register), core));
+	return (thread);
 }
 
-void vac_register_init(struct agent_core_t *core) {
+void
+vac_register_init(struct agent_core_t *core) {
 	struct vac_register_priv_t *priv;
 	struct agent_plugin_t *plug;
 

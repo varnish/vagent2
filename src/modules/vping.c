@@ -73,10 +73,13 @@ static void *vping_run(void *data)
 static pthread_t *
 vping_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*vping_run),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (*vping_run), core));
+	return (thread);
 }
 
 void

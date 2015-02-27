@@ -216,10 +216,13 @@ static void *vstat_run(void *data)
 static pthread_t *
 vstat_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*vstat_run),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (*vstat_run), core));
+	return (thread);
 }
 
 void
