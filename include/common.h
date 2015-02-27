@@ -140,4 +140,10 @@ static inline void freep(void *p) {
 #define _cleanup_free_ _cleanup_(freep)
 #define _cleanup_close_ _cleanup_(closep)
 
+#define ALLOC_OBJ(to)			\
+do {					\
+	(to) = calloc(sizeof *(to), 1);	\
+	assert((to) != NULL);		\
+} while(0)
+
 #endif
