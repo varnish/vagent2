@@ -152,7 +152,6 @@ void curl_init( struct agent_core_t *core)
 	struct curl_priv_t *private = malloc(sizeof(struct curl_priv_t));
 	struct agent_plugin_t *plug;
 	plug = plugin_find( core, "curl");
-	assert(plug);
 	curl_global_init(CURL_GLOBAL_ALL);
 	
 	private->logger = ipc_register(core, "logger");

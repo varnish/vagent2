@@ -119,7 +119,6 @@ static void *vac_register(void *data)
 	struct ipc_ret_t vret;
 	int ret;
 	plug = plugin_find(core,"vac_register");
-	assert(plug);
 	private = plug->data;
 	ret = send_curl(private, &vret);
 	if (ret == 0) {
@@ -143,7 +142,6 @@ void vac_register_init(struct agent_core_t *core) {
 	struct vac_register_priv_t *private  =  malloc(sizeof(struct vac_register_priv_t)) ;
 	struct agent_plugin_t *plug;
 	plug = plugin_find(core, "vac_register");
-	assert(plug);
 
 	//initialise the private data structure
 	private->logger = ipc_register(core, "logger");

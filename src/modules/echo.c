@@ -75,7 +75,6 @@ void echo_init(struct agent_core_t *core)
 	 */
 	struct agent_plugin_t *plug;
 	plug = plugin_find(core,"echo");
-	assert(plug);
 
 	/*
 	 * Register with the logger.

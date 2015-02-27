@@ -325,7 +325,6 @@ static int answer_to_connection (void *cls, struct MHD_Connection *connection,
 	(void)version;
 	plug = plugin_find(core,"http");
 	http = (struct http_priv_t *) plug->data;
-	assert(plug);
 	assert(http);
 
 	if (NULL == *con_cls) {
@@ -415,7 +414,6 @@ static void *http_run(void *data)
 	assert(data);
 	assert(core);
 	plug = plugin_find(core,"http");
-	assert(plug);
 	http = (struct http_priv_t *) plug->data;
 	assert(http);
 	port = atoi(core->config->c_arg);
@@ -451,7 +449,6 @@ int http_register_url(struct agent_core_t *core, const char *url,
 	struct agent_plugin_t *plug = plugin_find(core,"http");
 	struct http_priv_t *http = plug->data;
 	assert(listener);
-	assert(plug);
 	assert(http);
 	listener->url = strdup(url);
 	assert(listener->url);
@@ -481,7 +478,6 @@ void http_init(struct agent_core_t *core)
 	struct http_priv_t *priv = malloc(sizeof(struct http_priv_t));
 	assert(priv);
 	plug = plugin_find(core,"http");
-	assert(plug);
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = http_start;

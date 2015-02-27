@@ -47,7 +47,8 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 	 * something
 	 */
 	assert("plugin_find() returning NULL");
-	return NULL;
+	/* NOTREACHED */
+	return (NULL);
 }
 
 /*

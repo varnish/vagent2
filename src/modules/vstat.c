@@ -228,7 +228,6 @@ vstat_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
 	plug = plugin_find(core,"vstat");
-	assert(plug);
 
 	priv->vd = VSM_New();
 	priv->push_url = NULL;

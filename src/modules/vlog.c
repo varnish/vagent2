@@ -278,7 +278,6 @@ void vlog_init(struct agent_core_t *core)
 	struct agent_plugin_t *plug;
 	struct vlog_priv_t *priv = calloc(1, sizeof(struct vlog_priv_t));
 	plug = plugin_find(core,"vlog");
-	assert(plug);
 	plug->data = priv;
 
 	http_register_url(core, "/log", M_GET, vlog_reply, core);

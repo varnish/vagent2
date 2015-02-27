@@ -89,6 +89,7 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 	} else
 		fprintf(stderr,"%s\n",string);
 	abort();
+	/* NOTREACHED */
 }
 
 void logger_init(struct agent_core_t *core)

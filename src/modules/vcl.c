@@ -284,7 +284,6 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	assert(core);
 
 	plug = plugin_find(core,"vcl");
-	assert(plug);
 
 	vcl = plug->data;
 	assert(vcl);
