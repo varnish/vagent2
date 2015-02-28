@@ -4,8 +4,9 @@ compiler:
   - gcc
 before_install:
   - sudo apt-get update
-  - sudo apt-get install apt-transport-https netcat libcurl4-openssl-dev
-    libmicrohttpd-dev libwww-perl python-demjson python-docutils
+  - sudo apt-get install apt-transport-https netcat-openbsd
+    libcurl4-openssl-dev libmicrohttpd-dev libwww-perl python-demjson
+    python-docutils
   - curl -s https://repo.varnish-cache.org/ubuntu/GPG-key.txt |
     sudo apt-key add -
   - echo "deb https://repo.varnish-cache.org/ubuntu/ precise varnish-4.0" |
