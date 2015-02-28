@@ -425,7 +425,6 @@ void vcl_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	mk_help(core, priv);
 	http_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
 	http_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);

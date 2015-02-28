@@ -88,7 +88,6 @@ void echo_init(struct agent_core_t *core)
 	 * requests.
 	 */
 	plug->data = (void *)priv;
-	plug->start = NULL;
 
 	/*
 	 * Register the url /echo for the methods POST, PUT and GET. When a
