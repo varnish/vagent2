@@ -29,9 +29,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <unistd.h>
-#include <stdlib.h>
-
 /*
  * Configuration, handled by main for now.
  */

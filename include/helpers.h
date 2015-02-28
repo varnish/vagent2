@@ -29,8 +29,6 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include "http.h"
-
 /*
  * Generic http resonder that takes a char * as data and echos it back.
  * Used for /help/ stuff.
