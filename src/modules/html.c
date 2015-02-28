@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
@@ -35,6 +34,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -51,9 +51,9 @@ struct html_priv_t {
 static unsigned int html_reply(struct http_request *request, void *data)
 {
 	int ret;
-	_cleanup_close_ int fd = -1;
-	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *buffer = NULL;
+	int fd;
+	char path[PATH_MAX];
+	char *buffer;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
 	struct http_response *resp;
@@ -64,8 +64,7 @@ static unsigned int html_reply(struct http_request *request, void *data)
 		send_response_fail(request->connection, "Invalid URL");
 		return 0;
 	}
-	ret = asprintf(&path, "%s/%s", core->config->H_arg, url_stub);
-	assert(ret>0);
+	snprintf(path, sizeof(path), "%s/%s", core->config->H_arg, url_stub);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
 		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
@@ -81,18 +80,21 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	if (!S_ISREG(sbuf.st_mode)) {
 		warnlog(html->logger, "%s isn't a regular file.", path);
 		send_response_fail(request->connection, "not a file");
+		close(fd);
 		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
 	assert(buffer);
 	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret==sbuf.st_size);
+	close(fd);
 	resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = buffer;
 	resp->ndata = ret;
 	http_set_content_type(resp, path);
 	send_response2(resp);
 	http_free_resp(resp);
+	free(buffer);
 	return 0;
 }
 

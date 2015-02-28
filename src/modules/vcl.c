@@ -33,6 +33,7 @@
 #include "http.h"
 #include "vsb.h"
 #include "helpers.h"
+#include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -88,15 +89,12 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
  */
 static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
 	int ret;
-	_cleanup_free_ char *tempfile = NULL;
-	_cleanup_free_ char *target = NULL;
-	_cleanup_close_ int fd = -1;
+	char tempfile[PATH_MAX];
+	char target[PATH_MAX];
+	int fd = -1;
 
-	ret = asprintf(&target, "%s/%s.auto.vcl", core->config->p_arg, id);
-	assert(ret > 0);
-
-	ret = asprintf(&tempfile, "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
-	assert(ret > 0);
+	snprintf(target, sizeof(target), "%s/%s.auto.vcl", core->config->p_arg, id);
+	snprintf(tempfile, sizeof(tempfile), "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
 
 	ret = unlink(tempfile);
 	if (ret < 0 && errno != ENOENT) {
