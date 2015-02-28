@@ -44,6 +44,12 @@ struct ipc_ret_t {
 	char *answer;
 };
 
+#define ANSWER(r, code, reason)		\
+do {					\
+	(r)->status = ((code));		\
+	(r)->answer = strdup((reason));	\
+} while(0)
+
 /*
  * IPC structure used to track IPC listeners etc.
  * All plugins have an ipc_t-structure associated with them, even if they
@@ -102,5 +108,6 @@ void *ipc_start(struct agent_core_t *core, const char *name);
  * have a broken IPC.
  */
 void ipc_sanity(struct agent_core_t *core);
+
 #endif
 
