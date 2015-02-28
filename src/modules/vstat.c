@@ -212,7 +212,7 @@ static void *vstat_run(void *data)
 	return NULL;
 }
 
-static pthread_t *
+static void *
 vstat_start(struct agent_core_t *core, const char *name)
 {
 	pthread_t *thread;

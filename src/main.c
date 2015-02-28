@@ -343,7 +343,7 @@ int main(int argc, char **argv)
 	threads_started = 2;
 	for (plug = core.plugins; plug; plug = plug->next) {
 		if (plug->thread) {
-			pthread_join(*plug->thread, NULL);
+			pthread_join(*(pthread_t *)plug->thread, NULL);
 			free(plug->thread);
 		}
 	}

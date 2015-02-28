@@ -233,7 +233,7 @@ void ipc_init(struct ipc_t *ipc)
 /*
  * Does the actual threading and returns the thread.
  */
-pthread_t *
+void *
 ipc_start(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *plug;

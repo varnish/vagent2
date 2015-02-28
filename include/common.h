@@ -29,7 +29,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
 
@@ -97,8 +96,8 @@ struct agent_plugin_t {
 	void *data;
 	struct ipc_t *ipc;
 	struct agent_plugin_t *next;
-	pthread_t *(*start)(struct agent_core_t *core, const char *name);
-	pthread_t *thread;
+	void *(*start)(struct agent_core_t *core, const char *name);
+	void *thread;
 };
 
 extern int threads_started;

@@ -466,7 +466,7 @@ int http_register_url(struct agent_core_t *core, const char *url,
 	return 1;
 }
 
-static pthread_t *
+static void *
 http_start(struct agent_core_t *core, const char *name)
 {
 	pthread_t *thread;

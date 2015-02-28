@@ -30,7 +30,6 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <pthread.h>
 
 #include <ctype.h>
 #include <signal.h>

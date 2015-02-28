@@ -35,7 +35,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <string.h>
 #include <curl/curl.h>
 

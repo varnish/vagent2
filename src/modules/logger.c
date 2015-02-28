@@ -37,7 +37,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <syslog.h>
