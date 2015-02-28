@@ -61,8 +61,7 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	int loglevel;
 	assert(log);
 	loglevel = msg[0] - '0';
-	ret->status = 200;
-	ret->answer = strdup("OK");
+	ANSWER(ret, 200, "OK");
 	if (loglevel > log->loglevel)
 		return ;
 	msg++;

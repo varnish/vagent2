@@ -232,16 +232,14 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	nret = cli_write(sock, cmd);
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
-		ret->status = 400;
-		ret->answer = strdup("Varnishd disconnected");
+		ANSWER(ret, 400, "Varnishd disconnected");
 		vadmin->state = 0;
 		return;
 	}
 	nret = cli_write(sock, "\n");
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
-		ret->status = 400;
-		ret->answer = strdup("Varnishd disconnected");
+		ANSWER(ret, 400, "Varnishd disconnected");
 		vadmin->state = 0;
 		return;
 	}

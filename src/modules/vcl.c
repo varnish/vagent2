@@ -46,8 +46,7 @@
 #include "plugins.h"
 #include "vsb.h"
 
-#define VCL_PATH "tmp/"
-#define VCL_ACTIVE_PATH "tmp/active_vcl"
+#define ID_LEN			10
 
 
 struct vcl_priv_t {
@@ -194,8 +193,7 @@ static int vcl_store(struct http_request *request,
 	assert(request->data);
 	if (request->ndata == 0) {
 		warnlog(vcl->logger, "vcl.inline with ndata == 0");
-		vret->status = 400;
-		vret->answer = strdup("No VCL found");
+		ANSWER(vret, 400, "No VCL found");
 		return 500;
 	}
 	assert(request->ndata > 0);
@@ -203,8 +201,7 @@ static int vcl_store(struct http_request *request,
 	assert(strlen(id)>0);
 
 	if (! valid_c_ident(id)) {
-		vret->status = 400;
-		vret->answer = strdup("VCL name is not valid");
+		ANSWER(vret, 400, "VCL name is not valid");
 		return 500;
 	}
 	const char *end = (((char*)request->data)[request->ndata-1] == '\n') ? "" : "\n";
@@ -274,8 +271,9 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
 	struct agent_plugin_t *plug;
+	struct http_response *resp;
 	struct ipc_ret_t vret;
-	char *cmd;
+	char id[ID_LEN + 1];
 	int ret;
 	int status;
 
@@ -341,7 +339,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			} else {
 				json = vcl_list_json(vret.answer);
 				assert(VSB_finish(json) == 0);
-				struct http_response *resp = http_mkresp(request->connection, 200, NULL);
+				resp = http_mkresp(request->connection, 200, NULL);
 				resp->data = VSB_data(json);
 				resp->ndata = VSB_len(json);
 				http_add_header(resp, "Content-Type", "application/json");
@@ -357,11 +355,9 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			return 0;
 		}
 	} else if (request->method == M_POST) {
-		ret = asprintf(&cmd, "%d", (unsigned int)time(NULL));
-		assert(ret>0);
-		status = vcl_store(request, vcl, &vret, core, cmd);
-		free(cmd);
-		struct http_response *resp = http_mkresp(request->connection, status, vret.answer);
+		snprintf(id, sizeof(id), "%zu", time(NULL));
+		status = vcl_store(request, vcl, &vret, core, id);
+		resp = http_mkresp(request->connection, status, vret.answer);
 		send_response2(resp);
 		http_free_resp(resp);
 		free(vret.answer);
@@ -371,13 +367,13 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			if (strlen(request->url) >= 6) {
 				status = vcl_store(request, vcl, &vret, core,
 				                   request->url + strlen("/vcl/"));
-				struct http_response *resp = http_mkresp(request->connection, status, vret.answer);
+				resp = http_mkresp(request->connection, status, vret.answer);
 				send_response2(resp);
 				http_free_resp(resp);
 				free(vret.answer);
 				return 0;
 			} else {
-				struct http_response *resp = http_mkresp(request->connection, 400, "Bad URL?");
+				resp = http_mkresp(request->connection, 400, "Bad URL?");
 				send_response2(resp);
 				http_free_resp(resp);
 				return 0;
