@@ -27,12 +27,6 @@
  */
 
 #define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-#include "vsb.h"
-#include "helpers.h"
 #include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -41,10 +35,17 @@
 #include <time.h>
 #include <errno.h>
 #include <ctype.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#include "common.h"
+#include "ipc.h"
+#include "http.h"
+#include "helpers.h"
+#include "plugins.h"
+#include "vsb.h"
+
 #define VCL_PATH "tmp/"
 #define VCL_ACTIVE_PATH "tmp/active_vcl"
 

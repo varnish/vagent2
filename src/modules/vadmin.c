@@ -26,11 +26,8 @@
  * SUCH DAMAGE.
  */
 
-#include "config.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
-
 #include <ctype.h>
 #include <signal.h>
 #include <errno.h>
@@ -41,17 +38,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "vapi/vsl.h"
+#include <vapi/vsl.h>
 #include <vapi/vsm.h>
 #include <vcli.h>
 
 #include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "vss-hack.h"
 #include "http.h"
 #include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+#include "vss-hack.h"
+
 
 struct vadmin_config_t {
 	int sock;

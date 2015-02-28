@@ -27,18 +27,15 @@
  */
 
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
 #include "http.h"
 #include "helpers.h"
-#include "config.h"
-#include "vcs_version.h"
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 
 
 #define DIRECT_HELP \

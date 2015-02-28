@@ -30,19 +30,19 @@
  * Mostly just a demo/test plugin. Read for profit.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 #include <curl/curl.h>
 
+#include "common.h"
+#include "http.h"
+#include "ipc.h"
+#include "plugins.h"
 #include "vsb.h"
+
+
 struct vac_register_priv_t {
 	int logger;
 	int curl;

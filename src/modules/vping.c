@@ -26,15 +26,16 @@
  * SUCH DAMAGE.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+
+#include "common.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct vping_priv_t {
 	int vadmin_sock;

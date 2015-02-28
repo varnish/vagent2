@@ -49,19 +49,13 @@
 
 
 #define _GNU_SOURCE
-#include "config.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <pthread.h>
-
-
-#include <stdarg.h>
 #include <errno.h>
-#include <fcntl.h>
+#include <pthread.h>
 #include <poll.h>
+#include <stdarg.h>
 #include <stdio.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>

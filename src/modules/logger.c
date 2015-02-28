@@ -27,11 +27,6 @@
  */
 
 #define _GNU_SOURCE
-
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
@@ -40,6 +35,11 @@
 #include <poll.h>
 #include <sys/socket.h>
 #include <syslog.h>
+
+#include "common.h"
+#include "plugins.h"
+#include "ipc.h"
+
 
 /*
  * TODO:

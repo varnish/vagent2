@@ -27,17 +27,16 @@
  */
 
 
-#define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-#include "helpers.h"
-
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "common.h"
+#include "http.h"
+#include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 /*
  * FIXME: Should be a compile-time option.

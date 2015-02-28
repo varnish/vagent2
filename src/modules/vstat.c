@@ -31,11 +31,8 @@
  * Statistics output program
  */
 
-#include "config.h"
-
 #define _GNU_SOURCE
 #include <sys/time.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -47,12 +44,13 @@
 #include <vapi/vsm.h>
 #include <vapi/vsc.h>
 #include <pthread.h>
-#include "vsb.h"
+
 #include "common.h"
 #include "http.h"
+#include "helpers.h"
 #include "ipc.h"
 #include "plugins.h"
-#include "helpers.h"
+#include "vsb.h"
 
 
 struct vstat_priv_t {

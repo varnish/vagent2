@@ -27,10 +27,6 @@
  */
 
 #define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -38,13 +34,14 @@
 #include <string.h>
 #include <stdint.h>
 #include <microhttpd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 #include <netinet/in.h>
 
+#include "common.h"
+#include "plugins.h"
+#include "ipc.h"
 #include "http.h"
 #include "base64.h"
+
 
 #define RCV_BUFFER 2048000
 

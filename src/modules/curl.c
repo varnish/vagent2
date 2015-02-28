@@ -27,16 +27,15 @@
  */
 
 #define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+
+#include "common.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct curl_priv_t {
 	int logger;

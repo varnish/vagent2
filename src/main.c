@@ -40,6 +40,7 @@
  */
 #define daemon I_hate_you_so_much_right_now
 #endif
+
 #define _GNU_SOURCE
 #include <fcntl.h>
 #include <stdio.h>

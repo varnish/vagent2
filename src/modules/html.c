@@ -26,22 +26,22 @@
  * SUCH DAMAGE.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <limits.h>
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+
+#include "common.h"
+#include "http.h"
 #include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct html_priv_t {
 	int logger;

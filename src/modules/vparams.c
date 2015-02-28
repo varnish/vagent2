@@ -27,18 +27,17 @@
  */
 
 #define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-#include "helpers.h"
-
 #include <ctype.h>
-#include <stdarg.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "common.h"
+#include "http.h"
+#include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 #define PARAM_HELP \
 "GET /param/ - fetches a list of parameters and values\n" \

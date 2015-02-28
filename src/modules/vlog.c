@@ -39,7 +39,6 @@
  * properly leverage the flexibility of the new logging API in Varnish 4.0.
  *  
  */
-#include "config.h"
 
 #include <errno.h>
 #include <fcntl.h>
