@@ -123,13 +123,15 @@ static int send_auth_response(struct MHD_Connection *connection)
 
 void http_add_header(struct http_response *resp, const char *key, const char *value)
 {
-	struct http_header *hdr = malloc(sizeof(struct http_header));
-	assert(hdr);
+	struct http_header *hdr;
+
 	assert(key);
 	assert(value);
+
+	ALLOC_OBJ(hdr);
 	hdr->key = strdup(key);
-	hdr->value = strdup(value);
 	assert(hdr->key);
+	hdr->value = strdup(value);
 	assert(hdr->value);
 	hdr->next = resp->headers;
 	resp->headers = hdr;
@@ -152,16 +154,15 @@ void http_free_resp(struct http_response *resp)
 
 struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 {
-	struct http_response *resp = malloc(sizeof(struct http_response));
+	struct http_response *resp;
+
+	ALLOC_OBJ(resp);
 	resp->status = status;
 	resp->connection = conn;
 	resp->data = body;
-	if (!resp->data)
-		resp->ndata = 0;
-	else
+	if (resp->data)
 		resp->ndata = strlen(resp->data);
-	resp->headers = NULL;
-	return resp;
+	return (resp);
 }
 
 int send_response2(struct http_response *resp)
