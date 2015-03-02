@@ -137,13 +137,13 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 			ret->status = 200;
 			ret->answer = strdup("OK");
 		}
-		curl_slist_free_all(slist);
 		curl_easy_cleanup(curl);
 	} else {
 		ret->answer = strdup("Unable to instantiate libcurl.");
 		ret->status = 500;
 		warnlog( private->logger, "%s", ret->answer);
 	}
+	curl_slist_free_all(slist);
 	free(c_length);
 }
 
