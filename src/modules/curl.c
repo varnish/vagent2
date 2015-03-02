@@ -131,12 +131,13 @@ issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		} else {
 			ANSWER(ret, 200, "OK");
 		}
-		curl_slist_free_all(slist);
 		curl_easy_cleanup(curl);
 	} else {
 		ANSWER(ret, 500, "Unable to instantiate libcurl.");
 		warnlog(private->logger, "%s", ret->answer);
 	}
+
+	curl_slist_free_all(slist);
 }
 
 void
