@@ -137,7 +137,8 @@ issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		warnlog(private->logger, "%s", ret->answer);
 	}
 
-	curl_slist_free_all(slist);
+	if (slist)
+		curl_slist_free_all(slist);
 }
 
 void
