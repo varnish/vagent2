@@ -30,16 +30,15 @@
  * Mostly just a demo/test plugin. Read for profit.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <string.h>
+
+#include "common.h"
+#include "http.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct echo_priv_t {
 	int logger;
@@ -66,7 +65,8 @@ void echo_init(struct agent_core_t *core)
 	/*
 	 * Allocate the private data structure we'll keep using.
 	 */
-	struct echo_priv_t *priv = malloc(sizeof(struct echo_priv_t));
+	struct echo_priv_t *priv;
+	ALLOC_OBJ(priv);
 
 	/*
 	 * Find our pre-allocated data structure. This is only used to
@@ -74,8 +74,8 @@ void echo_init(struct agent_core_t *core)
 	 * private data and an IPC for the module (which we don't use).
 	 */
 	struct agent_plugin_t *plug;
+
 	plug = plugin_find(core,"echo");
-	assert(plug);
 
 	/*
 	 * Register with the logger.
@@ -88,7 +88,6 @@ void echo_init(struct agent_core_t *core)
 	 * requests.
 	 */
 	plug->data = (void *)priv;
-	plug->start = NULL;
 
 	/*
 	 * Register the url /echo for the methods POST, PUT and GET. When a

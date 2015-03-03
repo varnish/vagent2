@@ -31,11 +31,8 @@
  * Statistics output program
  */
 
-#include "config.h"
-
 #define _GNU_SOURCE
 #include <sys/time.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <inttypes.h>
@@ -47,12 +44,13 @@
 #include <vapi/vsm.h>
 #include <vapi/vsc.h>
 #include <pthread.h>
-#include "vsb.h"
+
 #include "common.h"
 #include "http.h"
+#include "helpers.h"
 #include "ipc.h"
 #include "plugins.h"
-#include "helpers.h"
+#include "vsb.h"
 
 
 struct vstat_priv_t {
@@ -184,21 +182,20 @@ static unsigned int vstat_push_test(struct http_request *request, void *data)
 
 
 
-static unsigned int vstat_push_url(struct http_request *request, void *data)
+static unsigned int
+vstat_push_url(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
-	GET_PRIV(data,vstat);
+
+	GET_PRIV(data, vstat);
 	pthread_mutex_lock(&vstat->lck);
-	assert(request->data);
 	if (vstat->push_url)
 		free(vstat->push_url);
-	vstat->push_url = malloc(request->ndata + 1);
-	memcpy(vstat->push_url, request->data, request->ndata);
-	vstat->push_url[request->ndata] = '\0';
+	DUP_OBJ(vstat->push_url, request->data, request->ndata);
 	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
 	send_response_ok(request->connection, "Url stored");
 	pthread_mutex_unlock(&vstat->lck);
-	return 0;
+	return (0);
 }
 
 static void *vstat_run(void *data)
@@ -213,26 +210,28 @@ static void *vstat_run(void *data)
 	return NULL;
 }
 
-static pthread_t *
+static void *
 vstat_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*vstat_run),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (*vstat_run), core));
+	return (thread);
 }
 
 void
 vstat_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vstat_priv_t *priv = malloc(sizeof(struct vstat_priv_t));
+	struct vstat_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vstat");
-	assert(plug);
 
 	priv->vd = VSM_New();
-	priv->push_url = NULL;
-	priv->vsb_http = NULL;
 	priv->vsb_http = VSB_new_auto();
 	priv->vsb_timer = VSB_new_auto();
 	plug->data = priv;
@@ -248,5 +247,4 @@ vstat_init(struct agent_core_t *core)
 	http_register_url(core, "/stats", M_GET, vstat_reply, core);
 	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
 	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
-	return;
 }

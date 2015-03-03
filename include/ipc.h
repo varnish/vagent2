@@ -44,6 +44,12 @@ struct ipc_ret_t {
 	char *answer;
 };
 
+#define ANSWER(r, code, reason)		\
+do {					\
+	(r)->status = ((code));		\
+	(r)->answer = strdup((reason));	\
+} while(0)
+
 /*
  * IPC structure used to track IPC listeners etc.
  * All plugins have an ipc_t-structure associated with them, even if they
@@ -94,7 +100,7 @@ void ipc_init(struct ipc_t *ipc);
  * Starts the IPC listener for the named plugin and returns the thread (if
  * any).
  */
-pthread_t *ipc_start(struct agent_core_t *core, const char *name);
+void *ipc_start(struct agent_core_t *core, const char *name);
 
 /*
  * Sanity function run by main() to verify that all plugins that seemingly
@@ -102,5 +108,6 @@ pthread_t *ipc_start(struct agent_core_t *core, const char *name);
  * have a broken IPC.
  */
 void ipc_sanity(struct agent_core_t *core);
+
 #endif
 

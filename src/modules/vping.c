@@ -26,15 +26,16 @@
  * SUCH DAMAGE.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
+
+#include "common.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct vping_priv_t {
 	int vadmin_sock;
@@ -70,20 +71,25 @@ static void *vping_run(void *data)
 	return NULL;
 }
 
-static pthread_t *
+static void *
 vping_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(*vping_run),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (*vping_run), core));
+	return (thread);
 }
 
 void
 vping_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vping_priv_t *priv = malloc(sizeof(struct vping_priv_t));
+	struct vping_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vping");
 
 	priv->vadmin_sock = ipc_register(core,"vadmin");

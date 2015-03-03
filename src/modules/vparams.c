@@ -27,19 +27,17 @@
  */
 
 #define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-#include "helpers.h"
-
 #include <ctype.h>
-#include <stdarg.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <string.h>
+
+#include "common.h"
+#include "http.h"
+#include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 #define PARAM_HELP \
 "GET /param/ - fetches a list of parameters and values\n" \
@@ -130,7 +128,7 @@ static char *vparams_show_json(char *raw)
 			assert(i<510);
 			i--;
 			word[i] = '\0';
-			term = rindex(word,'[');
+			term = strrchr(word,'[');
 			if (term) {
 				assert(*(term-1) == ' ');
 				*(term-1) = '\0';
@@ -152,7 +150,7 @@ static char *vparams_show_json(char *raw)
 				i-=2;
 			}
 			word[i+1] = '\0';
-			assert(index(word,'"') == NULL);
+			assert(strchr(word,'"') == NULL);
 
 			tmp->value = strdup(word);
 			i = 0;
@@ -189,7 +187,7 @@ static char *vparams_show_json(char *raw)
 				i-=2;
 			}
 			word[i] = '\0';
-			assert(index(word,'"') == NULL);
+			assert(strchr(word,'"') == NULL);
 
 			tmp->def = strdup(word);
 			i = 0;
@@ -306,7 +304,7 @@ static unsigned int vparams_reply(struct http_request *request, void *data)
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
 		body = strdup(request->data);
-		mark = index(body,'\n');
+		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
 		if (!strcmp(request->url, "/param/")) {
@@ -332,13 +330,14 @@ void
 vparams_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vparams_priv_t *priv = malloc(sizeof(struct vparams_priv_t));
+	struct vparams_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vparams");
 
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
 	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
 	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));

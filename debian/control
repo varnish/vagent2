@@ -3,20 +3,23 @@ Section: varnish-4.0/web
 Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
-               netcat-openbsd,
-	       libvarnishapi-dev (>= 4.0),
-	       pkg-config,
-	       libmicrohttpd-dev,
-	       python-docutils,
-	       varnish | varnish-plus,
-	       libcurl4-gnutls-dev | libcurl-dev,
-	       libwww-perl,
-	       python-demjson,
-           net-tools
+ netcat-openbsd,
+ libvarnishapi-dev (>= 4.0),
+ pkg-config,
+ libmicrohttpd-dev,
+ python-docutils,
+ varnish | varnish-plus,
+ libcurl4-gnutls-dev | libcurl-dev,
+ libwww-perl,
+ python-demjson,
+ net-tools
 Standards-Version: 3.8.1
 
 Package: varnish-agent
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, varnish
-Description: Varnish Agent
+Description: Varnish Agent is a small daemon meant to communicate with
+ Varnish and other varnish-related services to allow remote control and
+ monitoring of Varnish. Required component for running the Varnish
+ Administration Console (VAC) from Varnish Software.
 

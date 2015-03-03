@@ -26,12 +26,8 @@
  * SUCH DAMAGE.
  */
 
-#include "config.h"
-
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <pthread.h>
-
 #include <ctype.h>
 #include <signal.h>
 #include <errno.h>
@@ -42,17 +38,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-#include "vapi/vsl.h"
+#include <vapi/vsl.h>
 #include <vapi/vsm.h>
 #include <vcli.h>
 
 #include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "vss-hack.h"
 #include "http.h"
 #include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+#include "vss-hack.h"
+
 
 struct vadmin_config_t {
 	int sock;
@@ -236,16 +232,14 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 	nret = cli_write(sock, cmd);
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
-		ret->status = 400;
-		ret->answer = strdup("Varnishd disconnected");
+		ANSWER(ret, 400, "Varnishd disconnected");
 		vadmin->state = 0;
 		return;
 	}
 	nret = cli_write(sock, "\n");
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
-		ret->status = 400;
-		ret->answer = strdup("Varnishd disconnected");
+		ANSWER(ret, 400, "Varnishd disconnected");
 		vadmin->state = 0;
 		return;
 	}
@@ -274,9 +268,9 @@ vadmin_init(struct agent_core_t *core)
 	struct vadmin_config_t *vadmin;
 	struct agent_plugin_t *v;
 
+	ALLOC_OBJ(vadmin);
 	v  = plugin_find(core, "vadmin");
 	v->ipc->cb = read_cmd;
-	vadmin = malloc(sizeof(struct vadmin_config_t));
 	v->data = vadmin;
 	v->ipc->priv = core;
 	v->start = ipc_start;

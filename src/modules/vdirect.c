@@ -27,19 +27,15 @@
  */
 
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
 #include "http.h"
 #include "helpers.h"
-#include "config.h"
-#include "vcs_version.h"
-
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <pthread.h>
-#include <string.h>
 
 
 #define DIRECT_HELP \
@@ -51,33 +47,34 @@ struct vdirect_priv_t {
 	int vadmin;
 };
 
-static unsigned int vdirect_reply(struct http_request *request, void *data)
+static unsigned int
+vdirect_reply(struct http_request *request, void *data)
 {
 	struct vdirect_priv_t *vdirect;
+	char *cmd, *p;
+
 	GET_PRIV(data, vdirect);
-	char *tmp;
-	char *cmd = malloc(request->ndata);
-	memcpy(cmd, request->data, request->ndata);
-	cmd[request->ndata] = '\0';
-	tmp = index(cmd, '\n');
-	if (tmp)
-		*tmp = '\0';
-	run_and_respond(vdirect->vadmin,request->connection,cmd);
+	DUP_OBJ(cmd, request->data, request->ndata);
+	p = strchr(cmd, '\n');
+	if (p)
+		*p = '\0';
+	run_and_respond(vdirect->vadmin, request->connection, cmd);
 	free(cmd);
-	return 0;
+	return (0);
 }
 
 void
 vdirect_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vdirect_priv_t *priv = malloc(sizeof(struct vdirect_priv_t));
+	struct vdirect_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vdirect");
 
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/direct", M_POST, vdirect_reply, core);
 	http_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
 }

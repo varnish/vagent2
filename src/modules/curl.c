@@ -26,18 +26,14 @@
  * SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
-#include <unistd.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
+#include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
+
+#include "common.h"
+#include "ipc.h"
+#include "plugins.h"
 
 struct curl_priv_t {
 	int logger;
@@ -46,72 +42,72 @@ struct curl_priv_t {
 	unsigned int ndata;
 };
 
-static size_t dropdata(void *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t
+dropdata(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	(void)ptr;
 	(void)userdata;
-	return size*nmemb;
+	return (size * nmemb);
 }
 
-static size_t senddata( void *ptr, size_t size, size_t nmemb, void *userdata)
+static size_t
+senddata(void *ptr, size_t size, size_t nmemb, void *userdata)
 {
 	struct curl_priv_t *private = userdata;
-	unsigned int tmp;
-	if (private->ndata == 0) {
-		tmp = 0;
-	} else {
+	size_t len;
+
+	len = 0;
+	if (private->ndata != 0) {
 		assert(private->pos);
-		if (size*nmemb > private->ndata) {
-			memcpy(ptr, (char *) private->pos, private->ndata);
-			tmp = private->ndata;
+		if (size * nmemb > private->ndata) {
+			memcpy(ptr, (char *)private->pos, private->ndata);
+			len = private->ndata;
 			private->ndata = 0;
 			private->pos = NULL;
 		} else {
-			memcpy(ptr, private->pos, size*nmemb);
-			tmp = size*nmemb;
-			private->ndata -= tmp;
-			private->pos += tmp;
+			memcpy(ptr, private->pos, size * nmemb);
+			len = size * nmemb;
+			private->ndata -= len;
+			private->pos += len;
 		}
 	}
-	return tmp;
+	return (len);
 }
 
-static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
+static void
+issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 {
 	struct curl_priv_t *private = priv;
+	struct curl_slist *slist = NULL;
 	CURL *curl;
 	CURLcode res;
-	struct curl_slist *slist=NULL;
-	void *data = NULL;
-	char *c_length = NULL;
-	int asnret;
+	char buf[100];
+	char *data;
 
-	if( url == NULL || url[0] == '\0') {
-		ret->answer = strdup("VAC url is not supplied. Please do so with the -z argument.");
-		ret->status = 500;
+	if (url == NULL || *url == '\0') {
+		ANSWER(ret, 500, "VAC url is not supplied. "
+		    "Please do so with the -z argument.");
 		return;
 	}
 
-	data = index(url,'\n');
+	data = strchr(url, '\n');
 	if (data) {
-		*(char *)data = '\0';
-		private->data = (char *)data + 1;
+		*data = '\0';
+		private->data = data + 1;
 		private->ndata = strlen(private->data);
 		private->pos = private->data;
-		asnret = asprintf(&c_length, "Content-Length: %u", private->ndata);
-		assert(asnret);
+		snprintf(buf, sizeof(buf), "Content-Length: %u",
+		    private->ndata);
 		slist = curl_slist_append(slist, "expect:");
-		slist = curl_slist_append(slist, c_length);
+		slist = curl_slist_append(slist, buf);
 		slist = curl_slist_append(slist, "Transfer-Encoding:");
 	}
 
-
-	debuglog(private->logger, "Issuing curl command with url=%s. %s", url,
-		 data ? "Request body present" : "No request body");
+	debuglog(private->logger, "Issuing curl command with url=%s. %s",
+	    url, data ? "Request body present" : "No request body");
 
 	curl = curl_easy_init();
-
-	if(curl) {
+	if (curl) {
 		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
@@ -124,41 +120,40 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
 			curl_easy_setopt(curl, CURLOPT_READFUNCTION, senddata);
 			curl_easy_setopt(curl, CURLOPT_READDATA, private);
-		} else {
+		} else
 			curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
-		}
 		res = curl_easy_perform(curl);
-		if(res != CURLE_OK) {
-			asnret = asprintf(&ret->answer,"Curl callback failed with status code %d", res);
-			assert(asnret > 0);
-			ret->status = 500;
-			warnlog( private->logger, "%s", ret->answer);
+		if (res != CURLE_OK) {
+			snprintf(buf, sizeof(buf),
+			    "Curl callback failed with status code %d", res);
+			ANSWER(ret, 500, buf);
+			warnlog(private->logger, "%s", ret->answer);
 		} else {
-			ret->status = 200;
-			ret->answer = strdup("OK");
+			ANSWER(ret, 200, "OK");
 		}
 		curl_easy_cleanup(curl);
 	} else {
-		ret->answer = strdup("Unable to instantiate libcurl.");
-		ret->status = 500;
-		warnlog( private->logger, "%s", ret->answer);
+		ANSWER(ret, 500, "Unable to instantiate libcurl.");
+		warnlog(private->logger, "%s", ret->answer);
 	}
+
 	if (slist)
 		curl_slist_free_all(slist);
-	free(c_length);
 }
 
-void curl_init( struct agent_core_t *core)
+void
+curl_init(struct agent_core_t *core)
 {
-	struct curl_priv_t *private = malloc(sizeof(struct curl_priv_t));
+	struct curl_priv_t *priv;
 	struct agent_plugin_t *plug;
-	plug = plugin_find( core, "curl");
-	assert(plug);
+
 	curl_global_init(CURL_GLOBAL_ALL);
-	
-	private->logger = ipc_register(core, "logger");
-	plug->data = (void *) private;
-	plug->start  = ipc_start;
-	plug->ipc->priv = private;
+
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core, "curl");
+	priv->logger = ipc_register(core, "logger");
+	plug->data = (void *)priv;
+	plug->start = ipc_start;
+	plug->ipc->priv = priv;
 	plug->ipc->cb = issue_curl;
 }

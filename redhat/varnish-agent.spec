@@ -22,8 +22,10 @@ BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docut
 %endif
 
 %description
-Varnish Agent software that runs on all caches managed by Varnish
-Administration Console (VAC).
+Varnish Agent is a small daemon meant to communicate with Varnish and other
+varnish-related services to allow remote control and monitoring of Varnish.
+
+Required component for running the Varnish Administration Console (VAC) from Varnish Software.
 
 %prep
 %setup

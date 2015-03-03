@@ -29,10 +29,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <pthread.h>
-#include <unistd.h>
-#include <stdlib.h>
-
 /*
  * Configuration, handled by main for now.
  */
@@ -97,8 +93,8 @@ struct agent_plugin_t {
 	void *data;
 	struct ipc_t *ipc;
 	struct agent_plugin_t *next;
-	pthread_t *(*start)(struct agent_core_t *core, const char *name);
-	pthread_t *thread;
+	void *(*start)(struct agent_core_t *core, const char *name);
+	void *thread;
 };
 
 extern int threads_started;
@@ -127,17 +123,24 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 #define assert(expr) \
   	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
 
-static inline void closep(int *fd) {
-	if (*fd >= 0)
-		close(*fd);
-}
+#define ALLOC_OBJ(to)			\
+do {					\
+	(to) = calloc(sizeof *(to), 1);	\
+	assert((to) != NULL);		\
+} while(0)
 
-static inline void freep(void *p) {
-	free(*(void**) p);
-}
+#define AZ(expr)			\
+do {					\
+	assert((expr) == 0);		\
+} while(0)
 
-#define _cleanup_(x) __attribute__((cleanup(x)))
-#define _cleanup_free_ _cleanup_(freep)
-#define _cleanup_close_ _cleanup_(closep)
+#define DUP_OBJ(to, from, len)		\
+do {					\
+	assert((from) != NULL);		\
+	(to) = malloc((len) + 1);	\
+	assert((to) != NULL);		\
+	memcpy((to), (from), (len));	\
+	(to)[(len)] = '\0';		\
+} while(0)
 
 #endif

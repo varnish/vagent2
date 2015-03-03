@@ -29,8 +29,6 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include "http.h"
-
 /*
  * Generic http resonder that takes a char * as data and echos it back.
  * Used for /help/ stuff.
@@ -54,7 +52,6 @@ void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 	struct agent_plugin_t *p_tmp; \
 	assert(core_tmp); \
 	p_tmp = plugin_find(core_tmp,#plug); \
-	assert(p_tmp); \
 	plug = p_tmp->data; \
 	assert(plug); \
 } while(0)

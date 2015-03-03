@@ -29,8 +29,6 @@
 #ifndef PLUGINS_H
 #define PLUGINS_H
 
-#include "common.h"
-
 /*
  * Basic plugin functions.
  *

@@ -39,7 +39,6 @@
  * properly leverage the flexibility of the new logging API in Varnish 4.0.
  *  
  */
-#include "config.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -125,7 +124,7 @@ static int vlog_cb_func(struct VSL_data *vsl,
 static char *next_slash(const char *p)
 {
 	char *ret;
-	ret = index(p, '/');
+	ret = strchr(p, '/');
 	if (ret != NULL)
 		ret++;
 	if (ret && *ret == '\0')
@@ -168,14 +167,14 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 
 	if (p) {
 		tag = strdup(p);
-		char *tmp2 = index(tag,'/');
+		char *tmp2 = strchr(tag,'/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
 
 	if (p) {
 		tag_re = strdup(p);
-		char *tmp2 = index(tag_re, '/');
+		char *tmp2 = strchr(tag_re, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
@@ -276,9 +275,10 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 void vlog_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct vlog_priv_t *priv = calloc(1, sizeof(struct vlog_priv_t));
+	struct vlog_priv_t *priv;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vlog");
-	assert(plug);
 	plug->data = priv;
 
 	http_register_url(core, "/log", M_GET, vlog_reply, core);

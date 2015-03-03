@@ -26,23 +26,22 @@
  * SUCH DAMAGE.
  */
 
-#define _GNU_SOURCE
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
+#include <limits.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <string.h>
 #include <errno.h>
+
+#include "common.h"
+#include "http.h"
 #include "helpers.h"
+#include "ipc.h"
+#include "plugins.h"
+
 
 struct html_priv_t {
 	int logger;
@@ -51,9 +50,9 @@ struct html_priv_t {
 static unsigned int html_reply(struct http_request *request, void *data)
 {
 	int ret;
-	_cleanup_close_ int fd = -1;
-	_cleanup_free_ char *path = NULL;
-	_cleanup_free_ char *buffer = NULL;
+	int fd;
+	char path[PATH_MAX];
+	char *buffer;
 	struct stat sbuf;
 	struct agent_core_t *core = data;
 	struct http_response *resp;
@@ -64,8 +63,7 @@ static unsigned int html_reply(struct http_request *request, void *data)
 		send_response_fail(request->connection, "Invalid URL");
 		return 0;
 	}
-	ret = asprintf(&path, "%s/%s", core->config->H_arg, url_stub);
-	assert(ret>0);
+	snprintf(path, sizeof(path), "%s/%s", core->config->H_arg, url_stub);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
 		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
@@ -81,18 +79,21 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	if (!S_ISREG(sbuf.st_mode)) {
 		warnlog(html->logger, "%s isn't a regular file.", path);
 		send_response_fail(request->connection, "not a file");
+		close(fd);
 		return 0;
 	}
 	buffer = malloc(sbuf.st_size);
 	assert(buffer);
 	ret = read(fd, buffer, sbuf.st_size);
 	assert(ret==sbuf.st_size);
+	close(fd);
 	resp = http_mkresp(request->connection, 200, NULL);
 	resp->data = buffer;
 	resp->ndata = ret;
 	http_set_content_type(resp, path);
 	send_response2(resp);
 	http_free_resp(resp);
+	free(buffer);
 	return 0;
 }
 
@@ -100,11 +101,11 @@ void
 html_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct html_priv_t *priv = malloc(sizeof(struct html_priv_t));
-	plug = plugin_find(core,"html");
+	struct html_priv_t *priv;
 
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"html");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
-	plug->start = NULL;
 	http_register_url(core, "/html/", M_GET, html_reply, core);
 }

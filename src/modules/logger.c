@@ -27,20 +27,19 @@
  */
 
 #define _GNU_SOURCE
-
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-
 #include <stdarg.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <syslog.h>
+
+#include "common.h"
+#include "plugins.h"
+#include "ipc.h"
+
 
 /*
  * TODO:
@@ -62,8 +61,7 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 	int loglevel;
 	assert(log);
 	loglevel = msg[0] - '0';
-	ret->status = 200;
-	ret->answer = strdup("OK");
+	ANSWER(ret, 200, "OK");
 	if (loglevel > log->loglevel)
 		return ;
 	msg++;
@@ -89,14 +87,16 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 	} else
 		fprintf(stderr,"%s\n",string);
 	abort();
+	/* NOTREACHED */
 }
 
 void logger_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
-	struct logger_priv_t *priv = malloc(sizeof(struct logger_priv_t));
-	plug = plugin_find(core,"logger");
+	struct logger_priv_t *priv;
 
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"logger");
 	priv->loglevel = core->config->loglevel;
 	if (core->config->d_arg) {
 		priv->debug = 1;

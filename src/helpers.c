@@ -31,17 +31,18 @@
  */
 
 #define _GNU_SOURCE
-#include <unistd.h>
 #include <stdarg.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <microhttpd.h>
 
 #include "common.h"
-#include "ipc.h"
-#include "helpers.h"
 #include "http.h"
+#include "helpers.h"
+#include "ipc.h"
+
 
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 			 unsigned min, unsigned max, const char *fmt, ...)

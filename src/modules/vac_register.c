@@ -30,19 +30,19 @@
  * Mostly just a demo/test plugin. Read for profit.
  */
 
-#include "common.h"
-#include "plugins.h"
-#include "ipc.h"
-#include "http.h"
-
-#include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 #include <curl/curl.h>
 
+#include "common.h"
+#include "http.h"
+#include "ipc.h"
+#include "plugins.h"
 #include "vsb.h"
+
+
 struct vac_register_priv_t {
 	int logger;
 	int curl;
@@ -81,34 +81,32 @@ static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret
 	return 0;
 }
 
-static unsigned int vac_register_reply(struct http_request *request, void *data)
+static unsigned int
+vac_register_reply(struct http_request *request, void *data)
 {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
+	struct http_response *resp;
+	int ret;
 
 	if (request->ndata) {
-		assert(request->data);
 		free(vdata->vac_url);
-		vdata->vac_url = malloc(request->ndata + 1);
-		assert(vdata->vac_url != NULL);
-		memcpy(vdata->vac_url, request->data, request->ndata);
-		vdata->vac_url[request->ndata] = '\0';
+		DUP_OBJ(vdata->vac_url, request->data, request->ndata);
 		logger(vdata->logger, "Set new VAC URL: %s", vdata->vac_url);
 	}
 	
-	int ret = send_curl(vdata, &vret);
-	struct http_response *resp;
+	ret = send_curl(vdata, &vret);
 	if (ret != 0) {
 		send_response_fail(request->connection, "Couldn't register.");
-		return 0;
+		return (0);
 	}
 	resp = http_mkresp(request->connection, vret.status, vret.answer);
 	logger(vdata->logger, "VAC registration response: status=%d answer=%s", vret.status, vret.answer);
 	send_response2(resp);
 	http_free_resp(resp);
 	free(vret.answer);
-	return 0;
+	return (0);
 }
 
 static void *vac_register(void *data)
@@ -119,7 +117,6 @@ static void *vac_register(void *data)
 	struct ipc_ret_t vret;
 	int ret;
 	plug = plugin_find(core,"vac_register");
-	assert(plug);
 	private = plug->data;
 	ret = send_curl(private, &vret);
 	if (ret == 0) {
@@ -131,38 +128,44 @@ static void *vac_register(void *data)
 	return NULL;
 }
 
-static pthread_t *vac_register_start(struct agent_core_t *core, const char *name)
+static void *
+vac_register_start(struct agent_core_t *core, const char *name)
 {
+	pthread_t *thread;
+
 	(void)name;
-	pthread_t *thread = malloc(sizeof (pthread_t));
-	pthread_create(thread,NULL,(vac_register),core);
-	return thread;
+
+	ALLOC_OBJ(thread);
+	AZ(pthread_create(thread, NULL, (vac_register), core));
+	return (thread);
 }
 
-void vac_register_init(struct agent_core_t *core) {
-	struct vac_register_priv_t *private  =  malloc(sizeof(struct vac_register_priv_t)) ;
+void
+vac_register_init(struct agent_core_t *core) {
+	struct vac_register_priv_t *priv;
 	struct agent_plugin_t *plug;
+
+	ALLOC_OBJ(priv);
 	plug = plugin_find(core, "vac_register");
-	assert(plug);
 
 	//initialise the private data structure
-	private->logger = ipc_register(core, "logger");
-	private->curl = ipc_register(core, "curl");
-	private->vsb_out = VSB_new_auto();
-	private->core = core;
+	priv->logger = ipc_register(core, "logger");
+	priv->curl = ipc_register(core, "curl");
+	priv->vsb_out = VSB_new_auto();
+	priv->core = core;
 	/**
 	 * XXX: construct the URL based on varnish name, cli setup and vagent's own api location.
          *	pending vac api changes.
 	 *
 	 *	T_arg or T_arg_orig resides in core-config->T_arg for example. name is n_arg
          */
-	private->vac_url = core->config->vac_arg;
+	priv->vac_url = core->config->vac_arg;
 	//chuck the private ds to the plugin so it lives on
-	plug->data = (void *) private;
+	plug->data = (void *) priv;
 
 	//no need to kick it off just yet
 	plug->start = vac_register_start;
 
 	//httpd register
-	http_register_url(core, "/vac_register", M_POST, vac_register_reply, private);
+	http_register_url(core, "/vac_register", M_POST, vac_register_reply, priv);
 }
