@@ -92,11 +92,6 @@ struct http_response {
 	unsigned int ndata;
 };
 
-struct http_content_type {
-	const char *file_ext;
-	const char *content_type;
-};
-
 typedef unsigned int (*callback_t)(struct http_request *, void *);
 
 void http_add_header(struct http_response *resp, const char *key, const char *value);

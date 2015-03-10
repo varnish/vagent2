@@ -65,14 +65,18 @@ struct connection_info_struct {
 	int authed;
 };
 
-struct http_content_type http_content_types[] = {
-	{".html", "text/html"},
-	{".js",   "text/javascript"},
-	{".css",  "text/css"},
-	{".jpg",  "image/jpeg"},
-	{".jpeg", "image/jpeg"},
-	{".png",  "image/png"},
-	{".gif",  "image/gif"}
+struct http_content_type {
+	const char *file_ext;
+	const char *content_type;
+} http_content_types[] = {
+	{ ".html",	"text/html" },
+	{ ".js",	"text/javascript" },
+	{ ".css",	"text/css" },
+	{ ".jpg",	"image/jpeg" },
+	{ ".jpeg",	"image/jpeg" },
+	{ ".png",	"image/png" },
+	{ ".gif",	"image/gif" },
+	{ NULL,		NULL }
 };
 
 static char *make_help(struct http_priv_t *http)
@@ -464,6 +468,24 @@ int http_register_url(struct agent_core_t *core, const char *url,
 	return 1;
 }
 
+void
+http_set_content_type(struct http_response *resp, const char *path)
+{
+	struct http_content_type *cp;
+	char *ext;
+
+	ext = strrchr(path, '.');
+	if (ext) {
+		for (cp = http_content_types; cp->file_ext; cp++) {
+			if (!strcmp(ext, cp->file_ext)) {
+				http_add_header(resp, "Content-Type",
+				    cp->content_type);
+				break;
+			}
+		}
+	}
+}
+
 static void *
 http_start(struct agent_core_t *core, const char *name)
 {
@@ -487,21 +509,4 @@ http_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
 	plug->start = http_start;
-}
-
-void http_set_content_type(struct http_response *resp, const char *filepath)
-{
-	char *ext = strrchr(filepath, '.');
-
-	if (ext) {
-		int i;
-
-		for (i = 0; i < (int)(sizeof(http_content_types) / sizeof(struct http_content_type)); i++) {
-			if (strcmp(ext, http_content_types[i].file_ext) == 0) {
-				http_add_header(resp, "Content-Type", http_content_types[i].content_type);
-
-				break;
-			}
-		}
-	}
 }
