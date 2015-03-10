@@ -252,7 +252,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		resp->data = VSB_data(vrp.answer);
 		resp->ndata = VSB_len(vrp.answer);
 		http_add_header(resp,"Content-Type","application/json");
-		send_response2(resp);
+		send_response(resp);
 		http_free_resp(resp);
 	} else {
 		send_response_fail(request->connection, "FAIL");

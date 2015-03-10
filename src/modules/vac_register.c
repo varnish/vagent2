@@ -103,7 +103,7 @@ vac_register_reply(struct http_request *request, void *data)
 	}
 	resp = http_mkresp(request->connection, vret.status, vret.answer);
 	logger(vdata->logger, "VAC registration response: status=%d answer=%s", vret.status, vret.answer);
-	send_response2(resp);
+	send_response(resp);
 	http_free_resp(resp);
 	free(vret.answer);
 	return (0);

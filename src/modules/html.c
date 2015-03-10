@@ -91,7 +91,7 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	resp->data = buffer;
 	resp->ndata = ret;
 	http_set_content_type(resp, path);
-	send_response2(resp);
+	send_response(resp);
 	http_free_resp(resp);
 	free(buffer);
 	return 0;

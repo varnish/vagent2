@@ -105,7 +105,8 @@ struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const
  * client might not receive the data right away.
  */
 
-int send_response2(struct http_response *resp);
+int send_response(struct http_response *resp);
+
 /*
  * Various shortcuts for send_response().
  */

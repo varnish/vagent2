@@ -79,6 +79,18 @@ struct http_content_type {
 	{ NULL,		NULL }
 };
 
+#define SEND(name, status)						\
+int									\
+send_response_##name(struct MHD_Connection *conn, const char *data)	\
+{									\
+	struct http_response resp = {					\
+		conn, NULL, (status), data, strlen(data)		\
+	};								\
+	return (send_response(&resp));					\
+}
+SEND(ok, 200)
+SEND(fail, 500)
+
 static char *make_help(struct http_priv_t *http)
 {
 	char *body;
@@ -120,7 +132,7 @@ static int send_auth_response(struct MHD_Connection *connection)
 	    "If Varnish Agent was installed from packages, the /etc/varnish/agent_secret " \
 	    "file contains generated credentials.");
 	http_add_header(resp, "WWW-Authenticate", "Basic realm=varnish-agent");
-	send_response2(resp);
+	send_response(resp);
 	http_free_resp(resp);
 	return 1;
 }
@@ -169,7 +181,7 @@ struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const
 	return (resp);
 }
 
-int send_response2(struct http_response *resp)
+int send_response(struct http_response *resp)
 {
 	int ret;
 	struct MHD_Response *MHDresponse;
@@ -186,29 +198,6 @@ int send_response2(struct http_response *resp)
 	ret = MHD_queue_response (resp->connection, resp->status, MHDresponse);
 	MHD_destroy_response (MHDresponse);
 	return ret;
-}
-
-static int send_response(struct MHD_Connection *connection, int status, const char *data, unsigned int ndata)
-{
-	struct http_response *resp = http_mkresp(connection, status, NULL);
-	int ret;
-	resp->data = data;
-	resp->ndata = ndata;
-	ret = send_response2(resp);
-	http_free_resp(resp);
-	return ret;
-}
-
-int send_response_ok(struct MHD_Connection *connection, const char *data)
-{
-	assert(data);
-	return send_response(connection, 200, data, strlen(data));
-}
-
-int send_response_fail(struct MHD_Connection *connection, const char *data)
-{
-	assert(data);
-	return send_response(connection, 500, data, strlen(data));
 }
 
 static void request_completed (void *cls, struct MHD_Connection *connection,

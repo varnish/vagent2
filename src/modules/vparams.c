@@ -260,7 +260,7 @@ static void param_json(struct http_request *request, struct vparams_priv_t *vpar
 		tmp = vparams_show_json(vret.answer);
 		struct http_response *resp = http_mkresp(request->connection, 200, tmp);
 		http_add_header(resp,"Content-Type","application/json");
-		send_response2(resp);
+		send_response(resp);
 		free(tmp);
 		http_free_resp(resp);
 	} else {

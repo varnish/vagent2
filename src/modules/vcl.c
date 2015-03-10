@@ -343,7 +343,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 				resp->data = VSB_data(json);
 				resp->ndata = VSB_len(json);
 				http_add_header(resp, "Content-Type", "application/json");
-				send_response2(resp);
+				send_response(resp);
 				http_free_resp(resp);
 				VSB_clear(json);
 				VSB_delete(json);
@@ -358,7 +358,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 		snprintf(id, sizeof(id), "%zu", time(NULL));
 		status = vcl_store(request, vcl, &vret, core, id);
 		resp = http_mkresp(request->connection, status, vret.answer);
-		send_response2(resp);
+		send_response(resp);
 		http_free_resp(resp);
 		free(vret.answer);
 		return 0;
@@ -368,13 +368,13 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 				status = vcl_store(request, vcl, &vret, core,
 				                   request->url + strlen("/vcl/"));
 				resp = http_mkresp(request->connection, status, vret.answer);
-				send_response2(resp);
+				send_response(resp);
 				http_free_resp(resp);
 				free(vret.answer);
 				return 0;
 			} else {
 				resp = http_mkresp(request->connection, 400, "Bad URL?");
-				send_response2(resp);
+				send_response(resp);
 				http_free_resp(resp);
 				return 0;
 			}
