@@ -2,6 +2,9 @@
 varnish-agent
 =============
 
+.. image:: https://travis-ci.org/varnish/vagent2.svg?branch=master
+    :target: https://travis-ci.org/varnish/vagent2
+
 -------------
 Varnish Agent
 -------------
@@ -88,7 +91,7 @@ OPTIONS
 -v          Verbose mode. Be extra chatty, including all CLI chatter.
 
 -z vac_register_url
-            Specify the callback vac register url. 
+            Specify the callback vac register url.
 
 VARNISH CONFIGURATION
 =====================
