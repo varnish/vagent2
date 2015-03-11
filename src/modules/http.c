@@ -159,6 +159,33 @@ http_add_header(struct http_response *resp, const char *key,
 	resp->headers = hdr;
 }
 
+static int
+get_key(void *cls, enum MHD_ValueKind kind, const char *key,
+    const char *value)
+{
+	struct header_finder_t *finder = cls;
+
+	(void)kind;
+
+	if (!strcasecmp(finder->header, key)) {
+		finder->value = strdup(value);
+		return (MHD_NO);
+	}
+	return (MHD_YES);
+}
+
+static char *
+http_get_header(struct MHD_Connection *connection, const char *key)
+{
+	struct header_finder_t finder;
+
+	finder.header = key;
+	finder.value = NULL;
+	MHD_get_connection_values(connection, MHD_HEADER_KIND, &get_key,
+	    &finder);
+	return (finder.value);
+}
+
 void
 http_free_resp(struct http_response *resp)
 {
@@ -249,33 +276,6 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 		}
 	}
 	return (0);
-}
-
-static int
-get_key(void *cls, enum MHD_ValueKind kind, const char *key,
-    const char *value)
-{
-	struct header_finder_t *finder = cls;
-
-	(void)kind;
-
-	if (!strcasecmp(finder->header, key)) {
-		finder->value = strdup(value);
-		return (MHD_NO);
-	}
-	return (MHD_YES);
-}
-
-static char *
-http_get_header(struct MHD_Connection *connection, const char *header)
-{
-	struct header_finder_t finder;
-
-	finder.header = header;
-	finder.value = NULL;
-	MHD_get_connection_values(connection, MHD_HEADER_KIND, &get_key,
-	    &finder);
-	return (finder.value);
 }
 
 static void
