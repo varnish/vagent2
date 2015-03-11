@@ -53,10 +53,12 @@
 int									\
 send_response_##name(struct MHD_Connection *conn, const char *data)	\
 {									\
-	struct http_response resp = {					\
-		conn, NULL, (status), data, strlen(data)		\
-	};								\
-	return (send_response(&resp));					\
+	struct http_response *resp;					\
+	int retval;							\
+	resp = http_mkresp(conn, (status), data);			\
+	retval = send_response(resp);					\
+	http_free_resp(resp);						\
+	return (retval);						\
 }
 SEND(ok, 200)
 SEND(fail, 500)
