@@ -1,3 +1,11 @@
+varnish-agent (3.0.1) unstable; urgency=low
+
+  * Fix for a crash in handling of a specific malformed request.
+  * Fix memory leaks relating to the curl and stats modules.
+  * Fix a case where we crashed when serving an empty HTML file.
+
+ -- Dag Haavi Finstad <daghf@varnish-software.com>  Tue, 3 Mar 2015 15:08:19 +0100
+
 varnish-agent (3.0.0) unstable; urgency=low
 
   * Tag release 3.0.0.

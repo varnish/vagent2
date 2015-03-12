@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 3.0.0
+Version: 3.0.1
 Release: 2%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -88,6 +88,11 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Thu Mar 12 2015 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.1
+- Fix for a crash in handling of a specific malformed request.
+- Fix memory leaks relating to the curl and stats modules.
+- Fix a case where we crashed when serving an empty HTML file.
+
 * Thu Dec 4 2014 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.0
 - Tag release 3.0.0
 
