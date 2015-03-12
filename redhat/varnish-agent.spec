@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 4.0.0
+Version: 4.0.1
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -90,6 +90,11 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Thu Mar 12 2015 Dag Haavi Finstad <daghf@varnish-software.com> - 4.0.1
+- Fix for a crash in handling of a specific malformed request.
+- Fix memory leaks relating to the curl and stats modules.
+- Fix a case where we crashed when serving an empty HTML file.
+
 * Mon May 19 2014 Yves Hwang <yveshwang@gmail.com> - 4.0.0
 - Compatible with varnish >= 4.0.0
 
