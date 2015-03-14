@@ -33,13 +33,15 @@
 #include "ipc.h"
 #include "plugins.h"
 
-struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
+struct agent_plugin_t *
+plugin_find(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *plug;
+
 	assert(core);
 	for (plug = core->plugins; plug != NULL; plug = plug->next) {
-		if (!strcmp(name,plug->name))
-			return plug;
+		if (!strcmp(name, plug->name))
+			return (plug);
 	}
 	/*
 	 * XXX: In the future, this could be an acceptable way of detecting
@@ -55,7 +57,8 @@ struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 /*
  * Allocate memory and IPC for a plugin. init the IPC.
  */
-void plugin_alloc(const char *name, struct agent_core_t *core)
+void
+plugin_alloc(const char *name, struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 
@@ -67,4 +70,3 @@ void plugin_alloc(const char *name, struct agent_core_t *core)
 	plug->next = core->plugins;
 	core->plugins = plug;
 }
-
