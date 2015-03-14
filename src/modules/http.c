@@ -221,13 +221,10 @@ send_response(struct http_response *resp)
 	struct MHD_Response *response;
 	struct http_header *hdr;
 	char *origin;
-	void *data;
 	int ret;
 
-	data = malloc(resp->ndata);
-	memcpy(data, resp->data, resp->ndata);
-	response = MHD_create_response_from_data(resp->ndata, data,
-	    MHD_YES, MHD_NO);
+	response = MHD_create_response_from_data(resp->ndata,
+	    (void *)resp->data, MHD_NO, MHD_YES);
 	assert(response);
 	for (hdr = resp->headers; hdr; hdr = hdr->next)
 		MHD_add_response_header(response, hdr->key, hdr->value);
