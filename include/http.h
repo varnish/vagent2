@@ -111,8 +111,8 @@ int send_response(struct http_response *resp);
  * Various shortcuts for send_response().
  */
 
-int send_response_ok(struct MHD_Connection *connection, const char *data);
-int send_response_fail(struct MHD_Connection *connection, const char *data);
+int http_reply(struct MHD_Connection *, int, const char *);
+int http_reply_len(struct MHD_Connection *, int, const char *, unsigned);
 
 /*
  * URL    - the HTTP-protocol URL (e.g: req.url, not including host-header).

@@ -49,17 +49,6 @@
 	"PUT requests are idempotent, and can modify state\n"		\
 	"HEAD requests can be performed on all resources that support GET\n" \
 	"\nThe following URLs are bound:\n\n"
-#define SEND(name, status)						\
-int									\
-send_response_##name(struct MHD_Connection *conn, const char *data)	\
-{									\
-	struct http_response resp = {					\
-		conn, NULL, (status), data, data ? strlen(data) : 0	\
-	};								\
-	return (send_response(&resp));					\
-}
-SEND(ok, 200)
-SEND(fail, 500)
 
 struct http_listener {
 	char *url;
@@ -241,6 +230,20 @@ send_response(struct http_response *resp)
 	return (ret);
 }
 
+int
+http_reply(struct MHD_Connection *conn, int status, const char *data)
+{
+	return (http_reply_len(conn, status, data, data ? strlen(data) : 0));
+}
+
+int
+http_reply_len(struct MHD_Connection *conn, int status, const char *data,
+    unsigned data_size)
+{
+	struct http_response resp = { conn, NULL, status, data, data_size };
+	return (send_response(&resp));
+}
+
 static void
 request_completed(void *cls, struct MHD_Connection *connection,
     void **con_cls, enum MHD_RequestTerminationCode code)
@@ -356,7 +359,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	if (!strcmp(method, "OPTIONS")) {
 		/* We need this for preflight requests (CORS). */
-		return (send_response_ok(connection, NULL));
+		return (http_reply(connection, 200, NULL));
 	} else if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
 	    !strcmp(method, "DELETE")) {
 		if (check_auth(connection, core, con_info))
@@ -408,10 +411,10 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
 		assert(http->help_page);
-		return (send_response_ok(connection, http->help_page));
+		return (http_reply(connection, 200, http->help_page));
 	}
 
-	return (send_response_fail(connection, "Failed"));
+	return (http_reply(connection, 500, "Failed"));
 }
 
 static void *

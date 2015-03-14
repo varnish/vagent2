@@ -60,25 +60,25 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	GET_PRIV(data, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
-		send_response_fail(request->connection, "Invalid URL");
+		http_reply(request->connection, 500, "Invalid URL");
 		return 0;
 	}
 	snprintf(path, sizeof(path), "%s/%s", core->config->H_arg, url_stub);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
 		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
-		send_response_fail(request->connection, "stat() was not happy");
+		http_reply(request->connection, 500, "stat() was not happy");
 		return 0;
 	}
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
 		warnlog(html->logger, "open() failed for %s: %s", path, strerror(errno));
-		send_response_fail(request->connection, "open() was not happy");
+		http_reply(request->connection, 500, "open() was not happy");
 		return 0;
 	}
 	if (!S_ISREG(sbuf.st_mode)) {
 		warnlog(html->logger, "%s isn't a regular file.", path);
-		send_response_fail(request->connection, "not a file");
+		http_reply(request->connection, 500, "not a file");
 		close(fd);
 		return 0;
 	}

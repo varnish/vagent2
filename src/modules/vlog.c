@@ -157,7 +157,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		int j = sscanf(lim, "%u", &vrp.limit);
 		if(j != 1) {
 			free(lim);
-			send_response_fail(request->connection, "Not a number");
+			http_reply(request->connection, 500, "Not a number");
 			return 0;
 		}
 
@@ -188,7 +188,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		VSB_printf(vrp.answer, "Error in creating shmlog: %s",
 		    VSM_Error(vrp.vsm));
 		VSB_finish(vrp.answer);
-		send_response_fail(request->connection, VSB_data(vrp.answer));
+		http_reply(request->connection, 500, VSB_data(vrp.answer));
 		goto cleanup;
 	}
 
@@ -196,7 +196,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		VSB_printf(vrp.answer, "Error in opening shmlog: %s",
 		    VSM_Error(vrp.vsm));
 		VSB_finish(vrp.answer);
-		send_response_fail(request->connection, VSB_data(vrp.answer));
+		http_reply(request->connection, 500, VSB_data(vrp.answer));
 		goto cleanup;
 	}
 	
@@ -210,7 +210,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 			VSB_printf(vrp.answer, "Unable to specify tag '%s': %s",
 			    tag, VSL_Error(vsl));
 			VSB_finish(vrp.answer);
-			send_response_fail(request->connection, VSB_data(vrp.answer));
+			http_reply(request->connection, 500, VSB_data(vrp.answer));
 			goto cleanup;
 		}
 		if (tag_re) {
@@ -224,7 +224,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		VSB_printf(vrp.answer, "Can't open log (%s)",
 		    VSL_Error(vsl));
 		VSB_finish(vrp.answer);
-		send_response_fail(request->connection, VSB_data(vrp.answer));
+		http_reply(request->connection, 500, VSB_data(vrp.answer));
 		goto cleanup;
 	}
 
@@ -234,7 +234,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		VSB_clear(vrp.answer);
 		VSB_printf(vrp.answer, "Error in creating query: %s",
 		    VSL_Error(vsl));
-		send_response_fail(request->connection, VSB_data(vrp.answer));
+		http_reply(request->connection, 500, VSB_data(vrp.answer));
 		goto cleanup;
 	}
 
@@ -255,7 +255,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		send_response(resp);
 		http_free_resp(resp);
 	} else {
-		send_response_fail(request->connection, "FAIL");
+		http_reply(request->connection, 500, "FAIL");
 	}
 
  cleanup:

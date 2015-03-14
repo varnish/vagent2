@@ -264,7 +264,7 @@ static void param_json(struct http_request *request, struct vparams_priv_t *vpar
 		free(tmp);
 		http_free_resp(resp);
 	} else {
-		send_response_fail(request->connection, vret.answer);
+		http_reply(request->connection, 500, vret.answer);
 	}
 	free(vret.answer);
 }
@@ -322,7 +322,7 @@ static unsigned int vparams_reply(struct http_request *request, void *data)
 		return 1;
 
 	}
-	send_response_fail(request->connection, "Failed");
+	http_reply(request->connection, 500, "Failed");
 	return 1;
 }
 

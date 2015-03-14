@@ -60,9 +60,9 @@ void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 	free(buffer);
 
 	if (vret.status >= min && vret.status <= max)
-		send_response_ok(conn, vret.answer);
+		http_reply(conn, 200, vret.answer);
 	else
-		send_response_fail(conn, vret.answer);
+		http_reply(conn, 500, vret.answer);
 	free(vret.answer);
 }
 
@@ -84,15 +84,12 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	ipc_run(vadmin, &vret, "%s", buffer);
 	free(buffer);
 
-	if (vret.status == 200)
-		send_response_ok(conn, vret.answer);
-	else
-		send_response_fail(conn, vret.answer);
+	http_reply(conn, vret.status == 200 ? 200 : 500, vret.answer);
 	free(vret.answer);
 }
 
 unsigned int help_reply(struct http_request *request, void *data)
 {
-	send_response_ok(request->connection, (char *)data);
+	http_reply(request->connection, 200, (char *)data);
 	return 0;
 }

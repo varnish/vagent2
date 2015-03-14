@@ -115,14 +115,14 @@ static unsigned int vstatus_panic(struct http_request *request, void *data)
 static unsigned int vstatus_version(struct http_request *request, void *data)
 {
 	(void)data;
-	send_response_ok(request->connection, VCS_Version "\n");
+	http_reply(request->connection, 200, VCS_Version "\n");
 	return 0;
 }
 
 static unsigned int vstatus_package_string(struct http_request *request, void *data)
 {
 	(void)data;
-	send_response_ok(request->connection, PACKAGE_STRING "\n");
+	http_reply(request->connection, 200, PACKAGE_STRING "\n");
 	return 0;
 }
 

@@ -129,7 +129,7 @@ static unsigned int vstat_reply(struct http_request *request, void *data)
 
 	if (check_reopen(vstat)) {
 		pthread_mutex_unlock(&vstat->lck);
-		send_response_fail(request->connection, "Couldn't open shmlog");
+		http_reply(request->connection, 500, "Couldn't open shmlog");
 		return 0;
 	}
 
@@ -174,9 +174,9 @@ static unsigned int vstat_push_test(struct http_request *request, void *data)
 	struct vstat_priv_t *vstat;
 	GET_PRIV(data,vstat);
 	if (push_stats(vstat) < 0)
-		send_response_fail(request->connection, "Stats pushing failed");
+		http_reply(request->connection, 500, "Stats pushing failed");
 	else
-		send_response_ok(request->connection, "Stats pushed");
+		http_reply(request->connection, 200, "Stats pushed");
 	return 0;
 }
 
@@ -193,7 +193,7 @@ vstat_push_url(struct http_request *request, void *data)
 		free(vstat->push_url);
 	DUP_OBJ(vstat->push_url, request->data, request->ndata);
 	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
-	send_response_ok(request->connection, "Url stored");
+	http_reply(request->connection, 200, "Url stored");
 	pthread_mutex_unlock(&vstat->lck);
 	return (0);
 }

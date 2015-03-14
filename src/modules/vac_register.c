@@ -87,7 +87,6 @@ vac_register_reply(struct http_request *request, void *data)
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
-	struct http_response *resp;
 	int ret;
 
 	if (request->ndata) {
@@ -98,13 +97,11 @@ vac_register_reply(struct http_request *request, void *data)
 	
 	ret = send_curl(vdata, &vret);
 	if (ret != 0) {
-		send_response_fail(request->connection, "Couldn't register.");
+		http_reply(request->connection, 500, "Couldn't register.");
 		return (0);
 	}
-	resp = http_mkresp(request->connection, vret.status, vret.answer);
+	http_reply(request->connection, vret.status, vret.answer);
 	logger(vdata->logger, "VAC registration response: status=%d answer=%s", vret.status, vret.answer);
-	send_response(resp);
-	http_free_resp(resp);
 	free(vret.answer);
 	return (0);
 }

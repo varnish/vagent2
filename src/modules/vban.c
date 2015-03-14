@@ -79,7 +79,7 @@ static unsigned int vban_reply(struct http_request *request, void *data)
 		else {
 			const char *path = request->url + strlen("/ban");
 			if (request->ndata != 0) {
-				send_response_fail(request->connection, "Banning with both a url and request body? Pick one or the other please.");
+				http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
 			} else {
 				assert(request->ndata == 0);
 				run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
