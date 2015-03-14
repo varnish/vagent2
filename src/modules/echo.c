@@ -39,30 +39,36 @@
 #include "ipc.h"
 #include "plugins.h"
 
-
 struct echo_priv_t {
 	int logger;
 };
 
-static unsigned int echo_reply(struct http_request *request, void *data)
+static unsigned int
+echo_reply(struct http_request *request, void *data)
 {
 	struct echo_priv_t *echo = data;
 
 	if (request->method == M_PUT || request->method == M_POST) {
-		if (((char *)request->data)[request->ndata] == '\0' && strlen((char *)request->data) == request->ndata)
-			debuglog(echo->logger, "Data being printed: \n%s", (char *)request->data);
+		if (((char *)request->data)[request->ndata] == '\0' &&
+		    strlen((char *)request->data) == request->ndata)
+			debuglog(echo->logger, "Data being printed: \n%s",
+			    (char *)request->data);
 	}
 	logger(echo->logger, "Responding to request");
-	http_reply_len(request->connection, 200, request->data, request->ndata);
-	return 0;
+	http_reply_len(request->connection, 200, request->data,
+	    request->ndata);
+	return (0);
 }
 
-void echo_init(struct agent_core_t *core)
+void
+echo_init(struct agent_core_t *core)
 {
+	struct echo_priv_t *priv;
+	struct agent_plugin_t *plug;
+
 	/*
 	 * Allocate the private data structure we'll keep using.
 	 */
-	struct echo_priv_t *priv;
 	ALLOC_OBJ(priv);
 
 	/*
@@ -70,14 +76,12 @@ void echo_init(struct agent_core_t *core)
 	 * define start-functions (which we don't have), module-specific
 	 * private data and an IPC for the module (which we don't use).
 	 */
-	struct agent_plugin_t *plug;
-
-	plug = plugin_find(core,"echo");
+	plug = plugin_find(core, "echo");
 
 	/*
 	 * Register with the logger.
 	 */
-	priv->logger = ipc_register(core,"logger");
+	priv->logger = ipc_register(core, "logger");
 
 	/*
 	 * Store our private data somewhere we can reach it, and set our
@@ -91,5 +95,6 @@ void echo_init(struct agent_core_t *core)
 	 * request like that is encountered, the echo_reply function will
 	 * be called with "priv" as the last argument.
 	 */
-	http_register_url(core, "/echo", M_POST | M_PUT | M_GET, echo_reply, priv);
+	http_register_url(core, "/echo", M_POST | M_PUT | M_GET,
+	    echo_reply, priv);
 }
