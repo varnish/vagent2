@@ -54,7 +54,7 @@ int									\
 send_response_##name(struct MHD_Connection *conn, const char *data)	\
 {									\
 	struct http_response resp = {					\
-		conn, NULL, (status), data, strlen(data)		\
+		conn, NULL, (status), data, data ? strlen(data) : 0	\
 	};								\
 	return (send_response(&resp));					\
 }
@@ -359,7 +359,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	if (!strcmp(method, "OPTIONS")) {
 		/* We need this for preflight requests (CORS). */
-		return (send_response_ok(connection, ""));
+		return (send_response_ok(connection, NULL));
 	} else if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
 	    !strcmp(method, "DELETE")) {
 		if (check_auth(connection, core, con_info))
