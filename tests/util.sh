@@ -80,12 +80,22 @@ init_password() {
 }
 
 init_misc() {
+    if [ ! -f "$(which lwp-request)" ]; then
+        echo "lwp-request not found in PATH, is libwww-perl installed?"
+        exit 1
+    fi
+
+    if [ ! -f "$(which jsonlint)" ]; then
+        echo "jsonlint not found in PATH, is python-demjson installed?"
+        exit 1
+    fi
+
     trap 'cleanup' EXIT
     mkdir -p ${TMPDIR}/vcl
     cp ${SRCDIR}/data/boot.vcl ${TMPDIR}/boot.vcl
+    chmod -R 777 ${TMPDIR}
     init_password
 }
-
 
 pidwait() {
     I=1
@@ -202,6 +212,8 @@ start_agent() {
 }
 
 init_all() {
+    echo "Temp directory: $TMPDIR"
+    echo "Path to varnishd: $(which varnishd)"
     init_misc
     start_backend
     start_varnish
