@@ -53,12 +53,10 @@
 int									\
 send_response_##name(struct MHD_Connection *conn, const char *data)	\
 {									\
-	struct http_response *resp;					\
-	int retval;							\
-	resp = http_mkresp(conn, (status), data);			\
-	retval = send_response(resp);					\
-	http_free_resp(resp);						\
-	return (retval);						\
+	struct http_response resp = {					\
+		conn, NULL, (status), data, strlen(data)		\
+	};								\
+	return (send_response(&resp));					\
 }
 SEND(ok, 200)
 SEND(fail, 500)
@@ -207,7 +205,6 @@ struct http_response *
 http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 {
 	struct http_response *resp;
-	char *origin;
 
 	ALLOC_OBJ(resp);
 	resp->status = status;
@@ -215,14 +212,6 @@ http_mkresp(struct MHD_Connection *conn, int status, const char *body)
 	resp->data = body;
 	if (resp->data)
 		resp->ndata = strlen(resp->data);
-	http_add_header(resp, "Access-Control-Allow-Headers",
-	    "Authorization, Origin");
-	http_add_header(resp, "Access-Control-Allow-Methods",
-	    "GET, POST, PUT, DELETE, OPTIONS");
-	origin = http_get_header(conn, "Origin");
-	http_add_header(resp, "Access-Control-Allow-Origin",
-	    origin ? origin : "*");
-	free(origin);
 	return (resp);
 }
 
@@ -231,6 +220,7 @@ send_response(struct http_response *resp)
 {
 	struct MHD_Response *response;
 	struct http_header *hdr;
+	char *origin;
 	void *data;
 	int ret;
 
@@ -241,6 +231,14 @@ send_response(struct http_response *resp)
 	assert(response);
 	for (hdr = resp->headers; hdr; hdr = hdr->next)
 		MHD_add_response_header(response, hdr->key, hdr->value);
+	MHD_add_response_header(response, "Access-Control-Allow-Headers",
+	    "Authorization, Origin");
+	MHD_add_response_header(response, "Access-Control-Allow-Methods",
+	    "GET, POST, PUT, DELETE, OPTIONS");
+	origin = http_get_header(resp->connection, "Origin");
+	MHD_add_response_header(response, "Access-Control-Allow-Origin",
+	    origin ? origin : "*");
+	free(origin);
 	ret = MHD_queue_response(resp->connection, resp->status, response);
 	MHD_destroy_response(response);
 	return (ret);
