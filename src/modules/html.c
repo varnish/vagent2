@@ -57,7 +57,8 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 	struct http_response *resp;
 	struct html_priv_t *html;
-	GET_PRIV(data, html);
+
+	GET_PRIV(core, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
 		http_reply(request->connection, 500, "Invalid URL");

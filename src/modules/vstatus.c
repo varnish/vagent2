@@ -68,7 +68,9 @@ struct vstatus_priv_t {
 static unsigned int vstatus_reply(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
-	GET_PRIV(data, vstatus);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstatus);
 	run_and_respond(vstatus->vadmin,request->connection,"status");
 	return 0;
 }
@@ -76,7 +78,9 @@ static unsigned int vstatus_reply(struct http_request *request, void *data)
 static unsigned int vstatus_stop(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
-	GET_PRIV(data, vstatus);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstatus);
 	run_and_respond(vstatus->vadmin,request->connection,"stop");
 	return 0;
 }
@@ -84,7 +88,9 @@ static unsigned int vstatus_stop(struct http_request *request, void *data)
 static unsigned int vstatus_ping(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
-	GET_PRIV(data, vstatus);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstatus);
 	run_and_respond(vstatus->vadmin,request->connection,"ping");
 	return 0;
 }
@@ -92,7 +98,9 @@ static unsigned int vstatus_ping(struct http_request *request, void *data)
 static unsigned int vstatus_start(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
-	GET_PRIV(data, vstatus);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstatus);
 	run_and_respond(vstatus->vadmin,request->connection,"start");
 	return 0;
 }
@@ -100,7 +108,9 @@ static unsigned int vstatus_start(struct http_request *request, void *data)
 static unsigned int vstatus_panic(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
-	GET_PRIV(data, vstatus);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstatus);
 	if (request->method == M_GET)
 		run_and_respond_eok(vstatus->vadmin,request->connection,
 			200,301,"panic.show");

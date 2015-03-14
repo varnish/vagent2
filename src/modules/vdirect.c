@@ -51,9 +51,10 @@ static unsigned int
 vdirect_reply(struct http_request *request, void *data)
 {
 	struct vdirect_priv_t *vdirect;
+	struct agent_core_t *core = data;
 	char *cmd, *p;
 
-	GET_PRIV(data, vdirect);
+	GET_PRIV(core, vdirect);
 	DUP_OBJ(cmd, request->data, request->ndata);
 	p = strchr(cmd, '\n');
 	if (p)

@@ -47,13 +47,12 @@ void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
  * struct myplugstuff *pluginname;
  * GET_PRIV(core,pluginname);
  */
-#define GET_PRIV(core,plug) do { \
-	struct agent_core_t *core_tmp = (struct agent_core_t *)core; \
-	struct agent_plugin_t *p_tmp; \
-	assert(core_tmp); \
-	p_tmp = plugin_find(core_tmp,#plug); \
-	plug = p_tmp->data; \
-	assert(plug); \
+#define GET_PRIV(core, plug)			\
+do {						\
+	struct agent_plugin_t *pp;		\
+	pp = plugin_find(core, #plug);		\
+	plug = pp->data;			\
+	assert(plug);				\
 } while(0)
 	
 #endif

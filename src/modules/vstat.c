@@ -124,7 +124,9 @@ static int check_reopen(struct vstat_priv_t *vstat)
 static unsigned int vstat_reply(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
-	GET_PRIV(data,vstat);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstat);
 	pthread_mutex_lock(&vstat->lck);
 
 	if (check_reopen(vstat)) {
@@ -172,7 +174,9 @@ static int push_stats(struct vstat_priv_t *vstat)
 static unsigned int vstat_push_test(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
-	GET_PRIV(data,vstat);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstat);
 	if (push_stats(vstat) < 0)
 		http_reply(request->connection, 500, "Stats pushing failed");
 	else
@@ -186,8 +190,9 @@ static unsigned int
 vstat_push_url(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
+	struct agent_core_t *core = data;
 
-	GET_PRIV(data, vstat);
+	GET_PRIV(core, vstat);
 	pthread_mutex_lock(&vstat->lck);
 	if (vstat->push_url)
 		free(vstat->push_url);
@@ -201,7 +206,9 @@ vstat_push_url(struct http_request *request, void *data)
 static void *vstat_run(void *data)
 {
 	struct vstat_priv_t *vstat;
-	GET_PRIV(data,vstat);
+	struct agent_core_t *core = data;
+
+	GET_PRIV(core, vstat);
 	while (1) {
 		sleep(1);
 		if (vstat->push_url && *vstat->push_url)

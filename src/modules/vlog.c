@@ -134,7 +134,6 @@ static char *next_slash(const char *p)
 
 static unsigned int vlog_reply(struct http_request *request, void *data)
 {
-	struct vlog_priv_t *vlog;
 	struct vlog_req_priv vrp = { .limit = 10 };
 	int disp_status;
 	char *p;
@@ -145,8 +144,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 	struct VSL_cursor *c = NULL;
 	enum VSL_grouping_e grouping = VSL_g_request;
 	struct agent_core_t *core = data;
-	GET_PRIV(data, vlog);
- 	
+
 	p = next_slash(request->url + 1);
 	if (p) {
 		char *lim = strdup(p);
