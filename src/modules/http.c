@@ -61,6 +61,9 @@ send_response_##name(struct MHD_Connection *conn, const char *data)	\
 	return (retval);						\
 }
 SEND(ok, 200)
+SEND(bad_request, 400)
+SEND(forbidden, 404)
+SEND(not_found, 404)
 SEND(fail, 500)
 
 struct http_listener {

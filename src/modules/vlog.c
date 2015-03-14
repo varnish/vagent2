@@ -37,7 +37,7 @@
  *
  * We plan on doing a proper vlog module sometime down the line, where we
  * properly leverage the flexibility of the new logging API in Varnish 4.0.
- *  
+ *
  */
 
 #include <errno.h>
@@ -117,7 +117,7 @@ static int vlog_cb_func(struct VSL_data *vsl,
 			vrp->entries++;
 		}
 	}
-	
+
 	return (0);
 }
 
@@ -146,7 +146,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 	enum VSL_grouping_e grouping = VSL_g_request;
 	struct agent_core_t *core = data;
 	GET_PRIV(data, vlog);
- 	
+
 	p = next_slash(request->url + 1);
 	if (p) {
 		char *lim = strdup(p);
@@ -157,7 +157,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		int j = sscanf(lim, "%u", &vrp.limit);
 		if(j != 1) {
 			free(lim);
-			send_response_fail(request->connection, "Not a number");
+			send_response_bad_request(request->connection, "Not a number");
 			return 0;
 		}
 
@@ -178,7 +178,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		if (tmp2 && *tmp2) *tmp2 = '\0';
 		p = next_slash(p);
 	}
-	
+
 	vrp.answer = VSB_new_auto();
 	assert(vrp.answer != NULL);
 
@@ -199,13 +199,13 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		send_response_fail(request->connection, VSB_data(vrp.answer));
 		goto cleanup;
 	}
-	
+
 	vsl = VSL_New();
 	assert(vsl);
 
 	if (tag) {
 		grouping = VSL_g_raw;
-		
+
 		if (VSL_Arg(vsl, 'i', tag) < 0) {
 			VSB_printf(vrp.answer, "Unable to specify tag '%s': %s",
 			    tag, VSL_Error(vsl));
@@ -228,7 +228,7 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 		goto cleanup;
 	}
 
-	
+
 	vslq = VSLQ_New(vsl, &c, grouping, NULL);
 	if (vslq == NULL) {
 		VSB_clear(vrp.answer);

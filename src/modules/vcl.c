@@ -301,10 +301,10 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 					}
 					result = strtok_r(NULL, "\n", &saveptr);
 				}
-				
-				if (activevcl == NULL) { 
+
+				if (activevcl == NULL) {
 					send_response_fail(request->connection, "No active VCL");
-				} else { 
+				} else {
 					strcpy(vret.answer,activevcl);
 					send_response_ok(request->connection, vret.answer);
 				}
@@ -314,7 +314,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 		} else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
-				send_response_fail(request->connection, vret.answer);
+				send_response_bad_request(request->connection, vret.answer);
 			} else {
 				send_response_ok(request->connection, vret.answer);
 			}
@@ -323,7 +323,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
 			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
 			if (vret.status == 400) {
-				send_response_fail(request->connection, vret.answer);
+				send_response_bad_request(request->connection, vret.answer);
 			} else {
 				send_response_ok(request->connection, vret.answer);
 			}
@@ -333,7 +333,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			struct vsb *json;
 			ipc_run(vcl->vadmin, &vret, "vcl.list");
 			if (vret.status == 400) {
-				send_response_fail(request->connection, vret.answer);
+				send_response_bad_request(request->connection, vret.answer);
 			} else {
 				json = vcl_list_json(vret.answer);
 				assert(VSB_finish(json) == 0);
@@ -349,7 +349,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			free(vret.answer);
 			return 0;
 		} else {
-			send_response_fail(request->connection, "Invalid VCL-url.");
+			send_response_not_found(request->connection, "Invalid VCL-url.");
 			return 0;
 		}
 	} else if (request->method == M_POST) {
@@ -371,9 +371,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 				free(vret.answer);
 				return 0;
 			} else {
-				resp = http_mkresp(request->connection, 400, "Bad URL?");
-				send_response(resp);
-				http_free_resp(resp);
+				send_response_bad_request(request->connection, "Bad URL?");
 				return 0;
 			}
 		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
@@ -404,7 +402,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			return 0;
 		}
 	} else {
-		return send_response_fail(request->connection, "Unknown request?");
+		return send_response_bad_request(request->connection, "Unknown request?");
 	}
 	assert("Shouldn't get here" == NULL);
 	return 0;
