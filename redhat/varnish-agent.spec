@@ -88,10 +88,12 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
-* Thu Mar 12 2015 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.1
+* Mon Mar 16 2015 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.1
 - Fix for a crash in handling of a specific malformed request.
-- Fix memory leaks relating to the curl and stats modules.
-- Fix a case where we crashed when serving an empty HTML file.
+- #120 Fix memory leaks relating to the curl and stats modules.
+- #119 Fix a case where we crashed when serving empty files.
+- #123 Add appropriate Content-Type headers to responses.
+- #130 Add CORS headers to permit cross site requests.
 
 * Thu Dec 4 2014 Dag Haavi Finstad <daghf@varnish-software.com> - 3.0.0
 - Tag release 3.0.0
