@@ -36,6 +36,7 @@
 struct agent_plugin_t *plugin_find(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *plug;
+	assert(core);
 	for (plug = core->plugins; plug != NULL; plug = plug->next) {
 		if (!strcmp(name,plug->name))
 			return plug;

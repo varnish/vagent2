@@ -55,7 +55,7 @@ static unsigned int echo_reply(struct http_request *request, void *data)
 			debuglog(echo->logger, "Data being printed: \n%s", (char *)request->data);
 	}
 	logger(echo->logger, "Responding to request");
-	send_response2(resp);
+	send_response(resp);
 	http_free_resp(resp);
 	return 0;
 }
