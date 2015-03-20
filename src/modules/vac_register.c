@@ -65,6 +65,10 @@ static void generate_json(struct vac_register_priv_t *priv)
 	VSB_quote(priv->vsb_out, priv->core->config->password, strlen(priv->core->config->password), 0);
 	VSB_printf(priv->vsb_out, ",\n");
 	VSB_printf(priv->vsb_out, "\t\"dash-n\": \"%s\"\n", priv->core->config->n_arg ? priv->core->config->n_arg : "");
+
+	if (priv->core->config->a_arg != NULL)
+		VSB_printf(priv->vsb_out, "\t\"hostname\": \"%s\",\n", priv->core->config->a_arg);
+
 	VSB_printf(priv->vsb_out, "}\n");
 	assert(VSB_finish(priv->vsb_out) == 0);
 }

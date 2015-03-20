@@ -22,7 +22,8 @@ SYNOPSIS
         varnish-agent -K agentsecretfile [-p directory] [-H directory]
                       [-n name] [-c port] [-S file] [-T host:port]
                       [-t timeout] [-h] [-P pidfile] [-V] [-u user]
-                      [-g group] [-z http://vac_register_url] [-q] [-v]
+                      [-g group] [-z http://vac_register_url] [-a host]
+                      [-q] [-v]
 
 DESCRIPTION
 ===========
@@ -92,6 +93,8 @@ OPTIONS
 
 -z vac_register_url
             Specify the callback vac register url.
+
+-a host     The host name the VAC shoul use to reach the agent.
 
 VARNISH CONFIGURATION
 =====================
