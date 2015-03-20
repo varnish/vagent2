@@ -121,6 +121,7 @@ static void usage(const char *argv0)
 	"-v                    Verbose mode. Output everything.\n"
 	"-K agentsecretfile    File containing username:password for authentication\n"
 	"-z http://host:port   VAC interface.\n"
+	"-a host               The host name the VAC should call back.\n"
 	"\n"
 	"All arguments are optional.\n"
 	, argv0);
@@ -145,9 +146,10 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
 	core->config->P_arg = NULL;
 	core->config->vac_arg= NULL;
+	core->config->a_arg = NULL;
 	core->config->K_arg = strdup("/etc/varnish/agent_secret");
 	core->config->loglevel = 2;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:K:qv")) != -1) {
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:a:K:qv")) != -1) {
 		switch (opt) {
 		case 'q':
 			core->config->loglevel = 1;
@@ -204,6 +206,9 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'z':
 			core->config->vac_arg = strdup(optarg);
+			break;
+		case 'a':
+			core->config->a_arg = optarg;
 			break;
 		}
 	}
