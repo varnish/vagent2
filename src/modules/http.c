@@ -337,15 +337,12 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 {
 	struct agent_core_t *core = (struct agent_core_t *)cls;
 	struct http_priv_t *http;
-	struct agent_plugin_t *plug;
 	struct http_request request;
 	struct connection_info_struct *con_info;
 
 	(void)version;
 
-	plug = plugin_find(core, "http");
-	http = (struct http_priv_t *)plug->data;
-	assert(http);
+	GET_PRIV(core, http);
 
 	if (*con_cls == NULL) {
 		ALLOC_OBJ(con_info);
@@ -421,14 +418,11 @@ static void *
 http_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
-	struct agent_plugin_t *plug;
 	struct http_priv_t *http;
 	struct MHD_Daemon *d;
 	int port;
 
-	plug = plugin_find(core, "http");
-	http = (struct http_priv_t *)plug->data;
-	assert(http);
+	GET_PRIV(core, http);
 	port = atoi(core->config->c_arg);
 	assert(port > 0);
 	logger(http->logger, "HTTP starting on port %i", port);
@@ -456,15 +450,12 @@ http_register_url(struct agent_core_t *core, const char *url,
     unsigned int method, callback_t cb, void *data)
 {
 	struct http_listener *lp;
-	struct agent_plugin_t *plug;
 	struct http_priv_t *http;
 
 	assert(cb);
 
 	ALLOC_OBJ(lp);
-	plug = plugin_find(core, "http");
-	http = plug->data;
-	assert(http);
+	GET_PRIV(core, http);
 	lp->url = strdup(url);
 	assert(lp->url);
 	lp->method = method;

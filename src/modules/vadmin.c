@@ -252,10 +252,10 @@ static void
 read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct agent_core_t *core = private;
-	struct agent_plugin_t *plug;
 	struct vadmin_config_t *vadmin;
-	plug = plugin_find(core,"vadmin");
-	vadmin = plug->data;
+
+	GET_PRIV(core, vadmin);
+
 	if (vadmin->state == 0)
 		cli_sock(vadmin, core);
 	vadmin_run(vadmin, msg, ret);

@@ -270,17 +270,13 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
-	struct agent_plugin_t *plug;
 	struct http_response *resp;
 	struct ipc_ret_t vret;
 	char id[ID_LEN + 1];
 	int ret;
 	int status;
 
-	plug = plugin_find(core,"vcl");
-
-	vcl = plug->data;
-	assert(vcl);
+	GET_PRIV(core, vcl);
 
 	if (request->method == M_GET) {
 		if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {

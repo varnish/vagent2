@@ -49,23 +49,21 @@ struct vping_priv_t {
 static void *vping_run(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
-	struct agent_plugin_t *plug;
-	struct vping_priv_t *ping;
+	struct vping_priv_t *vping;
 	struct ipc_ret_t vret;
 
-	plug = plugin_find(core,"vping");
-	ping = (struct vping_priv_t *) plug->data;
+	GET_PRIV(core, vping);
 
 	while (1) {
 		sleep(30);
-		ipc_run(ping->vadmin_sock, &vret, "ping");
+		ipc_run(vping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
-			logger(ping->logger, "Ping failed. %d ", vret.status);
+			logger(vping->logger, "Ping failed. %d ", vret.status);
 		free(vret.answer);
 
-		ipc_run(ping->vadmin_sock, &vret, "status");
+		ipc_run(vping->vadmin_sock, &vret, "status");
 		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
-			logger(ping->logger, "%d %s", vret.status, vret.answer);
+			logger(vping->logger, "%d %s", vret.status, vret.answer);
 		free(vret.answer);
 	}
 	return NULL;

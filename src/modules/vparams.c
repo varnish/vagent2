@@ -276,11 +276,10 @@ static unsigned int vparams_reply(struct http_request *request, void *data)
 {
 	const char *arg;
 	struct agent_core_t *core = data;
-	struct agent_plugin_t *plug;
 	struct vparams_priv_t *vparams;
 	char *body;
-	plug = plugin_find(core,"vparams");
-	vparams = plug->data;
+
+	GET_PRIV(core, vparams);
 
 	if (!strcmp(request->url, "/paramjson/") && request->method == M_GET) {
 		param_json(request, vparams);

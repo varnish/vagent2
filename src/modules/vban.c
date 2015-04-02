@@ -58,11 +58,11 @@ struct vban_priv_t {
 
 static unsigned int vban_reply(struct http_request *request, void *data)
 {
+	struct agent_core_t *core = data;
 	struct vban_priv_t *vban;
-	struct agent_plugin_t *plug;
 	char *body;
-	plug = plugin_find(data,"vban");
-	vban = plug->data;
+
+	GET_PRIV(core, vban);
 
 	if (request->method == M_GET) {
 		run_and_respond(vban->vadmin, request->connection, "ban.list");
