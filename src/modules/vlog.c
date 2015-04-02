@@ -54,7 +54,6 @@
 #include "ipc.h"
 #include "plugins.h"
 #include "vsb.h"
-#include "helpers.h"
 
 #include <vapi/vsm.h>
 #include <vapi/vsl.h>

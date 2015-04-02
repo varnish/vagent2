@@ -47,7 +47,6 @@
 
 #include "common.h"
 #include "http.h"
-#include "helpers.h"
 #include "ipc.h"
 #include "plugins.h"
 #include "vsb.h"
