@@ -36,7 +36,6 @@
 #include "ipc.h"
 #include "plugins.h"
 
-
 struct vping_priv_t {
 	int vadmin_sock;
 	int logger;
@@ -46,27 +45,32 @@ struct vping_priv_t {
  * Pings the varnish server every Nth second. First vadmin-plugin written,
  * not sure if it still has value.
  */
-static void *vping_run(void *data)
+static void *
+vping_run(void *data)
 {
-	struct agent_core_t *core = (struct agent_core_t *)data;
+	struct agent_core_t *core = data;
 	struct vping_priv_t *vping;
 	struct ipc_ret_t vret;
 
 	GET_PRIV(core, vping);
 
-	while (1) {
+	for (;;) {
 		sleep(30);
+
 		ipc_run(vping->vadmin_sock, &vret, "ping");
 		if (vret.status != 200)
-			logger(vping->logger, "Ping failed. %d ", vret.status);
+			logger(vping->logger, "Ping failed. %d ",
+			    vret.status);
 		free(vret.answer);
 
 		ipc_run(vping->vadmin_sock, &vret, "status");
-		if (vret.status != 200 || strcmp(vret.answer,"Child in state running"))
-			logger(vping->logger, "%d %s", vret.status, vret.answer);
+		if (vret.status != 200 ||
+		    strcmp(vret.answer, "Child in state running"))
+			logger(vping->logger, "%d %s", vret.status,
+			    vret.answer);
 		free(vret.answer);
 	}
-	return NULL;
+	return (NULL);
 }
 
 static void *
@@ -77,7 +81,7 @@ vping_start(struct agent_core_t *core, const char *name)
 	(void)name;
 
 	ALLOC_OBJ(thread);
-	AZ(pthread_create(thread, NULL, (*vping_run), core));
+	AZ(pthread_create(thread, NULL, vping_run, core));
 	return (thread);
 }
 
@@ -88,10 +92,9 @@ vping_init(struct agent_core_t *core)
 	struct vping_priv_t *priv;
 
 	ALLOC_OBJ(priv);
-	plug = plugin_find(core,"vping");
-
-	priv->vadmin_sock = ipc_register(core,"vadmin");
-	priv->logger = ipc_register(core,"logger");
+	plug = plugin_find(core, "vping");
+	priv->vadmin_sock = ipc_register(core, "vadmin");
+	priv->logger = ipc_register(core, "logger");
 	plug->data = (void *)priv;
 	plug->start = vping_start;
 }

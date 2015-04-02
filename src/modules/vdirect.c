@@ -26,7 +26,6 @@
  * SUCH DAMAGE.
  */
 
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,10 +36,9 @@
 #include "http.h"
 #include "helpers.h"
 
-
-#define DIRECT_HELP \
-	"You can issue verbatim varnish CLI commands (varnishadm) by posting a single line\n" \
-	"to /direct.\n"
+#define DIRECT_HELP							\
+	"You can issue verbatim varnish CLI commands (varnishadm) by "	\
+	"posting a single line\nto /direct.\n"
 
 struct vdirect_priv_t {
 	int logger;
@@ -50,8 +48,8 @@ struct vdirect_priv_t {
 static unsigned int
 vdirect_reply(struct http_request *request, void *data)
 {
-	struct vdirect_priv_t *vdirect;
 	struct agent_core_t *core = data;
+	struct vdirect_priv_t *vdirect;
 	char *cmd, *p;
 
 	GET_PRIV(core, vdirect);
@@ -71,13 +69,11 @@ vdirect_init(struct agent_core_t *core)
 	struct vdirect_priv_t *priv;
 
 	ALLOC_OBJ(priv);
-	plug = plugin_find(core,"vdirect");
-
-	priv->logger = ipc_register(core,"logger");
-	priv->vadmin = ipc_register(core,"vadmin");
+	plug = plugin_find(core, "vdirect");
+	priv->logger = ipc_register(core, "logger");
+	priv->vadmin = ipc_register(core, "vadmin");
 	plug->data = (void *)priv;
 	http_register_url(core, "/direct", M_POST, vdirect_reply, core);
-	http_register_url(core, "/help/direct", M_GET, help_reply, strdup(DIRECT_HELP));
+	http_register_url(core, "/help/direct", M_GET, help_reply,
+	    strdup(DIRECT_HELP));
 }
-
-
