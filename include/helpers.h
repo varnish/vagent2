@@ -42,17 +42,4 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 			 unsigned min, unsigned max, const char *fmt, ...);
 
-/*
- * Got core, need priv?
- * struct myplugstuff *pluginname;
- * GET_PRIV(core,pluginname);
- */
-#define GET_PRIV(core, plug)			\
-do {						\
-	struct agent_plugin_t *pp;		\
-	pp = plugin_find(core, #plug);		\
-	plug = pp->data;			\
-	assert(plug);				\
-} while(0)
-	
 #endif

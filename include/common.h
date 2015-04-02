@@ -143,4 +143,12 @@ do {					\
 	(to)[(len)] = '\0';		\
 } while(0)
 
+#define GET_PRIV(core, plug)		\
+do {					\
+	struct agent_plugin_t *pp;	\
+	pp = plugin_find(core, #plug);	\
+	plug = pp->data;		\
+	assert(plug);			\
+} while(0)
+
 #endif
