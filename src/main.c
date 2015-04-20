@@ -111,6 +111,7 @@ static void usage(const char *argv0)
 	"-T host:port          Varnishd administrative interface.\n"
 	"-t timeout            timeout for talking to varnishd.\n"
 	"-c port               TCP port (default: 6085).\n"
+	"-C cafile             CA certificate file for cURL outgoing requests.\n"
 	"-d                    Debug. Runs in foreground.\n"
 	"-P pidfile            Write pidfile.\n"
 	"-V                    Print version.\n"
@@ -139,6 +140,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->u_arg = NULL;
 	core->config->T_arg_orig = NULL;
 	core->config->c_arg = strdup("6085");
+	core->config->C_arg = NULL;
 	core->config->timeout = 5;
 	core->config->d_arg = 0;
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
@@ -147,7 +149,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->vac_arg= NULL;
 	core->config->K_arg = strdup("/etc/varnish/agent_secret");
 	core->config->loglevel = 2;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:u:g:z:K:qv")) != -1) {
+	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:C:u:g:z:K:qv")) != -1) {
 		switch (opt) {
 		case 'q':
 			core->config->loglevel = 1;
@@ -188,6 +190,9 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'c':
 			core->config->c_arg = optarg;
+			break;
+		case 'C':
+			core->config->C_arg = optarg;
 			break;
 		case 'd':
 			core->config->d_arg = 1;
