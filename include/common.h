@@ -49,6 +49,7 @@ struct agent_config_t {
 	int d_arg; // 0 - fork. 1 - foreground.
 	int loglevel;
 	char *c_arg; // Listening port for incoming requests
+	char *C_arg; // CURLOPT_CAINFO param
 	char *p_arg; // Persistence directory
 	char *H_arg; // HTML directory
 	char *P_arg; // Pid file
