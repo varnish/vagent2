@@ -43,6 +43,7 @@ struct curl_priv_t {
 	int logger;
 	void *data;
 	char *pos;
+	char *cainfo;
 	unsigned int ndata;
 };
 
@@ -119,6 +120,8 @@ static void issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
+		if (private->cainfo)
+			curl_easy_setopt(curl, CURLOPT_CAINFO, private->cainfo);
 		if (data) {
 			curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
@@ -155,8 +158,9 @@ void curl_init( struct agent_core_t *core)
 	plug = plugin_find( core, "curl");
 	assert(plug);
 	curl_global_init(CURL_GLOBAL_ALL);
-	
+
 	private->logger = ipc_register(core, "logger");
+	private->cainfo = core->config->C_arg;
 	plug->data = (void *) private;
 	plug->start  = ipc_start;
 	plug->ipc->priv = private;

@@ -19,7 +19,8 @@ SYNOPSIS
         varnish-agent -K agentsecretfile [-p directory] [-H directory]
                       [-n name] [-c port] [-S file] [-T host:port]
                       [-t timeout] [-h] [-P pidfile] [-V] [-u user]
-                      [-g group] [-z http://vac_register_url] [-q] [-v]
+                      [-g group] [-C cafile ] [-z http://vac_register_url]
+		      [-q] [-v]
 
 DESCRIPTION
 ===========
@@ -86,6 +87,13 @@ OPTIONS
 -q          Quiet mode. Only log/output warnings/errors.
 
 -v          Verbose mode. Be extra chatty, including all CLI chatter.
+
+-C cafile
+            CA certificate for use by the cURL module. For use when
+            the VAC register URL is specified as https using a
+            certificate that can not be validated with the
+            certificates in the system's default certificate
+            directory.
 
 -z vac_register_url
             Specify the callback vac register url. 
