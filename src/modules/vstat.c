@@ -73,7 +73,7 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 	if (pt == NULL)
 		return (0);
 	
-	assert(!strcmp(pt->desc->fmt, "uint64_t"));
+	assert(!strcmp(pt->desc->ctype, "uint64_t"));
 	val = *(const volatile uint64_t*)pt->ptr;
 	sec = pt->section;	
 
@@ -91,7 +91,7 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 		VSB_printf(out_vsb,"\"ident\": \"%s\", ", sec->fantom->ident);
 
 	VSB_printf(out_vsb, "\"value\": %" PRIu64 ", ", val);
-	VSB_printf(out_vsb, "\"flag\": \"%c\", ", pt->desc->flag);
+	VSB_printf(out_vsb, "\"flag\": \"%c\", ", pt->desc->semantics);
 	VSB_printf(out_vsb, "\"description\": \"%s\" }", pt->desc->sdesc);
 	return (0);
 }
