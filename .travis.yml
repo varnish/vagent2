@@ -9,7 +9,7 @@ before_install:
     python-docutils
   - git clone https://github.com/varnish/Varnish-Cache
   - cd Varnish-Cache && ./autogen.sh && ./configure --prefix=/usr &&
-    make && make install && cd ..
+    make && sudo make install && cd ..
   - ./autogen.sh
 script:
   - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check
