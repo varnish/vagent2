@@ -284,25 +284,33 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			if (vret.status == 400) {
 				http_reply(request->connection, 500, vret.answer);
 			} else {
-				char *activevcl = NULL;
-				char *saveptr = NULL;
-				char *result = strtok_r(vret.answer, "\n", &saveptr);
+				char **tp, *tok[5];
+				char *p, *last;
+				char *line;
 
-				while (result != NULL) {
-					if (!strncmp("active", result, 6)) {
-						activevcl = strtok_r(result, " ", &saveptr);
-						activevcl = strtok_r(NULL, " ", &saveptr);
-						activevcl = strtok_r(NULL, " ", &saveptr);
-						break ;
-					}
-					result = strtok_r(NULL, "\n", &saveptr);
+				memset(tok, '\0', sizeof(tok));
+				for (p = vret.answer;
+				    (line = strtok_r(p, "\n", &last));
+				    p = NULL) {
+					if (strncmp("active", line, 6))
+						continue;
+					last = NULL;
+					for (p = line, tp = tok;
+					    tp < &tok[4] &&
+					    (*tp = strtok_r(p, " ", &last));
+					    p = NULL) {
+						if (**tp != '\0')
+							tp++;
+                                        }
 				}
-				
-				if (activevcl == NULL) { 
-					http_reply(request->connection, 500, "No active VCL");
-				} else { 
-					strcpy(vret.answer,activevcl);
-					http_reply(request->connection, 200, vret.answer);
+				if (!tok[2] || !tok[3]) {
+					http_reply(request->connection,
+					    500, "No active VCL");
+				} else {
+					strcpy(vret.answer,
+					    tok[3] ? tok[3] : tok[2]);
+					http_reply(request->connection,
+					    200, vret.answer);
 				}
 			}
 			free(vret.answer);
