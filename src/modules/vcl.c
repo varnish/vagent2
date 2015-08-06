@@ -289,7 +289,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 				char *line;
 
 				memset(tok, '\0', sizeof(tok));
-				for (p = vret.answer;
+				for (p = vret.answer, last = NULL;
 				    (line = strtok_r(p, "\n", &last));
 				    p = NULL) {
 					if (strncmp("active", line, 6))
