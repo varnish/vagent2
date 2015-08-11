@@ -280,6 +280,13 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 
 	if (request->method == M_GET) {
 		if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {
+			/*
+			 * vcl.list output:
+			 *
+			 * V3/4 : <active|available|discarded> <refcnt> <name>
+			 * V4.1 : <active|available|discarded> <state> \
+			 *            <busycnt|""> <name>
+			 */
 			ipc_run(vcl->vadmin,&vret,"vcl.list");
 			if (vret.status == 400) {
 				http_reply(request->connection, 500, vret.answer);
