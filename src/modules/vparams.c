@@ -110,6 +110,27 @@ static char *vparams_show_json(char *raw)
 	top = NULL;
 	tmp->next = NULL;
 
+	/*
+	 * param.show -l output:
+	 *
+	 * V3:
+	 * (parameter) (value) \[(unit|)\]
+	 *             Default is (value)
+	 *             (description line 1)
+	 *             ..
+	 *             (description line n)
+	 *
+	 * V4/4.1:
+	 * (parameter)
+	 *   Value is: (value) [\[(unit)\]] [\(default\)]
+	 *   [Default is: (value)]
+	 *   [Minimum is: (value)]
+	 *   [Maximum is: (value)]
+	 *
+	 *   (description line 1)
+	 *   ..
+	 *   (description line n)
+	 */
 	while(raw[pos]) {
 		word[i++] = raw[pos];
 		assert(i<510);

@@ -283,9 +283,9 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			/*
 			 * vcl.list output:
 			 *
-			 * V3/4 : <active|available|discarded> <refcnt> <name>
-			 * V4.1 : <active|available|discarded> <state> \
-			 *            <busycnt|""> <name>
+			 * V3/4 : (active|available|discarded) (refcnt) (name)
+			 * V4.1 : (active|available|discarded) (state) \
+			 *            (busycnt|) (name)
 			 */
 			ipc_run(vcl->vadmin,&vret,"vcl.list");
 			if (vret.status == 400) {
