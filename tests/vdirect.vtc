@@ -1,0 +1,46 @@
+varnishtest "Test vdirect module"
+
+server s1 {
+	rxreq
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+} -start
+
+shell "echo user:pass > ${tmpdir}/agent-secret"
+process p1 "exec ${agent} -d -u ${user} -n ${tmpdir}/v1 -p ${tmpdir} -K ${tmpdir}/agent-secret" -start
+
+delay .5
+
+client c1 -connect "127.0.0.1 6085" {
+	txreq -req POST -url /direct -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "status"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "Child in state running"
+
+	txreq -req POST -url /direct -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "stop"
+	rxresp
+	expect resp.status == 200
+
+	txreq -req POST -url /direct -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "status"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "Child in state stopped"
+
+	txreq -req POST -url /direct -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "start"
+	rxresp
+	expect resp.status == 200
+
+	txreq -req POST -url /direct -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "status"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "Child in state running"
+} -run
+
+process p1 -stop
