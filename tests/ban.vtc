@@ -1,0 +1,43 @@
+varnishtest "Test vban module"
+
+server s1 {
+	rxreq
+	txresp
+} -start
+
+varnish v1 -vcl+backend {
+} -start
+
+shell "echo user:pass > ${tmpdir}/agent-secret"
+process p1 "exec ${agent} -d -u ${user} -n ${tmpdir}/v1 -p ${tmpdir} -K ${tmpdir}/agent-secret" -start
+
+delay .5
+
+client c1 -connect "127.0.0.1 6085" {
+	txreq -url /ban -hdr "Authorization: Basic dXNlcjpwYXNz"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "^Present bans:\\n[0-9]+\\.[0-9]+\\s+0\\sC\\s+\\n$"
+
+	txreq -req POST -url /ban -hdr "Authorization: Basic dXNlcjpwYXNz" \
+	    -body "req.url ~ /foo"
+	rxresp
+	expect resp.status == 200
+
+	txreq -url /ban -hdr "Authorization: Basic dXNlcjpwYXNz"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "req.url ~ /foo"
+
+	# shorter variant
+	txreq -req POST -url /ban/bar -hdr "Authorization: Basic dXNlcjpwYXNz"
+	rxresp
+	expect resp.status == 200
+
+	txreq -url /ban -hdr "Authorization: Basic dXNlcjpwYXNz"
+	rxresp
+	expect resp.status == 200
+	expect resp.body ~ "req.url ~ /bar"
+} -run
+
+process p1 -stop

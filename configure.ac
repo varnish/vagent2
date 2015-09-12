@@ -76,6 +76,12 @@ PKG_CHECK_MODULES([VARNISHAPI],[varnishapi])
 PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
 PKG_CHECK_MODULES([LIBCURL],[libcurl])
 
+AC_PATH_PROG([VARNISHTEST], [varnishtest])
+AC_PATH_PROG([VARNISHD], [varnishd])
+
+VAGENT2_TESTS="$(cd tests && echo *.vtc)"
+AC_SUBST(VAGENT2_TESTS)
+
 AC_CONFIG_FILES([Makefile
 		 include/Makefile
                  src/Makefile

@@ -1,12 +1,5 @@
-LOG_COMPILER = $(srcdir)/test-wrapper
-TESTS = ban.sh \
-	arguments.sh \
-	buffers.sh \
-	vac_register.sh \
-	json.sh \
-	log.sh \
-	status.sh \
-	vcl.sh \
-	vdirect.sh \
-	authorize.sh \
-	echo.sh
+VTC_LOG_COMPILER = $(VARNISHTEST) -v -i \
+        -Dagent=$(abs_top_builddir)/src/varnish-agent \
+        -Duser=$$(whoami)
+TEST_EXTENSIONS = .vtc
+TESTS = @VAGENT2_TESTS@
