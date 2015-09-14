@@ -49,6 +49,7 @@
             <ul class="nav">
 	      <li class="active"id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
 	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
+              <li id="nav-varnishstatview"><a href="#varnishstatview" onclick="showVarnishstat()">Varnishstat</a></li>
               <li id="nav-home"><a href="#about" onclick="showHome()">About</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -166,6 +167,45 @@
 	      </div>
 	    </div>
 	  </div><!-- params -->
+	  <div  id="varnishstatview" style="DISPLAY: none">
+	    <div class="row-fluid span12">
+	      <div class="span6">
+		<table class="table">
+		  <tr>
+		    <td>Uptime mgt:</td>
+		    <td id="MGT.uptime-1"></td>
+		  </tr>
+		  <tr>
+		    <td>Uptime child:</td>
+		    <td id="MAIN.uptime-1"></td>
+		  </tr>
+		</table>
+	      </div>
+	      <div class="span6">
+		<table class="table">
+		  <tr>
+		    <td>Hitrate n:</td>
+		    <td id="hitrate10d"></td>
+		    <td id="hitrate100d"></td>
+		    <td id="hitrate1000d"></td>
+		  </tr>
+		  <tr>
+		    <td>avg (n): </td>
+		    <td id="hitrate10v"></td>
+		    <td id="hitrate100v"></td>
+		    <td id="hitrate1000v"></td>
+		  </tr>
+		</table>
+	      </div>
+	    </div>
+	    <button onclick="toggleIgnoreNull();" >
+	      Toggle ignoring empty headers
+	    </button>
+	    <div id="varnishstat">
+	      <div id="varnishstat-inner">
+	      </div>
+	    </div>
+	  </div>
 	  <div class="span9" id="home" style="DISPLAY: none">
             <div class="hero-unit">
 	      <h1>Welcome to the Varnish Agent</h1>
@@ -208,5 +248,6 @@
     <script src="../html/js/jquery-1.10.2.min.js"></script>
     <script src="../html/js/bootstrap.min.js"></script>
     <script src="../html/js/agent.js"></script>
+    <script src="../html/js/varnishstat.js"></script>
   </body>
 </html>

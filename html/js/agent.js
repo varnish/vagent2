@@ -69,7 +69,7 @@ function out_up()
 
 function topActive(head)
 {
-	var navs = new Array('nav-home', 'nav-vcl', 'nav-param');
+	var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-varnishstatview');
 	assertText(head);
 
 	for (x in navs) {
@@ -83,6 +83,7 @@ function showVCL()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
+	document.getElementById("varnishstatview").style.display = "NONE";
 	topActive("vcl");
 }
 
@@ -91,7 +92,17 @@ function showHome()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
+	document.getElementById("varnishstatview").style.display = "NONE";
 	topActive("home");
+}
+
+function showVarnishstat()
+{
+	document.getElementById("params").style.display = "NONE";
+	document.getElementById("home").style.display = "NONE";
+	document.getElementById("vcl").style.display = "NONE";
+	document.getElementById("varnishstatview").style.display = "block";
+	topActive("varnishstatview");
 }
 
 function showParam()
@@ -99,6 +110,7 @@ function showParam()
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
+	document.getElementById("varnishstatview").style.display = "NONE";
 	list_params();
 	topActive("param");
 }
