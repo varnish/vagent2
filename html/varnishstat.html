@@ -1,0 +1,52 @@
+<html><head><title>varnishstat</title></head>
+<body>
+
+<style>
+#varnishstat table, td, th {
+	border-bottom: 1px solid black;
+}
+
+#varnishstat table {
+	width: 100%;
+
+}
+</style>
+<button onclick="toggleIgnoreNull();" >
+Toggle ignoring empty headers
+</button>
+<table border="1">
+<tr>
+<td>Uptime mgt:</td>
+<td id="MGT.uptime-1"></td>
+</tr>
+<tr>
+<td>Uptime child:</td>
+<td id="MAIN.uptime-1"></td>
+</tr>
+
+</table>
+<table border="1">
+<tr>
+<td>Hitrate n:</td>
+<td id="hitrate10d"></td>
+<td id="hitrate100d"></td>
+<td id="hitrate1000d"></td>
+</tr>
+<tr>
+<td>avg (n): </td>
+<td id="hitrate10v"></td>
+<td id="hitrate100v"></td>
+<td id="hitrate1000v"></td>
+</tr>
+</table>
+
+<div id="varnishstat">
+<div id="varnishstat-inner">
+</div>
+</div>
+
+<script src="../html/js/jquery-1.10.2.min.js"></script>
+<script src="../html/js/varnishstat.js"></script>
+</body>
+</html>
+
