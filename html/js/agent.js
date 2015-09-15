@@ -84,6 +84,7 @@ function showVCL()
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
 	document.getElementById("varnishstatview").style.display = "NONE";
+	document.getElementById("mainblock").style.display = "block";
 	topActive("vcl");
 }
 
@@ -93,6 +94,7 @@ function showHome()
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
+	document.getElementById("mainblock").style.display = "block";
 	topActive("home");
 }
 
@@ -102,6 +104,7 @@ function showVarnishstat()
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "block";
+	document.getElementById("mainblock").style.display = "NONE";
 	topActive("varnishstatview");
 }
 
@@ -111,6 +114,7 @@ function showParam()
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
 	document.getElementById("varnishstatview").style.display = "NONE";
+	document.getElementById("mainblock").style.display = "block";
 	list_params();
 	topActive("param");
 }

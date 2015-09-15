@@ -1,20 +1,23 @@
-<html><head><title>varnishstat</title></head>
+<html><head>
+<title>varnishstat</title>
+<link href="../html/css/varnishstat.css" rel="stylesheet">
+</head>
 <body>
 
 <style>
-#varnishstat table, td, th {
-	border-bottom: 1px solid black;
-}
-
 #varnishstat table {
 	width: 100%;
-
 }
+#varnishstat td,tr,th {
+	border-bottom: 1px solid #ccc;
+}
+
 </style>
 <button onclick="toggleIgnoreNull();" >
 Toggle ignoring empty headers
 </button>
-<table border="1">
+<br>
+<table style="float: left">
 <tr>
 <td>Uptime mgt:</td>
 <td id="MGT.uptime-1"></td>
@@ -25,22 +28,40 @@ Toggle ignoring empty headers
 </tr>
 
 </table>
-<table border="1">
+<table style="float: right; width: 40%;">
 <tr>
-<td>Hitrate n:</td>
+<td>Period:</td>
 <td id="hitrate10d"></td>
 <td id="hitrate100d"></td>
 <td id="hitrate1000d"></td>
 </tr>
 <tr>
-<td>avg (n): </td>
+<td>Hitrate: </td>
 <td id="hitrate10v"></td>
 <td id="hitrate100v"></td>
 <td id="hitrate1000v"></td>
 </tr>
+<tr>
+<td>Backend: </td>
+<td id="bw10v"></td>
+<td id="bw100v"></td>
+<td id="bw1000v"></td>
+</tr>
+<tr>
+<td>Front: </td>
+<td id="fbw10v"></td>
+<td id="fbw100v"></td>
+<td id="fbw1000v"></td>
+</tr>
+<tr>
+<td>Storage: </td>
+<td id="storage10v"></td>
+<td id="storage100v"></td>
+<td id="storage1000v"></td>
+</tr>
 </table>
 
-<div id="varnishstat">
+<div id="varnishstat" class="varnishstat">
 <div id="varnishstat-inner">
 </div>
 </div>

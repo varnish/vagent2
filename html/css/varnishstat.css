@@ -1,0 +1,8 @@
+.varnishstat-Name { width: 15%; }
+.varnishstat-Current { width: 10%; }
+.varnishstat-Change { width: 10%; }
+.varnishstat-Average { width: 10%; }
+.varnishstat-Average10 { width: 10%; }
+.varnishstat-Average100 { width: 10%; }
+.varnishstat-Average1000 { width: 10%; }
+.varnishstat-Description { width: 15%; }
