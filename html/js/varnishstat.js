@@ -3,35 +3,93 @@
  *
  * Author: Kristian Lyngstøl <kristian@bohemians.org>
  *
- * FIXME: This thing is entirely separate from the rest of agent.js, for better
- * or worse. This is arguably a feature, as it's quite reasonable to want to
- * use this stand-alone, which, in fact, is possible with varnishstat.html.
+ * FIXME: The various averages don't necessarily check the time but assumes
+ * that the timer is precise. This can lead to incorrect values if the
+ * network/response is unreliable.
+ *
+ * FIXME: If a counter is removed or added, things might not work. Workaround: reload.
  *
  * FIXME: The name space here is rather random, and entirely global. Should be
  * fixed.
+ *
  */
 
-
+/*
+ * vdata is the actual stats data, up to 1000 seconds.
+ */
 var vdata = new Array();
+
+/*
+ * This is/was a normalized-variant of vdata. It's only used by the infoboxes
+ * on top and is largely unnecessary. Should be phased out.
+ */
 var vdatap = new Array();
+
+/*
+ * Setting: Do we ignore counters with 0 value or not.
+ */
 var ignore_null = true;
+
+/*
+ * We want to make sure that we show counters that _had_ a value at some point,
+ * so we can't just check vdata[0]. This is a simple hash of all counters with
+ * true/false on whether they've been spotted with a value or not.
+ */
+var ignoreNullTable = {};
+
+/*
+ * Set to true if we need to re-create the table. Useful so updateTable() can
+ * spot if an element is missing or not. Without it we get a problem as
+ * constructTable() calls updateTable() as the last thing it does.
+ */
 var reconstructTable = true;
+
+/*
+ * Setting: Do we draw sparklines or not.
+ */
+var varnishstatSparkLines = false;
+
+/*
+ * Performancetweak: History for sparklines to avoid redrawing identical lines.
+ */
+var sparklineDataHistory = {};
+
+/*
+ * Performancetweak: Used in updateTable(). Set to true if we've detected that
+ * a particular counter is below the viewport. Used to avoid calling
+ * getBoundingRect().
+ */
+var wasBelow = false;
+
+/*
+ * Used for drawing hitrates, bandwidth and storage usage. Note that the other
+ * values are set by the implementation.
+ */
 var hitrate = { 
 	10: { v: 0, d: 0 },
 	100: { v: 0, d: 0 },
 	1000: { v: 0, d: 0 }
 }
+
+/*
+ * interval handler to start/stop varnishstat.
+ */
+var varnishstathandler = false;
+
 /*
  * Store the last 1000 seconds of varnishstat data, but also the very first.
+ *
+ * XXX: Might want to remove 'description' from old fields if we care about
+ * memory.
  */
 function compressData()
 {
 	if (vdata.length > 1000) {
-		console.log("compressing");
 		vdata.splice(1000,vdata.length-1001);
 	}
 	if ((vdata.length-1) < 1) 
 		return;
+
 	if (vdata[0]['MAIN.uptime'] == undefined  
 		|| vdata[vdata.length-1]['MAIN.uptime'] == undefined 
 		|| vdata[vdata.length-1]['MAIN.uptime']['value'] > vdata[0]['MAIN.uptime']['value']) {
@@ -44,7 +102,9 @@ function compressData()
 }
 
 /*
- * Updates stats
+ * Updates stats.
+ *
+ * Called by interval.
  */
 function updateArray()
 {
@@ -71,8 +131,10 @@ function updateArray()
 			compressData();
 			updateHitrate();
 			if (reconstructTable) {
+				sparklineDataHistory = {};
 				constructTable();
 				reconstructTable = false;
+				sparklineDataHistory = {};
 			} else {
 				updateTable();
 			}
@@ -99,44 +161,61 @@ function constructTable()
 	header = table.createTHead();
 	tr = header.insertRow(0);
 	td = tr.insertCell(0);
-	td.innerHTML = "Name";
+	td.textContent = "Name";
 	td.className = "varnishstat-Name";
 	td = tr.insertCell(1);
-	td.innerHTML = "Current";
+	td.textContent = "Current";
 	td.className = "varnishstat-Current";
 	td = tr.insertCell(2);
-	td.innerHTML = "Change";
+	td.textContent = "Change";
 	td.className = "varnishstat-Change";
 	td = tr.insertCell(3);
-	td.innerHTML = "Average";
+	td.textContent = "Average";
 	td.className = "varnishstat-Average";
 	td = tr.insertCell(4);
-	td.innerHTML = "Average 10";
+	td.textContent = "Average 10";
 	td.className = "varnishstat-Average10";
 	td = tr.insertCell(5);
-	td.innerHTML = "Average 100";
+	td.textContent = "Average 100";
 	td.className = "varnishstat-Average100";
 	td = tr.insertCell(6);
-	td.innerHTML = "Average 1000";
+	td.textContent = "Average 1000";
 	td.className = "varnishstat-Average1000";
 	td = tr.insertCell(7);
-	td.innerHTML = "Description";
+	td.textContent = "Description";
 	td.className = "varnishstat-Description";
 	
 	for (v in vdata[0]) {
 		if (v == 'timestamp')
 			continue;
-		if (vdata[0][v]['value'] == 0 && ignore_null)
+		ignoreNullTable[v] = ignoreNullTable[v] || vdata[0][v]['value'] > 0;
+		if (!ignoreNullTable[v] && ignore_null)
 			continue;
+		origv = v;
+		v = n(v);
 		tr = table.insertRow(-1);
 		td = tr.insertCell(0);
 		td.id = v + "-name";
-		td.innerHTML = v;
+		td.textContent = origv;
 		td = tr.insertCell(1);
-		td.id = v + "-cur";
-		td.innerHTML = vdata[0][v]['value'];
+		x = document.createElement("div");
+		x.id = v + "-cur";
+		y = document.createElement("SPAN");
+		y.id = v + "-spark";
+		y.style.float = "right";
+		y.style.width = "50%";
+		td.appendChild(y);
+		td.appendChild(x);
+		
 		td = tr.insertCell(2);
-		td.id = v + "-diff";
+		x = document.createElement("div");
+		x.id = v + "-diff";
+		y = document.createElement("SPAN");
+		y.id = v + "-spark2";
+		y.style.float = "right";
+		y.style.width = "50%";
+		td.appendChild(y);
+		td.appendChild(x);
 		td = tr.insertCell(3);
 		td.id = v + "-avg";
 		td = tr.insertCell(4);
@@ -147,15 +226,14 @@ function constructTable()
 		td.id = v + "-avg1000";
 		td = tr.insertCell(7);
 		td.id = v + "-sdec";
-		td.innerHTML = vdata[0][v]['description'];
+		td.textContent = vdata[0][origv]['description'];
 	}
 	el.appendChild(table);
 	updateTable();
 }
 
 /*
- * You don't want to read this. Pretend it's not here.
- * (converts 124124123 to "day+hour:minute:second")
+ * Convert seconds to a duration. (d+HH:MM:SS)
  */
 function secToDiff(x)
 {
@@ -167,7 +245,6 @@ function secToDiff(x)
 	x -= h;
 	d = x / (3600*24);
 
-	d = d/(3600*24);
 	h = h/3600;
 	m = m/60;
 	if (s<10) 
@@ -177,13 +254,68 @@ function secToDiff(x)
 	if (h < 10)
 		h = "0" + h;
 
-	return  d + "+" +  h + ":" + m + ":" + s ;
+	return  parseInt(d) + "+" +  h + ":" + m + ":" + s ;
 }
 
 function toggleIgnoreNull()
 {
 	ignore_null = !ignore_null;
 	constructTable();
+}
+
+function toggleSparkLines()
+{
+	varnishstatSparkLines = !varnishstatSparkLines;
+	constructTable();
+}
+
+/*
+ * Normalize x for id/tag names.
+ */
+function n(x)
+{
+	return x.replace(/[^a-z0-9]/ig,'-');
+}
+
+/*
+ * Returns true if the data in sparkData is different from sparkDataHistory[v]
+ */
+function sparkUpdated(v, sparkData)
+{
+	if (sparklineDataHistory[v] == undefined)
+		return true;
+	if (sparklineDataHistory[v].length != sparkData.length)
+		return true;
+	for (var i = 0; i < sparkData.length;i++) {
+		if (sparkData[i] != sparklineDataHistory[v][i])
+			return true;
+	}
+	return false;
+}
+
+/*
+ * Performance tweak/hack:
+ * We know we iterate over a list and draw from top to bottom, so if one items
+ * is below the screen, it's safe to assume the next ones are too.
+ *
+ * This is done because getBoundingClientRect() can be surprisingly slow. Some
+ * tests showed that it was almost cheaper to render all the sparklines than to
+ * try to figure out if they were visible...
+ */
+function isScrolledIntoView(elem)
+{
+	if (wasBelow)
+		return false;
+	var rect = document.getElementById(elem).getBoundingClientRect();
+	if (below(rect)) {
+		wasBelow = true;
+	}
+	return (!below(rect) && (rect.top > 0));
+}
+
+function below(rect)
+{
+	return ((window.innerHeight - rect.bottom) < 0);
 }
 
 /*
@@ -193,36 +325,61 @@ function toggleIgnoreNull()
  */
 function updateTable()
 {
-	for (v in vdata[0]) {
+	tmpvdata = vdata[0];
+	wasBelow = false;
+	for (v in tmpvdata) {
 		if (v == 'timestamp')
 			continue;
-		if (vdata[0][v]['value'] == 0 && ignore_null)
+		ignoreNullTable[v] = ignoreNullTable[v] || vdata[0][v]['value'] > 0;
+		if (!ignoreNullTable[v] && ignore_null)
 			continue;
-		el = document.getElementById(v + "-cur");
+		el = document.getElementById(n(v) + "-cur");
 		if (el == undefined) {
 			reconstructTable = true;
 			continue;
 		}
-		el.innerHTML = vdata[0][v]['value'];
+		el.textContent = vdata[0][v]['value'];
 		if (vdata[1] == undefined || vdata[1][v] == undefined)
 			continue;
 		if (vdata.length > 1) {
-			el = document.getElementById(v + "-diff");
-			el.innerHTML = vdata[0][v]['value'] - vdata[1][v]['value'];
+			if (varnishstatSparkLines) {
+				sparkData = [];
+				sparkData2 = [];
+				for (i = 0; i < vdata.length && i < 30; i ++) {
+					sparkData.unshift(vdata[i][v]['value']);
+					if (i>0)
+						sparkData2.unshift(vdata[i-1][v]['value'] - vdata[i][v]['value']);
+				}
+				if (sparkUpdated(v,sparkData)) {
+					if (isScrolledIntoView(n(v) + '-spark')) {
+						sparklineDataHistory[v] = sparkData;
+						sparkOptions = {
+							disableHiddenCheck: true,
+							disableHighlight: true
+						};
+						$('#' + n(v) + '-spark').sparkline(sparkData,sparkOptions);
+						$('#' + n(v) + '-spark2').sparkline(sparkData2,sparkOptions);
+					}
+				}
+			} else {
+				sparklineDataHistory[v] = undefined;
+			}
+			el = document.getElementById(n(v) + "-diff");
+			el.textContent = vdata[0][v]['value'] - vdata[1][v]['value'];
 			if (vdata[0][v]['flag'] == 'a') {
-				el = document.getElementById(v + "-avg");
-				el.innerHTML = (vdata[0][v]['value'] / vdata[0]['MAIN.uptime']['value']).toFixed(2);
+				el = document.getElementById(n(v) + "-avg");
+				el.textContent = (vdata[0][v]['value'] / vdata[0]['MAIN.uptime']['value']).toFixed(2);
 				scope = [10, 100, 1000];
 				for (a in scope) {
 					a = scope[a];
-					el = document.getElementById(v + "-avg" + a);
+					el = document.getElementById(n(v) + "-avg" + a);
 					now =  vdata[0][v]['value'];
 					nthen = vdata.length > a ? a : vdata.length - 1;
 					if (vdata[nthen][v] == undefined)
 						continue;
 					then = vdata[nthen][v]['value'];
 					timed = vdata[0]['MAIN.uptime']['value'] - vdata[nthen]['MAIN.uptime']['value'];
-					el.innerHTML = ((now - then) / timed).toFixed(2);
+					el.textContent = ((now - then) / timed).toFixed(2);
 				}
 			}
 		}
@@ -233,6 +390,7 @@ function updateTable()
 /*
  * Updates the hitrate and uptime-boxes
  * FIXME: Should be cleaned up a bit, mostly for style/readability and naming.
+ * FIXME: Remove vdatap.
  */
 function updateHitrate()
 {
@@ -253,18 +411,26 @@ function updateHitrate()
 				   s2['beresp_hdrbytes'] - s2['beresp_bodybytes']) / a;
 		hitrate[origa].f = (vdatap[0]['s_resp_hdrbytes'] + vdatap[0]['s_resp_bodybytes']
 				- (vdatap[a]['s_resp_hdrbytes'] + vdatap[a]['s_resp_bodybytes']))/a;
-		document.getElementById("hitrate" + origa + "d").innerHTML = hitrate[origa].d;
-		document.getElementById("hitrate" + origa + "v").innerHTML = (hitrate[origa].h*100).toFixed(3) + "%";
-		document.getElementById("bw" + origa + "v").innerHTML = toHuman(hitrate[origa].b) + "B/s";
-		document.getElementById("fbw" + origa + "v").innerHTML = toHuman(hitrate[origa].f) + "B/s";
+		document.getElementById("hitrate" + origa + "d").textContent = hitrate[origa].d;
+		document.getElementById("hitrate" + origa + "v").textContent = (hitrate[origa].h*100).toFixed(3) + "%";
+		document.getElementById("bw" + origa + "v").textContent = toHuman(hitrate[origa].b) + "B/s";
+		document.getElementById("fbw" + origa + "v").textContent = toHuman(hitrate[origa].f) + "B/s";
 		
-		document.getElementById("storage" + origa + "v").innerHTML = toHuman(storage['g_bytes']);
+		document.getElementById("storage" + origa + "v").textContent = toHuman(storage['g_bytes']);
 
 	}
-	document.getElementById("MAIN.uptime-1").innerHTML = secToDiff(vdatap[0]['uptime']);
-	document.getElementById("MGT.uptime-1").innerHTML = secToDiff(vdatap[0]['MGT.uptime']);
+	document.getElementById("MAIN.uptime-1").textContent = secToDiff(vdatap[0]['uptime']);
+	document.getElementById("MGT.uptime-1").textContent = secToDiff(vdatap[0]['MGT.uptime']);
 }
 
+/*
+ * Varnish has a hierarchy of dynamic counters, but the JSON doesn't clearly
+ * reflect this in a way we can use directly.
+ *
+ * This function parses the vdata in d and returns a proper tree structure.
+ *
+ * FIXME: Should probably be cached instead of recreating it on every update.
+ */
 function makeProperJson(d) {
 	var out = {};
 	for (item in d) {
@@ -290,6 +456,13 @@ function makeProperJson(d) {
 	return out;
 }
 
+/*
+ * Add up all same-named counters under the family 'types' (array), except
+ * 'skip'.
+ *
+ * Or: Give us stats for all combined backends.
+ * Or: Give us stats for all combined memory allocators, except Transient.
+ */
 function collect(d,types,skip) {
 	var out = {};
 	for (t in types) {
@@ -310,6 +483,11 @@ function collect(d,types,skip) {
 	return out;
 }
 
+/*
+ * Convert i to a human-readable number (add T/G/M/k postfixes).
+ *
+ * 1024-based.
+ */
 function toHuman(i) {
 	var units = ['T','G','M','k'];
 	var unit = '';
@@ -322,8 +500,14 @@ function toHuman(i) {
 	return i.toFixed(1) + unit;
 }
 
-/*
- * FIXME: Should not really be here. Hidden away from the rest of the agent.js code...
- */
-setInterval(updateArray,1000);
+function startVarnishstat()
+{
+	stopVarnishstat();
+	varnishstathandler = setInterval(updateArray,1000);
+}
 
+function stopVarnishstat()
+{
+	if (varnishstathandler)
+		clearInterval(varnishstathandler);
+}

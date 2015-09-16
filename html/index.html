@@ -254,8 +254,11 @@
           </div>
         </div>
         <div class="row-fluid">
-          <button onclick="toggleIgnoreNull();" >
+          <button onclick="toggleIgnoreNull();" class="btn">
             Toggle ignoring empty headers
+          </button>
+          <button onclick="toggleSparkLines();" class="btn">
+            Toggle spark lines
           </button>
           <div id="varnishstat">
             <div id="varnishstat-inner">
@@ -265,6 +268,7 @@
     </div><!--/.fluid-container-->
   </div>
     <script src="../html/js/jquery-1.10.2.min.js"></script>
+    <script src="../html/js/jquery.sparkline.min.js"></script>
     <script src="../html/js/bootstrap.min.js"></script>
     <script src="../html/js/agent.js"></script>
     <script src="../html/js/varnishstat.js"></script>

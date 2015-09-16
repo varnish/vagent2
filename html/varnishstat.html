@@ -13,8 +13,12 @@
 }
 
 </style>
+<div>
 <button onclick="toggleIgnoreNull();" >
 Toggle ignoring empty headers
+</button>
+<button onclick="toggleSparkLines();" >
+Toggle spark lines
 </button>
 <br>
 <table style="float: left">
@@ -60,14 +64,20 @@ Toggle ignoring empty headers
 <td id="storage1000v"></td>
 </tr>
 </table>
-
-<div id="varnishstat" class="varnishstat">
-<div id="varnishstat-inner">
 </div>
+<div style="clear: both">
+	<div id="varnishstat" class="varnishstat">
+	<div id="varnishstat-inner">
+	</div>
+	</div>
 </div>
 
 <script src="../html/js/jquery-1.10.2.min.js"></script>
+<script src="../html/js/jquery.sparkline.min.js"></script>
 <script src="../html/js/varnishstat.js"></script>
+<script type="text/javascript">
+startVarnishstat();
+</script>
 </body>
 </html>
 
