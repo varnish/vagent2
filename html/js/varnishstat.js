@@ -47,7 +47,7 @@ var reconstructTable = true;
 /*
  * Setting: Do we draw sparklines or not.
  */
-var varnishstatSparkLines = false;
+var varnishstatSparkLines = true;
 
 /*
  * Performancetweak: History for sparklines to avoid redrawing identical lines.
@@ -131,7 +131,6 @@ function updateArray()
 			compressData();
 			updateHitrate();
 			if (reconstructTable) {
-				sparklineDataHistory = {};
 				constructTable();
 				reconstructTable = false;
 				sparklineDataHistory = {};
@@ -154,6 +153,7 @@ function constructTable()
 {
 	var el = document.getElementById("varnishstat");
 	var table = document.getElementById("varnishstat-inner");
+	sparklineDataHistory = {};
 	el.removeChild(table);
 	table = document.createElement("table");
 	table.className = "table table-condensed";
