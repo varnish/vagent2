@@ -229,8 +229,16 @@ test_it() {
 }
 
 test_it_no_content() {
-    FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 </dev/null)
+    FOO=$(lwp-request -f -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 </dev/null)
     if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
+    inc
+    if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
+    inc
+}
+
+test_it_no_content_fail() {
+    FOO=$(lwp-request -f -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 )
+    if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
     inc
     if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
     inc

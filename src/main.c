@@ -102,7 +102,7 @@ static void usage(const char *argv0)
 	"Varnish Agent usage: \n"
 	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
 	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n"
-	"   [-z http://host:port] [-K agentsecretfile]\n\n"
+	"   [-z http://host:port] [-K agentsecretfile] [-r]\n\n"
 	"-p directory          Persistence directory: where VCL and parameters\n"
 	"                      are stored. Default: " AGENT_PERSIST_DIR "\n"
 	"-H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
@@ -122,6 +122,7 @@ static void usage(const char *argv0)
 	"-v                    Verbose mode. Output everything.\n"
 	"-K agentsecretfile    File containing username:password for authentication\n"
 	"-z http://host:port   VAC interface.\n"
+	"-r                    Read-only mode. Only accept GET and HEAD requsts\n"
 	"\n"
 	"All arguments are optional.\n"
 	, argv0);
@@ -146,16 +147,20 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
 	core->config->H_arg = strdup(AGENT_HTML_DIR);
 	core->config->P_arg = NULL;
+	core->config->r_arg = 0;
 	core->config->vac_arg= NULL;
 	core->config->K_arg = strdup("/etc/varnish/agent_secret");
 	core->config->loglevel = 2;
-	while ((opt = getopt(argc, argv, "VhdP:p:H:n:S:T:t:c:C:u:g:z:K:qv")) != -1) {
+	while ((opt = getopt(argc, argv, "rVhdP:p:H:n:S:T:t:c:C:u:g:z:K:qv")) != -1) {
 		switch (opt) {
 		case 'q':
 			core->config->loglevel = 1;
 			break;
 		case 'v':
 			core->config->loglevel = 3;
+			break;
+		case 'r':
+			core->config->r_arg = 1;
 			break;
 		case 'K':
 			core->config->K_arg = optarg;
