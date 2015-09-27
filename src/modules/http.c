@@ -353,9 +353,11 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 	assert(core->config->userpass);
 
 	log_request(connection, http, method, url);
-	if (core->config->r_arg && (!(!strcmp(method,"GET") || !strcmp(method,"HEAD") || !strcmp(method,"OPTIONS")))) {
-		logger(http->logger, "Read/only mode and not a GET, HEAD or OPTIONS request");
-		return (http_reply(connection, 405, "Read/only mode"));
+	if (core->config->r_arg && strcmp(method,"GET") &&
+	    strcmp(method,"HEAD") && strcmp(method,"OPTIONS")) {
+		logger(http->logger,
+		    "Read-only mode and not a GET, HEAD or OPTIONS request");
+		return (http_reply(connection, 405, "Read-only mode"));
 	}
 
 	if (!strcmp(method, "OPTIONS")) {

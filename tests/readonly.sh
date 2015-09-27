@@ -10,6 +10,6 @@ ARGS="-r"
 init_all
 
 test_it GET echo "" ""
-test_it_no_content_fail POST echo "Foobar" "Read/only mode"
-test_it_no_content_fail POST echo "" "Read/only mode"
+test_it_no_content_fail POST echo "Foobar" "Read-only mode"
+test_it_no_content_fail POST echo "" "Read-only mode"
 exit $ret
