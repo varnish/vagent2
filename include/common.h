@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Varnish Software AS
+ * Copyright (c) 2012-2015 Varnish Software Group
  * All rights reserved.
  *
  * Author: Kristian Lyngstøl <kristian@bohemians.org>
@@ -44,15 +44,15 @@ struct agent_config_t {
 	char *n_arg;
 	char *u_arg;
 	char *g_arg;
-	char *K_arg;
+	const char *K_arg;
 	int r_arg;
 
 	int d_arg; // 0 - fork. 1 - foreground.
 	int loglevel;
-	char *c_arg; // Listening port for incoming requests
+	const char *c_arg; // Listening port for incoming requests
 	char *C_arg; // CURLOPT_CAINFO param
-	char *p_arg; // Persistence directory
-	char *H_arg; // HTML directory
+	const char *p_arg; // Persistence directory
+	const char *H_arg; // HTML directory
 	char *P_arg; // Pid file
 	char *vac_arg;
 	char *password;

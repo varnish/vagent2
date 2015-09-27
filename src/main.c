@@ -116,35 +116,28 @@ static void usage(const char *argv0)
 	    "    -S varnishd-secret-file\n"
 	    "                          Location of the varnishd secret file.\n"
 	    "    -T host:port          Varnishd administrative interface.\n"
-	    "    -t timeout            timeout for talking to varnishd.\n"
+	    "    -t timeout            Timeout for talking to varnishd (default: 5 seconds).\n"
 	    "    -u user               User to run as (default: varnish)\n"
 	    "    -V                    Print version.\n"
 	    "    -v                    Verbose mode. Output everything.\n"
-	    "    -z http://host:port   VAC interface.\n\n", argv0);
+	    "    -z vac_register_url   VAC interface.\n\n",
+	    argv0);
 }
 
 static void core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
 	const char *argv0 = argv[0];
+
 	assert(core->config != NULL);
-	core->config->n_arg = NULL;
-	core->config->S_arg = NULL;
+
+	memset(core->config, '\0', sizeof(*core->config));
 	core->config->S_arg_fd = -1;
-	core->config->T_arg = NULL;
-	core->config->g_arg = NULL;
-	core->config->u_arg = NULL;
-	core->config->T_arg_orig = NULL;
-	core->config->c_arg = strdup("6085");
-	core->config->C_arg = NULL;
+	core->config->c_arg = "6085";
 	core->config->timeout = 5;
-	core->config->d_arg = 0;
-	core->config->p_arg = strdup(AGENT_PERSIST_DIR);
-	core->config->H_arg = strdup(AGENT_HTML_DIR);
-	core->config->P_arg = NULL;
-	core->config->r_arg = 0;
-	core->config->vac_arg= NULL;
-	core->config->K_arg = strdup("/etc/varnish/agent_secret");
+	core->config->p_arg = AGENT_PERSIST_DIR;
+	core->config->H_arg = AGENT_HTML_DIR;
+	core->config->K_arg = "/etc/varnish/agent_secret";
 	core->config->loglevel = 2;
 	while ((opt = getopt(argc, argv, "C:c:dg:H:hK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
