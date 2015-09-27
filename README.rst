@@ -23,7 +23,7 @@ SYNOPSIS
                       [-n name] [-c port] [-S file] [-T host:port]
                       [-t timeout] [-h] [-P pidfile] [-V] [-u user]
                       [-g group] [-C cafile ] [-z http://vac_register_url]
-		      [-q] [-v]
+		      [-q] [-v] [-r]
 
 DESCRIPTION
 ===========
@@ -100,6 +100,9 @@ OPTIONS
 
 -z vac_register_url
             Specify the callback vac register url.
+
+-r          Read/only mode. Only accept GET, HEAD and OPTIONS request
+            methods.
 
 VARNISH CONFIGURATION
 =====================

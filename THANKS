@@ -10,6 +10,8 @@ Some of the many people to thank:
 * Lasse Karstensen, for early testing and bug reports.
 * Yves Hwang/Per Buer, for testing on Mac OS X. Not sure you actually
   deserve a thanks for that though... !@#!@# mac.
+* Norwegian Broadcasting Company (NRK) for contributing with
+  varnishstat-development
 
 src/foreign/
 ============

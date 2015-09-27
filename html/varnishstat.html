@@ -1,0 +1,83 @@
+<html><head>
+<title>varnishstat</title>
+<link href="../html/css/varnishstat.css" rel="stylesheet">
+</head>
+<body>
+
+<style>
+#varnishstat table {
+	width: 100%;
+}
+#varnishstat td,tr,th {
+	border-bottom: 1px solid #ccc;
+}
+
+</style>
+<div>
+<button onclick="toggleIgnoreNull();" >
+Toggle ignoring empty headers
+</button>
+<button onclick="toggleSparkLines();" >
+Toggle spark lines
+</button>
+<br>
+<table style="float: left">
+<tr>
+<td>Uptime mgt:</td>
+<td id="MGT.uptime-1"></td>
+</tr>
+<tr>
+<td>Uptime child:</td>
+<td id="MAIN.uptime-1"></td>
+</tr>
+
+</table>
+<table style="float: right; width: 40%;">
+<tr>
+<td>Period:</td>
+<td id="hitrate10d"></td>
+<td id="hitrate100d"></td>
+<td id="hitrate1000d"></td>
+</tr>
+<tr>
+<td>Hitrate: </td>
+<td id="hitrate10v"></td>
+<td id="hitrate100v"></td>
+<td id="hitrate1000v"></td>
+</tr>
+<tr>
+<td>Backend: </td>
+<td id="bw10v"></td>
+<td id="bw100v"></td>
+<td id="bw1000v"></td>
+</tr>
+<tr>
+<td>Front: </td>
+<td id="fbw10v"></td>
+<td id="fbw100v"></td>
+<td id="fbw1000v"></td>
+</tr>
+<tr>
+<td>Storage: </td>
+<td id="storage10v"></td>
+<td id="storage100v"></td>
+<td id="storage1000v"></td>
+</tr>
+</table>
+</div>
+<div style="clear: both">
+	<div id="varnishstat" class="varnishstat">
+	<div id="varnishstat-inner">
+	</div>
+	</div>
+</div>
+
+<script src="../html/js/jquery-1.10.2.min.js"></script>
+<script src="../html/js/jquery.sparkline.min.js"></script>
+<script src="../html/js/varnishstat.js"></script>
+<script type="text/javascript">
+startVarnishstat();
+</script>
+</body>
+</html>
+

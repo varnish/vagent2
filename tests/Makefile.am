@@ -9,4 +9,5 @@ TESTS = ban.sh \
 	vcl.sh \
 	vdirect.sh \
 	authorize.sh \
-	echo.sh
+	echo.sh \
+	readonly.sh

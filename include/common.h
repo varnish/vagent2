@@ -45,6 +45,7 @@ struct agent_config_t {
 	char *u_arg;
 	char *g_arg;
 	char *K_arg;
+	int r_arg;
 
 	int d_arg; // 0 - fork. 1 - foreground.
 	int loglevel;
