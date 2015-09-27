@@ -43,24 +43,47 @@ maintains ``/var/lib/varnish-agent/boot.vcl``.
 OPTIONS
 =======
 
--K file
-            Path to a file containing a single line representing the
-            username and password required to authenticate. The file is the
-            only required configuration of the agent. It should have a
-            format of ``username:password``.
+-C cafile
+            CA certificate for use by the cURL module. For use when
+            the VAC register URL is specified as https using a
+            certificate that can not be validated with the
+            certificates in the system's default certificate
+            directory.
 
--p directory
-            Specify persistence directory. This is where VCL is stored. See
-            ``varnish-agent -h`` to see the compiled in default.
+-c port     Port number to listen for incomming connections. Defaults to
+            6085.
+
+-d          Run in foreground.
+
+-g group    Group to run as. Defaults to varnish.
 
 -H directory
             Specify where html files are found. This directory will be
             accessible through ``/html/``. The default provides a proof of
             concept front end.
 
+-h          Print help.
+
+-K file
+            Path to a file containing a single line representing the
+            username and password required to authenticate. The file is the
+            only required configuration of the agent. It should have a
+            format of ``username:password``.
+
 -n name     Specify the varnishd name. Should match the ``varnishd -n``
             option. Amongst other things, this name is used to construct a
             path to the SHM-log file.
+
+-P pidfile  Write pidfile.
+
+-p directory
+            Specify persistence directory. This is where VCL is stored. See
+            ``varnish-agent -h`` to see the compiled in default.
+
+-q          Quiet mode. Only log/output warnings/errors.
+
+-r          Read-only mode. Only accept GET, HEAD and OPTIONS request
+            methods.
 
 -S secretfile
             Path to the shared secret file, used to authenticate with
@@ -72,37 +95,14 @@ OPTIONS
 
 -t timeout  Timeout in seconds for talking to varnishd.
 
--c port     Port number to listen for incomming connections. Defaults to
-            6085.
-
--P pidfile  Write pidfile.
-
--d          Run in foreground.
+-u user     User to run as. Defaults to varnish.
 
 -V          Print version.
 
--h          Print help.
-
--u user     User to run as. Defaults to varnish.
-
--g group    Group to run as. Defaults to varnish.
-
--q          Quiet mode. Only log/output warnings/errors.
-
 -v          Verbose mode. Be extra chatty, including all CLI chatter.
-
--C cafile
-            CA certificate for use by the cURL module. For use when
-            the VAC register URL is specified as https using a
-            certificate that can not be validated with the
-            certificates in the system's default certificate
-            directory.
 
 -z vac_register_url
             Specify the callback vac register url.
-
--r          Read/only mode. Only accept GET, HEAD and OPTIONS request
-            methods.
 
 VARNISH CONFIGURATION
 =====================
