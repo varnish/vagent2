@@ -19,11 +19,11 @@ SYNOPSIS
 
 ::
 
-        varnish-agent -K agentsecretfile [-p directory] [-H directory]
-                      [-n name] [-c port] [-S file] [-T host:port]
-                      [-t timeout] [-h] [-P pidfile] [-V] [-u user]
-                      [-g group] [-C cafile ] [-z http://vac_register_url]
-		      [-q] [-v] [-r]
+        varnish-agent [-C cafile] [-c port] [-d] [-g group] [-H directory]
+                      [-h] [-K agent-secret-file] [-n name] [-P pidfile]
+                      [-p directory] [-q] [-r] [-S varnishd-secret-file]
+                      [-T host:port] [-t timeout] [-u user] [-V] [-v]
+                      [-z http://vac_register_url]
 
 DESCRIPTION
 ===========
@@ -33,9 +33,8 @@ and other varnish-related services to allow remote control and monitoring
 of Varnish.
 
 It listens to port 6085 by default. Try ``http://hostname:6085/html/`` for
-the HTML front-end. All arguments are optional, but a password-file is
-required, see the ``-K`` option. The Varnish Agent will read other
-necessary options from the shm-log.
+the HTML front-end. All arguments are optional.  The Varnish Agent will
+read all the necessary options from the shm-log.
 
 The Varnish Agent persists VCL changes to ``/var/lib/varnish-agent/`` and
 maintains ``/var/lib/varnish-agent/boot.vcl``.
@@ -64,11 +63,10 @@ OPTIONS
 
 -h          Print help.
 
--K file
+-K agent-secret-file
             Path to a file containing a single line representing the
-            username and password required to authenticate. The file is the
-            only required configuration of the agent. It should have a
-            format of ``username:password``.
+            username and password required to authenticate. It should
+            have a format of ``username:password``.
 
 -n name     Specify the varnishd name. Should match the ``varnishd -n``
             option. Amongst other things, this name is used to construct a
@@ -85,7 +83,7 @@ OPTIONS
 -r          Read-only mode. Only accept GET, HEAD and OPTIONS request
             methods.
 
--S secretfile
+-S varnishd-secret-file
             Path to the shared secret file, used to authenticate with
             varnishd.
 
@@ -129,11 +127,11 @@ Everything is written as a module, and the goal is:
 SEE ALSO
 ========
 
-* varnish-cli(7)
-* varnishd(1)
 * varnishadm(1)
+* varnishd(1)
 * varnishlog(1)
 * varnishstat(1)
+* varnish-cli(7)
 * vcl(7)
 
 HISTORY
@@ -181,4 +179,4 @@ COPYRIGHT
 This document is licensed under the same license as the Varnish Agent
 itself. See LICENSE for details.
 
-* Copyright 2012-2014 Varnish Software AS
+* Copyright 2012-2015 Varnish Software Group

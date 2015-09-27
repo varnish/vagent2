@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 Varnish Software AS
+ * Copyright (c) 2012-2015 Varnish Software Group
  * All rights reserved.
  *
  * Author: Kristian Lyngstøl <kristian@bohemians.org>
@@ -99,33 +99,28 @@ static char *get_line(const char *filename)
 static void usage(const char *argv0)
 {
 	fprintf(stderr,
-	"Varnish Agent usage: \n"
-	"%s [-p directory] [-H directory] [-n name] [-S file]\n"
-	"   [-T host:port] [-t timeout] [-c port] [-h] [-d]\n"
-	"   [-z http://host:port] [-K agentsecretfile] [-r]\n\n"
-	"-p directory          Persistence directory: where VCL and parameters\n"
-	"                      are stored. Default: " AGENT_PERSIST_DIR "\n"
-	"-H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
-	"-n name               Name. Should match varnishd -n option.\n"
-	"-S secretfile         location of the varnishd secret file.\n"
-	"-T host:port          Varnishd administrative interface.\n"
-	"-t timeout            timeout for talking to varnishd.\n"
-	"-c port               TCP port (default: 6085).\n"
-	"-C cafile             CA certificate file for cURL outgoing requests.\n"
-	"-d                    Debug. Runs in foreground.\n"
-	"-P pidfile            Write pidfile.\n"
-	"-V                    Print version.\n"
-	"-h                    Prints this.\n"
-	"-u user               User to run as(default: varnish)\n"
-	"-g group              Group to run as (default: varnish)\n"
-	"-q                    Quiet mode. Only log/output warnings and errors\n"
-	"-v                    Verbose mode. Output everything.\n"
-	"-K agentsecretfile    File containing username:password for authentication\n"
-	"-z http://host:port   VAC interface.\n"
-	"-r                    Read-only mode. Only accept GET and HEAD requsts\n"
-	"\n"
-	"All arguments are optional.\n"
-	, argv0);
+	    "usage %s [options]\n"
+	    "    -c port               HTTP listen port (default: 6085).\n"
+	    "    -C cafile             CA certificate file for cURL outgoing requests.\n"
+	    "    -d                    Debug. Runs in foreground.\n"
+	    "    -g group              Group to run as (default: varnish)\n"
+	    "    -H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
+	    "    -h                    This help.\n"
+	    "    -K agent-secret-file  File containing username:password for authentication.\n"
+	    "    -n name               Name. Should match varnishd -n option.\n"
+	    "    -P pidfile            Write pidfile.\n"
+	    "    -p directory          Persistence directory: where VCL and parameters\n"
+	    "                          are stored. Default: " AGENT_PERSIST_DIR "\n"
+	    "    -q                    Quiet mode. Only log/output warnings and errors\n"
+	    "    -r                    Read-only mode. Only accept GET and HEAD requsts\n"
+	    "    -S varnishd-secret-file\n"
+	    "                          Location of the varnishd secret file.\n"
+	    "    -T host:port          Varnishd administrative interface.\n"
+	    "    -t timeout            timeout for talking to varnishd.\n"
+	    "    -u user               User to run as (default: varnish)\n"
+	    "    -V                    Print version.\n"
+	    "    -v                    Verbose mode. Output everything.\n"
+	    "    -z http://host:port   VAC interface.\n\n", argv0);
 }
 
 static void core_opt(struct agent_core_t *core, int argc, char **argv)
@@ -151,25 +146,16 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->vac_arg= NULL;
 	core->config->K_arg = strdup("/etc/varnish/agent_secret");
 	core->config->loglevel = 2;
-	while ((opt = getopt(argc, argv, "rVhdP:p:H:n:S:T:t:c:C:u:g:z:K:qv")) != -1) {
+	while ((opt = getopt(argc, argv, "C:c:dg:H:hK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
-		case 'q':
-			core->config->loglevel = 1;
+		case 'C':
+			core->config->C_arg = optarg;
 			break;
-		case 'v':
-			core->config->loglevel = 3;
+		case 'c':
+			core->config->c_arg = optarg;
 			break;
-		case 'r':
-			core->config->r_arg = 1;
-			break;
-		case 'K':
-			core->config->K_arg = optarg;
-			break;
-		case 'p':
-			core->config->p_arg = optarg;
-			break;
-		case 'u':
-			core->config->u_arg = optarg;
+		case 'd':
+			core->config->d_arg = 1;
 			break;
 		case 'g':
 			core->config->g_arg = optarg;
@@ -177,8 +163,26 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 		case 'H':
 			core->config->H_arg = optarg;
 			break;
+		case 'h':
+			usage(argv0);
+			exit(1);
+		case 'K':
+			core->config->K_arg = optarg;
+			break;
 		case 'n':
 			core->config->n_arg = optarg;
+			break;
+		case 'P':
+			core->config->P_arg = optarg;
+			break;
+		case 'p':
+			core->config->p_arg = optarg;
+			break;
+		case 'q':
+			core->config->loglevel = 1;
+			break;
+		case 'r':
+			core->config->r_arg = 1;
 			break;
 		case 'S':
 			// avoid fd leak
@@ -193,24 +197,16 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 		case 't':
 			core->config->timeout = strtod(optarg, NULL);
 			break;
-		case 'c':
-			core->config->c_arg = optarg;
+		case 'u':
+			core->config->u_arg = optarg;
 			break;
-		case 'C':
-			core->config->C_arg = optarg;
-			break;
-		case 'd':
-			core->config->d_arg = 1;
-			break;
-		case 'P':
-			core->config->P_arg = optarg;
-			break;
-		case 'h':
-			usage(argv0);
-			exit(1);
 		case 'V':
-			fprintf(stderr, PACKAGE_STRING "\nCopyright (c) 2012-2013 Varnish Software AS\n");
+			fprintf(stderr, PACKAGE_STRING
+			    "\nCopyright (c) 2012-2015 Varnish Software Group\n");
 			exit(1);
+			break;
+		case 'v':
+			core->config->loglevel = 3;
 			break;
 		case 'z':
 			core->config->vac_arg = strdup(optarg);
