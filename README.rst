@@ -23,7 +23,7 @@ SYNOPSIS
                       [-h] [-K agent-secret-file] [-n name] [-P pidfile]
                       [-p directory] [-q] [-r] [-S varnishd-secret-file]
                       [-T host:port] [-t timeout] [-u user] [-V] [-v]
-                      [-z http://vac_register_url]
+                      [-z vac_register_url]
 
 DESCRIPTION
 ===========
@@ -42,8 +42,7 @@ maintains ``/var/lib/varnish-agent/boot.vcl``.
 OPTIONS
 =======
 
--C cafile
-            CA certificate for use by the cURL module. For use when
+-C cafile   CA certificate for use by the cURL module. For use when
             the VAC register URL is specified as https using a
             certificate that can not be validated with the
             certificates in the system's default certificate
