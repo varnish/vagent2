@@ -21,3 +21,4 @@ for a in $ARGS; do
 	inc
 done
 
+exit $ret

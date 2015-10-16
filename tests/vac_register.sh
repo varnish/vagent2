@@ -66,7 +66,7 @@ RESULTFILE="$TMPDIR/result"
 echo dummy port = $DUMMY_PORT
 echo VAC port = $VAC_PORT
 echo result file = $RESULTFILE
-nc -4 -l $VAC_PORT > $RESULTFILE &
+nc -l $VAC_PORT > $RESULTFILE &
 sleep 1
 # ok run the test
 export ARGS="-z http://localhost:${VAC_PORT}/"
