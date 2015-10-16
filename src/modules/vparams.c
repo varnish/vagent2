@@ -350,7 +350,8 @@ static void param_json(struct http_request *request, struct vparams_priv_t *vpar
 {
 	struct ipc_ret_t vret;
 	char *tmp;
-	ipc_run(vparams->vadmin, &vret, "param.show -l");
+	const char *param = (request->url) + strlen("/paramjson/");
+	ipc_run(vparams->vadmin, &vret, "param.show %s", *param ? param : "-l");
 	if (vret.status == 200) {
 		tmp = vparams_show_json(vret.answer);
 		struct http_response *resp = http_mkresp(request->connection, 200, tmp);
@@ -376,7 +377,7 @@ static unsigned int vparams_reply(struct http_request *request, void *data)
 
 	GET_PRIV(core, vparams);
 
-	if (!strcmp(request->url, "/paramjson/") && request->method == M_GET) {
+	if (!strncmp(request->url, "/paramjson/", strlen("/paramjson/")) && request->method == M_GET) {
 		param_json(request, vparams);
 		return 1;
 	}
