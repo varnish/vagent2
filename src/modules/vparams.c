@@ -59,6 +59,8 @@ struct param_opt {
 	char *unit;
 	char *def;
 	char *description;
+	char *min;
+	char *max;
 	struct param_opt *next;
 };
 
@@ -70,6 +72,8 @@ static void param_assert(struct param_opt *p)
 	assert(p->unit);
 	assert(p->def);
 	assert(p->description);
+	assert(p->min);
+	assert(p->max);
 }
 
 /*
@@ -84,9 +88,172 @@ static struct param_opt *param_free(struct param_opt *p)
 	free(p->unit);
 	free(p->def);
 	free(p->description);
+	free(p->min);
+	free(p->max);
 	next = p->next;
 	free(p);
 	return next;
+}
+
+/*
+ * Parse a hopefully generic 'name'-string (first string).
+ *
+ * Returns a malloc'ed param_opt.
+ *
+ * Some fields are optional: default and unit MIGHT be filled in, depending
+ * on output.
+ *
+ * <variable> [value] [unit]\n
+ */
+static struct param_opt *get_name_val(const char *raw)
+{
+	struct param_opt *r = calloc(1,sizeof(struct param_opt));
+	char *line = strdup(raw);
+	char *tmp = index(line,'\n');
+	char *tmp2;
+	assert(tmp);
+	*tmp = '\0';
+
+	tmp = index(line,' ');
+	if (tmp)
+		*tmp = '\0';
+	r->name = strdup(line);
+	assert(r->name);
+	assert(*(r->name));
+	if (!tmp) {
+		free(line);
+		return r;
+	}
+	tmp++;
+	tmp2 = index(tmp,' ');
+	if (tmp2)
+		*tmp2 = '\0';
+	r->value = strdup(tmp);
+	if (!tmp2) {
+		free(line);
+		return r;
+	}
+	r->unit = strdup(tmp2+1);
+	free(line);
+	return r;
+}
+
+/*
+ * Just skip space characters to avoid indentation meh.
+ */
+static char *skip_space(char *p) {
+	while (*p && (*p == ' ' || *p == '\t'))
+		p++;
+	return p;
+}
+
+/*
+ * Prase:
+ *
+ * Value is: <value> [\[unit\]] [(default)]
+ *
+ */
+static int parse_value(const char *w, struct param_opt *p) {
+	char *tmp = strdup(w);
+	char *tmp2;
+	char *orig;
+	orig = tmp;
+	tmp2 = index(tmp,'\n');
+	assert(tmp2);
+	*tmp2 = '\0';
+
+	if (*tmp == '"') {
+		tmp2 = index(tmp+1,'"');
+		tmp2++;
+	} else {
+		tmp2 = index(tmp, ' ');
+	}
+	if (tmp2) {
+		*tmp2 = '\0';
+	}
+	assert(p->value == NULL);
+	p->value = strdup(tmp);
+	if (!tmp2) {
+		free(orig);
+		return 0;
+	}
+	tmp = tmp2+1;
+	if (*tmp == '[') {
+		int mark = 0;
+		tmp2 = index(tmp,']');
+		assert(tmp2);
+		tmp2++;
+		if (*tmp2 == ' ')
+			mark = 1;
+		*tmp2 = '\0';
+		p->unit = strdup(tmp);
+		if (mark)
+			tmp = tmp2+1;
+	}
+	if (*tmp == '(') {
+		p->def = strdup(p->value);
+	}
+	return 1;
+}
+
+/*
+ * Parse an entry after we have the name (and possibly more).
+ */
+static char *fill_entry(struct param_opt *p, const char *pos)
+{
+	char *tmp;
+	char *tmp2;
+	assert(*pos);
+	tmp = skip_space(strdup(pos));
+	assert(tmp);
+	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
+		parse_value(tmp+strlen("Value is: "), p);
+		tmp = index(tmp, '\n');
+		assert(tmp);
+		tmp++;
+		tmp = skip_space(tmp);
+	}
+	if (!strncmp("Default is: ", tmp, strlen("Default is: "))) {
+		tmp2 = index(tmp,'\n');
+		assert(tmp2);
+		*tmp2 = '\0';
+		p->def = strdup(tmp);
+		tmp = tmp2+1;
+		tmp = skip_space(tmp);
+	}
+	if (!strncmp("Minimum is: ", tmp, strlen("Minimum is: "))) {
+		tmp2 = index(tmp,'\n');
+		assert(tmp2);
+		*tmp2 = '\0';
+		p->min = strdup(tmp);
+		tmp = tmp2+1;
+		tmp = skip_space(tmp);
+	}
+	if (!strncmp("Maximum is: ", tmp, strlen("Maximum is: "))) {
+		tmp2 = index(tmp,'\n');
+		assert(tmp2);
+		*tmp2 = '\0';
+		p->max = strdup(tmp);
+		tmp = tmp2+1;
+		tmp = skip_space(tmp);
+	}
+	char desc[2048];
+	desc[0] = '\0';
+	if (*tmp == '\n')
+		tmp++;
+	while(1) {
+		tmp = skip_space(tmp);
+		tmp2 = index(tmp,'\n');	
+		assert(tmp2);
+		*tmp2 = '\0';
+		strncat(desc,tmp,2047);
+		strncat(desc," ",2047);
+		tmp = tmp2+1;
+		if (*tmp != ' ' && *tmp != '\n')
+			break;
+	}
+	p->description = strdup(desc);
+	return tmp;
 }
 
 /*
@@ -100,12 +267,9 @@ static struct param_opt *param_free(struct param_opt *p)
  */
 static char *vparams_show_json(char *raw)
 {
-	char word[2048];
 	struct param_opt *tmp, *top;
-	int pos = 0, i = 0;
-	int state = 0;
-	char *term = NULL;
 	char *out = NULL, *out2 = NULL, *out3 = NULL;
+	int state = 0;
 	tmp = malloc(sizeof (struct param_opt));
 	top = NULL;
 	tmp->next = NULL;
@@ -131,120 +295,30 @@ static char *vparams_show_json(char *raw)
 	 *   ..
 	 *   (description line n)
 	 */
-	while(raw[pos]) {
-		word[i++] = raw[pos];
-		assert(i<510);
-		if (state == 0 && (raw[pos] == ' ' || raw[pos] == '\n')) {
-			word[i-1] = '\0';
-			tmp->name = strdup(word);
-			i = 0;
-			while (raw[pos] == ' ' || raw[pos] == '\n')
-				pos++;
-			word[0] = raw[pos];
-			assert(strncmp("Value is: ", raw+pos, strlen("Value is: ")) == 0);
-			pos += strlen("Value is: ");
-			state = 1;
-			pos--;
-		} else if (state == 1 && (raw[pos] == '\n' || raw[pos] == '[')) {
-			assert(i<510);
-			i--;
-			word[i] = '\0';
-			term = strrchr(word,'[');
-			if (term) {
-				assert(*(term-1) == ' ');
-				*(term-1) = '\0';
-			}
-			i = strlen(word);
-			size_t dlen = strlen("(default)");
 
-			if (i > (int)dlen) {
-				if (strncmp(word + i - dlen, "(default)", dlen) == 0) {
-					i -= dlen;
-					word[i] = '\0';
-				}
-			}
-			
-			while(word[--i] == ' ');
-			if (word[i] == '"') {
-				assert(word[0] == '"');
-				memmove(word, word+1, i-1);
-				i-=2;
-			}
-			word[i+1] = '\0';
-			assert(strchr(word,'"') == NULL);
-
-			tmp->value = strdup(word);
-			i = 0;
-			if (raw[pos] == '\n')
-				tmp->unit = strdup("");
-			else {
-				pos++;
-				while (raw[pos] != ']')
-					word[i++] = raw[pos++];
-				word[i] = '\0';
-				tmp->unit = strdup(word);
-				i = 0;
-			}
-			
-			if (raw[pos] == '\n')
-				pos++;
-			term = strstr(raw+pos, "Default is: ");
-			assert(term);
-			pos = term-raw + strlen("Default is: ");
-			if (raw[pos] == 0x01) {
-				assert(raw[pos+1] == '\n');
-				pos++;
-			}
-			while (raw[pos] != '\n')  {
-				word[i++] = raw[pos++];
-				assert(i<2048);
-			}
-			assert(raw[pos] == '\n');
-			assert((isprint(word[0]) || i == 0));
-			word[i] = '\0';
-			if (word[i-1] == '"') {
-				assert(word[0] == '"');
-				memmove(word, word+1, i-1);
-				i-=2;
-			}
-			word[i] = '\0';
-			assert(strchr(word,'"') == NULL);
-
-			tmp->def = strdup(word);
-			i = 0;
-			state = 0;
-			while (!(raw[pos-1] == '\n' && !isspace(raw[pos]))) {
-				if (raw[pos] == '\n') {
-					pos++;
-					word[i++] = '\\';
-					word[i++] = 'n';
-					state = 0;
-				} else if (state == 0 && isspace(raw[pos])) {
-					pos++;
-				} else {
-					state = 1;
-					if (raw[pos] == '"')
-						word[i++] = '\\';
-					if (raw[pos] == '\t') {
-						word[i++] = '\\';
-						word[i++] = 't';
-						pos++;
-					} else
-						word[i++] = raw[pos++];
-				}
-			}
-			word[i] = '\0';
-			tmp->description = strdup(word);
-			tmp->next = top;
-			top = tmp;
-			state = 0;
-			i = 0;
-			assert(strlen(tmp->name) < 30);
-			tmp = malloc(sizeof (struct param_opt));
-			tmp->next = NULL;
-			pos--;
-		}
+	char *pos = raw;
+	while(pos && *pos) {
+		tmp = get_name_val(pos);
+		assert(tmp);
+		pos = index(pos, '\n');
+		assert(pos);
 		pos++;
+		pos = fill_entry(tmp, pos);
+		tmp->next = top;
+		top = tmp;
+		/*
+		 * Sort of silly, but simplifies cleanup
+		 */
+		if (!tmp->unit) {
+			tmp->unit = strdup("");
+		}
+		if (!tmp->min) {
+			tmp->min = strdup("");
+		}
+		if (!tmp->max) {
+			tmp->max = strdup("");
+		}
+		param_assert(tmp);
 	}
 	
 	state = asprintf(&out3, "{\n");
