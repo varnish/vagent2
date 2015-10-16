@@ -212,6 +212,10 @@ start_agent() {
 }
 
 init_all() {
+    if [ -z "$(which varnishd)" ]; then
+            echo 1>&2 "No varnishd binary found";
+            exit 1
+    fi
     echo "Temp directory: $TMPDIR"
     echo "Path to varnishd: $(which varnishd)"
     init_misc
