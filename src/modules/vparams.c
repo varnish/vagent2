@@ -109,12 +109,12 @@ static struct param_opt *get_name_val(const char *raw)
 {
 	struct param_opt *r = calloc(1,sizeof(struct param_opt));
 	char *line = strdup(raw);
-	char *tmp = index(line,'\n');
+	char *tmp = strchr(line,'\n');
 	char *tmp2;
 	assert(tmp);
 	*tmp = '\0';
 
-	tmp = index(line,' ');
+	tmp = strchr(line,' ');
 	if (tmp)
 		*tmp = '\0';
 	r->name = strdup(line);
@@ -125,7 +125,7 @@ static struct param_opt *get_name_val(const char *raw)
 		return r;
 	}
 	tmp++;
-	tmp2 = index(tmp,' ');
+	tmp2 = strchr(tmp,' ');
 	if (tmp2)
 		*tmp2 = '\0';
 	r->value = strdup(tmp);
@@ -158,15 +158,15 @@ static int parse_value(const char *w, struct param_opt *p) {
 	char *tmp2;
 	char *orig;
 	orig = tmp;
-	tmp2 = index(tmp,'\n');
+	tmp2 = strchr(tmp,'\n');
 	assert(tmp2);
 	*tmp2 = '\0';
 
 	if (*tmp == '"') {
-		tmp2 = index(tmp+1,'"');
+		tmp2 = strchr(tmp+1,'"');
 		tmp2++;
 	} else {
-		tmp2 = index(tmp, ' ');
+		tmp2 = strchr(tmp, ' ');
 	}
 	if (tmp2) {
 		*tmp2 = '\0';
@@ -180,7 +180,7 @@ static int parse_value(const char *w, struct param_opt *p) {
 	tmp = tmp2+1;
 	if (*tmp == '[') {
 		int mark = 0;
-		tmp2 = index(tmp,']');
+		tmp2 = strchr(tmp,']');
 		assert(tmp2);
 		tmp2++;
 		if (*tmp2 == ' ')
@@ -208,13 +208,13 @@ static char *fill_entry(struct param_opt *p, const char *pos)
 	assert(tmp);
 	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
 		parse_value(tmp+strlen("Value is: "), p);
-		tmp = index(tmp, '\n');
+		tmp = strchr(tmp, '\n');
 		assert(tmp);
 		tmp++;
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Default is: ", tmp, strlen("Default is: "))) {
-		tmp2 = index(tmp,'\n');
+		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		*tmp2 = '\0';
 		p->def = strdup(tmp);
@@ -222,7 +222,7 @@ static char *fill_entry(struct param_opt *p, const char *pos)
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Minimum is: ", tmp, strlen("Minimum is: "))) {
-		tmp2 = index(tmp,'\n');
+		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		*tmp2 = '\0';
 		p->min = strdup(tmp);
@@ -230,7 +230,7 @@ static char *fill_entry(struct param_opt *p, const char *pos)
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Maximum is: ", tmp, strlen("Maximum is: "))) {
-		tmp2 = index(tmp,'\n');
+		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		*tmp2 = '\0';
 		p->max = strdup(tmp);
@@ -243,7 +243,7 @@ static char *fill_entry(struct param_opt *p, const char *pos)
 		tmp++;
 	while(1) {
 		tmp = skip_space(tmp);
-		tmp2 = index(tmp,'\n');	
+		tmp2 = strchr(tmp,'\n');	
 		assert(tmp2);
 		*tmp2 = '\0';
 		strncat(desc,tmp,2047);
@@ -300,7 +300,7 @@ static char *vparams_show_json(char *raw)
 	while(pos && *pos) {
 		tmp = get_name_val(pos);
 		assert(tmp);
-		pos = index(pos, '\n');
+		pos = strchr(pos, '\n');
 		assert(pos);
 		pos++;
 		pos = fill_entry(tmp, pos);
