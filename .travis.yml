@@ -12,4 +12,4 @@ before_install:
     make && sudo make install && cd ..
   - ./autogen.sh
 script:
-  - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check
+  - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check || cat tests/*.log && false
