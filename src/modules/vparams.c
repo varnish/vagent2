@@ -243,7 +243,7 @@ static char *fill_entry(struct param_opt *p, const char *pos)
 		tmp++;
 	while(1) {
 		tmp = skip_space(tmp);
-		tmp2 = strchr(tmp,'\n');	
+		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		*tmp2 = '\0';
 		strncat(desc,tmp,2047);
@@ -320,7 +320,7 @@ static char *vparams_show_json(char *raw)
 		}
 		param_assert(tmp);
 	}
-	
+
 	state = asprintf(&out3, "{\n");
 	assert(state);
 	for (tmp = top; tmp != NULL; ) {
