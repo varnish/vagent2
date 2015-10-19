@@ -67,11 +67,11 @@ echo dummy port = $DUMMY_PORT
 echo VAC port = $VAC_PORT
 echo result file = $RESULTFILE
 nc -l $VAC_PORT > $RESULTFILE &
-sleep 1
+sleep 2
 # ok run the test
 export ARGS="-z http://localhost:${VAC_PORT}/"
 start_agent
-sleep 2
+sleep 1
 cat $RESULTFILE
 stop_agent > /dev/null
 # check results
@@ -86,3 +86,5 @@ fi
 inc
 
 kill $dummypid
+
+exit $ret
