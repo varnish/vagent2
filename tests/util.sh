@@ -93,6 +93,8 @@ init_misc() {
     trap 'cleanup' EXIT
     mkdir -p ${TMPDIR}/vcl
     cp ${SRCDIR}/data/boot.vcl ${TMPDIR}/boot.vcl
+    mkdir -p ${TMPDIR}/html
+    echo "Rosebud" > ${TMPDIR}/html/index.html
     chmod -R 777 ${TMPDIR}
     init_password
 }
@@ -205,8 +207,8 @@ start_agent() {
     AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
     echo -e "\tAgent port: $AGENT_PORT"
     ARGS="$ARGS -K ${TMPDIR}/agent-secret"
-    echo -e "\tAgent arguments: -n ${TMPDIR} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
-    $ORIGPWD/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR}/vcl/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
+    echo -e "\tAgent arguments: -n ${TMPDIR} -p ${TMPDIR}/vcl/ -H ${TMPDIR}/html/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
+    $ORIGPWD/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR}/vcl/ -H ${TMPDIR}/html/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
 
     pidwait agent $AGENT_PORT
 }
@@ -229,6 +231,15 @@ test_it() {
     if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
     inc
     if [ "x$FOO" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
+    inc
+}
+
+test_it_code() {
+    FOO=$(lwp-request -Ssd -m $1 http://${PASS}@localhost:$AGENT_PORT/$2 <<<"$3")
+    if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
+    inc
+    CODE=$(echo -e "$FOO" | grep -v "^$1" | head -n1 | cut -f1 -d' ')
+    if [ "x$CODE" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
     inc
 }
 

@@ -10,4 +10,5 @@ TESTS = ban.sh \
 	vdirect.sh \
 	authorize.sh \
 	echo.sh \
+	http.sh \
 	readonly.sh
