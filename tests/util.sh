@@ -335,6 +335,8 @@ test_json() {
         cat "$NAME"
     fi
     inc
+    DIFF=$(echo -e "$FOO" | tail -n1 | sed 's/^.*:/:/')
+    if [ "x$DIFF" = "x: ok" ]; then pass; else fail "json failed to validate: $1: $DIFF"; fi
     lwp-request -m GET -ed "http://${PASS}@localhost:${AGENT_PORT}/$1" | grep -q 'Content-Type: application/json'
     if [ "x$?" = "x0" ]; then pass; else fail "json failed content-type check: $1 failed"; fi
 }
