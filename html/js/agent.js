@@ -598,7 +598,7 @@ function updateTop()
 	assertText(tag);
 	$.ajax({
 		type: "GET",
-		url: urlPrefix() + "/log/1/" + tag,
+		url: urlPrefix() + "/log/100/" + tag,
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
