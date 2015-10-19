@@ -25,7 +25,15 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
+/*
+ * FIXME:
+ * The entire json-output should be escaped, but then again, Varnish itself
+ * should provide JSON!
+ *
+ * Right now, a parameter with " in the description will break, which is
+ * obviously bad. Likewise, setting cc_command to "cc -Wall "foobar
+ * -Werr..." or something ....
+ */
 #define _GNU_SOURCE
 #include <ctype.h>
 #include <stdlib.h>
@@ -162,8 +170,16 @@ static int parse_value(const char *w, struct param_opt *p) {
 	assert(tmp2);
 	*tmp2 = '\0';
 
+	/*
+	 * Special handling of " (read: cc_command).
+	 * XXX: This is a bit subtle: First we skip past the first one,
+	 * then we set the last one to \0. But we have to keep tmp2
+	 * relevant, otherwise finding the default would be really hard...
+	 */
 	if (*tmp == '"') {
-		tmp2 = strchr(tmp+1,'"');
+		tmp++;
+		tmp2 = strchr(tmp,'"');
+		*tmp2 = '\0';
 		tmp2++;
 	} else {
 		tmp2 = strchr(tmp, ' ');
