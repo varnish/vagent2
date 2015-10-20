@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_HEADERS([config.h])
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign parallel-tests subdir-objects])
-# AM_SILENT_RULES([yes])
+AM_SILENT_RULES([yes])
 
 # Check for rst utilities
 AC_ARG_WITH([rst2man],
