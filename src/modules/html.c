@@ -62,7 +62,7 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (strlen(request->url) == strlen("/html")) {
 		char *host_header = http_get_header(request->connection,"Host");
-		char *tmp;
+		char *tmp = NULL;
 		resp = http_mkresp(request->connection, 301, NULL);
 		if (host_header == NULL) {
 			logger(html->logger, "Requested /html but no Host header found. Can't redirect correctly.");
