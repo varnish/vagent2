@@ -104,7 +104,7 @@ static void usage(const char *argv0)
 	    "    -C cafile             CA certificate file for cURL outgoing requests.\n"
 	    "    -d                    Debug. Runs in foreground.\n"
 	    "    -g group              Group to run as (default: varnish)\n"
-	    "    -H                    Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
+	    "    -H directory          Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
 	    "    -h                    This help.\n"
 	    "    -K agent-secret-file  File containing username:password for authentication.\n"
 	    "    -n name               Name. Should match varnishd -n option.\n"
