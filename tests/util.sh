@@ -12,6 +12,7 @@ ORIGPWD="${ORIGPWD:-"."}"
 VARNISH_PID="${TMPDIR}/varnish.pid"
 BACKEND_PID="${TMPDIR}/backend.pid"
 BACKEND_LOG="${TMPDIR}/backend.log"
+AGENT_STDOUT="${TMPDIR}/agent.log"
 PASS="${PASS:-agent:test}"
 
 inc() {
@@ -19,7 +20,7 @@ inc() {
 }
 
 fail() {
-    echo -en "${INDENT}Failed ${N}:"
+    echo -en "${INDENT}Test ${N}: \033[31mFailed\033[0m: "
     echo " $*"
     if [ "x$KNOWN_FAIL" = "x1" ]; then
         echo "Known failure. Ignoring."
@@ -29,7 +30,7 @@ fail() {
 }
 
 pass() {
-    echo -en "${INDENT}Passed ${N} "
+    echo -en "${INDENT}Test ${N}: \033[32mOK\033[0m"
     echo "$*"
 }
 
@@ -38,8 +39,8 @@ stop_backend() {
     if [ -z "$backendpid" ]; then
         echo "NO BACKEND_PID? Damn..."
     else
-        echo -e "\tStopping the backend($backendpid)"
-        kill $backendpid
+        echo -ne " backend($backendpid)"
+        kill $backendpid >/dev/null 2>&1
         pidwaitinverse $backendpid
     fi
 }
@@ -49,7 +50,7 @@ stop_varnish() {
     if [ -z "$varnishpid" ]; then
         echo "NO VARNISH_PID? Bad stuff..."
     else
-        echo -e "\tStopping varnish($varnishpid)"
+        echo -ne " varnish($varnishpid)"
         kill $varnishpid
         pidwaitinverse $varnishpid
     fi
@@ -60,17 +61,18 @@ stop_agent() {
     if [ -z "$agentpid" ]; then
         echo "Stopping agent but no agent pid found. BORK"
     else
-        echo -e "\tStopping agent($agentpid)"
+        echo -ne " agent($agentpid)"
         kill $agentpid
         pidwaitinverse $agentpid
     fi
 }
 
 cleanup() {
-    echo Stopping varnishd, the agent and the backend
+    echo -n "Stopping: "
     stop_agent
     stop_varnish
     stop_backend
+    echo
     echo Cleaning up
     rm -rf ${TMPDIR}
 }
@@ -95,6 +97,7 @@ init_misc() {
     cp ${SRCDIR}/data/boot.vcl ${TMPDIR}/boot.vcl
     mkdir -p ${TMPDIR}/html
     echo "Rosebud" > ${TMPDIR}/html/index.html
+    echo "vcl 4.0; backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
     chmod -R 777 ${TMPDIR}
     init_password
 }
@@ -107,28 +110,24 @@ pidwait() {
             # pid is established, check port
             if [ -n "$2" ]; then
                 # wait for the port also
-                port_check="$(netstat -nlpt | awk '{print $4;}' | egrep ":${2}$" | wc -l)";
+                port_check="$(netstat -nlpt 2>/dev/null | awk '{print $4;}' | egrep ":${2}$" | wc -l)";
                 if [ $port_check -eq 1 ]; then
-                    echo listening port $2 found.
                     break
                 fi
             else
-                echo "skipp check the port"
                 break
             fi
         fi
         sleep 0.5
         I=$(( $I + 1 ))
     done
-    echo -e "\tPidwait took $I iterations"
-    echo -e "\tStarted $1. Pid $pid"
+    #echo -e "\tPidwait took $I iterations"
+    echo -e " Started $1. Pid $pid"
     if [ -z "$pid" ]; then
         fail "No $1 pid? Bad stuff..."
         exit 1
     fi
-    if kill -0 $pid; then
-        echo -e "\t$1 started ok, we think."
-    else
+    if ! kill -0 $pid; then
         fail "$1 not started correctly? FAIL"
         exit 1
     fi
@@ -140,22 +139,23 @@ pidwaitinverse() {
         return
     fi
     I=1
-    for a in x x x x x; do
-        if ! kill -0 $1; then
+    for a in {1..20}; do
+        if ! kill -0 $1 >/dev/null 2>&1 ; then
             break
         fi
-        sleep 0.5;
+        sleep 0.1;
         I=$(( $I + 1 ))
     done
-    echo -e "\tPidwaitinverse took $I iterations"
+    #echo -e "\tPidwaitinverse took $I iterations"
 }
 
 start_backend() {
-       echo "Starting backend:"
+       echo -n "Starting backend: "
        python -u empty_response_backend.py 0 >$BACKEND_LOG 2>&1 &
        backendpid=$(jobs -p %+)
+       disown %+
        echo $backendpid >$BACKEND_PID
-       echo -e "\tStarted the backend. Pid $backendpid"
+       echo -n "pid $backendpid. "
        for i in x x x x x x x x x x; do
               sleep 0.2
               backendport=$(grep -F 'Serving HTTP' $BACKEND_LOG | awk '{print $6}')
@@ -164,13 +164,12 @@ start_backend() {
        if [ -z "$backendport" ]; then
                echo -e "\tWarning: python backend failed to bind in a timely fashion."
        fi
-       echo -e "\tListening to *:$backendport"
-       echo "vcl 4.0; backend default { .host = \"localhost:$backendport\"; }" >$TMPDIR/boot.vcl
+       echo -e " port $backendport."
 }
 
 start_varnish() {
 	head -c 16 /dev/urandom > "$TMPDIR/secret"
-	printf "${INDENT}Starting varnishd:\n\n"
+	printf "${INDENT}Starting varnishd: "
 	varnishd -f "${TMPDIR}/boot.vcl" \
 	    -P "$VARNISH_PID" \
 	    -n "$TMPDIR" \
@@ -179,15 +178,15 @@ start_varnish() {
 	    -a 127.0.0.1:0 \
 	    -T 127.0.0.1:0 \
 	    -s malloc,50m \
-	    -S "$TMPDIR/secret"
+	    -S "$TMPDIR/secret" 
 
 	FOO=""
 	for i in x x x x x x x x x x; do
-	    FOO=$(varnishadm -n "$TMPDIR" status)
-	    if echo $FOO 2>/dev/null | grep -q "running"; then
+	    FOO=$(varnishadm -n "$TMPDIR" status 2>/dev/null)
+	    if echo $FOO | grep -q "running"; then
 		break
 	    fi
-	    sleep 0.3
+	    sleep 0.1
 	done
 
 	if ! echo $FOO | grep -q "running"; then
@@ -202,13 +201,17 @@ start_varnish() {
 }
 
 start_agent() {
-    printf "Starting agent:\n\n"
     AGENT_PORT=$(( 1024 + ( $RANDOM % 48000 ) ))
-    echo -e "\tAgent port: $AGENT_PORT"
-    ARGS="$ARGS -K ${TMPDIR}/agent-secret"
-    echo -e "\tAgent arguments: -n ${TMPDIR} -p ${TMPDIR}/vcl/ -H ${TMPDIR}/html/ -P ${TMPDIR}/agent.pid -c $AGENT_PORT ${ARGS}"
-    $ORIGPWD/../src/varnish-agent -n ${TMPDIR} -p ${TMPDIR}/vcl/ -H ${TMPDIR}/html/ -P ${TMPDIR}/agent.pid -c "$AGENT_PORT" ${ARGS}
-
+    printf "Starting agent on port $AGENT_PORT: "
+    ARGS="$ARGS
+	-K ${TMPDIR}/agent-secret
+	-n ${TMPDIR}
+	-p ${TMPDIR}/vcl/
+	-H ${TMPDIR}/html/
+	-P ${TMPDIR}/agent.pid
+	-c $AGENT_PORT"
+    echo -e "$ARGS" > $TMPDIR/agent-arguments
+    $ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
     pidwait agent $AGENT_PORT
 }
 
