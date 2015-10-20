@@ -163,7 +163,7 @@ get_key(void *cls, enum MHD_ValueKind kind, const char *key,
 	return (MHD_YES);
 }
 
-static char *
+char *
 http_get_header(struct MHD_Connection *connection, const char *key)
 {
 	struct header_finder_t finder;

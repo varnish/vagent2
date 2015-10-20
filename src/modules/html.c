@@ -26,6 +26,7 @@
  * SUCH DAMAGE.
  */
 
+#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -60,10 +61,22 @@ static unsigned int html_reply(struct http_request *request, void *data)
 	GET_PRIV(core, html);
 	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
 	if (strlen(request->url) == strlen("/html")) {
+		char *host_header = http_get_header(request->connection,"Host");
+		char *tmp;
 		resp = http_mkresp(request->connection, 301, NULL);
-		http_add_header(resp, "Location", "/html/");
+		if (host_header == NULL) {
+			logger(html->logger, "Requested /html but no Host header found. Can't redirect correctly.");
+			http_add_header(resp, "Location", "/html/");
+		} else {
+			ret = asprintf(&tmp, "http://%s/html/", host_header);
+			assert(ret);
+			assert(tmp);
+			http_add_header(resp,"Location",tmp);
+		}
 		send_response(resp);
 		http_free_resp(resp);
+		if (tmp)
+			free(tmp);
 		return 0;
 	}
 	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {

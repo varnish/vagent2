@@ -234,7 +234,7 @@ test_it() {
 }
 
 test_it_code() {
-    FOO=$(lwp-request -Ssd -m $1 http://${PASS}@localhost:$AGENT_PORT/$2 <<<"$3")
+    FOO=$(lwp-request -Ssd -C ${PASS} -m $1 http://${PASS}@localhost:$AGENT_PORT/$2 <<<"$3")
     if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
     inc
     CODE=$(echo -e "$FOO" | grep -v "^$1" | head -n1 | cut -f1 -d' ')

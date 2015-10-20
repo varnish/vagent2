@@ -95,6 +95,7 @@ struct http_response {
 typedef unsigned int (*callback_t)(struct http_request *, void *);
 
 void http_add_header(struct http_response *resp, const char *key, const char *value);
+char *http_get_header(struct MHD_Connection *connection, const char *key);
 void http_set_content_type(struct http_response *resp, const char *filepath);
 void http_free_resp(struct http_response *resp);
 struct http_response *http_mkresp(struct MHD_Connection *conn, int status, const char *body);
