@@ -14,7 +14,7 @@ BACKEND_PID="${TMPDIR}/backend.pid"
 BACKEND_LOG="${TMPDIR}/backend.log"
 AGENT_STDOUT="${TMPDIR}/agent.log"
 PASS="${PASS:-agent:test}"
-
+DEBUG_TEST_START=$(date +%s)
 inc() {
     N=$(( ${N} + 1 ))
 }
@@ -32,6 +32,18 @@ fail() {
 pass() {
     echo -en "${INDENT}Test ${N}: \033[32mOK\033[0m"
     echo "$*"
+}
+
+debug_out() {
+	if [ ! -z "$DEBUG_TESTS" ]; then
+		echo "$*" >&2
+	fi
+}
+
+time_it() {
+	time $*
+	debug_out "Timed: $*"
+	debug_out "-------"
 }
 
 stop_backend() {
@@ -52,7 +64,7 @@ stop_varnish() {
     else
         echo -ne " varnish($varnishpid)"
         kill $varnishpid
-        pidwaitinverse $varnishpid
+        time_it pidwaitinverse $varnishpid
     fi
 }
 
@@ -69,12 +81,15 @@ stop_agent() {
 
 cleanup() {
     echo -n "Stopping: "
-    stop_agent
-    stop_varnish
-    stop_backend
+    time_it stop_agent
+    time_it stop_varnish
+    time_it stop_backend
     echo
     echo Cleaning up
     rm -rf ${TMPDIR}
+    if [ ! -z "$DEBUG_TESTS" ]; then
+	    echo "Timing: Tests took total: $(( $(date +%s) - $DEBUG_TEST_START )) seconds" >&2
+    fi
 }
 
 init_password() {
@@ -121,7 +136,7 @@ pidwait() {
         sleep 0.5
         I=$(( $I + 1 ))
     done
-    #echo -e "\tPidwait took $I iterations"
+    debug_out "Pidwait for ${1} took $I iterations"
     echo -e " Started $1. Pid $pid"
     if [ -z "$pid" ]; then
         fail "No $1 pid? Bad stuff..."
@@ -146,7 +161,7 @@ pidwaitinverse() {
         sleep 0.1;
         I=$(( $I + 1 ))
     done
-    #echo -e "\tPidwaitinverse took $I iterations"
+    debug_out "Pidwaitinverse for ${1} took $I iterations"
 }
 
 start_backend() {
@@ -211,6 +226,7 @@ start_agent() {
 	-P ${TMPDIR}/agent.pid
 	-c $AGENT_PORT"
     echo -e "$ARGS" > $TMPDIR/agent-arguments
+    debug_out "Agent args: $ARGS"
     $ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
     pidwait agent $AGENT_PORT
 }
@@ -222,10 +238,10 @@ init_all() {
     fi
     echo "Temp directory: $TMPDIR"
     echo "Path to varnishd: $(which varnishd)"
-    init_misc
-    start_backend
-    start_varnish
-    start_agent
+    time_it init_misc
+    time_it start_backend
+    time_it start_varnish
+    time_it start_agent
 }
 
 test_it() {
