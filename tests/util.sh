@@ -41,9 +41,10 @@ debug_out() {
 }
 
 time_it() {
-	time $*
-	debug_out "Timed: $*"
-	debug_out "-------"
+	START=$(date +%s)
+	$*
+	STOP=$(date +%s)
+	debug_out "Timed: $*: $(( ${STOP} - ${START} )) seconds"
 }
 
 stop_backend() {
