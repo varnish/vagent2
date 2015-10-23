@@ -37,6 +37,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdint.h>
 #include <fcntl.h>
 
 #include "common.h"
@@ -364,7 +365,7 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 			return 0;
 		}
 	} else if (request->method == M_POST) {
-		snprintf(id, sizeof(id), "%zu", time(NULL));
+		snprintf(id, sizeof(id), "%ju", (uintmax_t) time(NULL));
 		status = vcl_store(request, vcl, &vret, core, id);
 		http_reply(request->connection, status, vret.answer);
 		free(vret.answer);
