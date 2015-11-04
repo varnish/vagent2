@@ -34,10 +34,13 @@ of Varnish.
 
 It listens to port 6085 by default. Try ``http://hostname:6085/html/`` for
 the HTML front-end. All arguments are optional.  The Varnish Agent will
-read all the necessary options from the shm-log.
+read all the necessary options from the shm-log, with the exception of the
+username and password, which is read from the -K option or the default
+value.
 
-The Varnish Agent persists VCL changes to ``/var/lib/varnish-agent/`` and
-maintains ``/var/lib/varnish-agent/boot.vcl``.
+For default values of options, including but not limited to where username
+and password is read from (``-K``), where VCL is saved to (``-p``) and
+where HTML is read from (``-H``), see ``varnish-agent -h``.
 
 OPTIONS
 =======
@@ -48,12 +51,12 @@ OPTIONS
             certificates in the system's default certificate
             directory.
 
--c port     Port number to listen for incomming connections. Defaults to
+-c port     Port number to listen for incoming connections. Defaults to
             6085.
 
 -d          Run in foreground.
 
--g group    Group to run as. Defaults to varnish.
+-g group    Group to run as. Defaults to ``varnish``.
 
 -H directory
             Specify where html files are found. This directory will be
@@ -67,15 +70,14 @@ OPTIONS
             username and password required to authenticate. It should
             have a format of ``username:password``.
 
--n name     Specify the varnishd name. Should match the ``varnishd -n``
+-n name     Specify the varnish name. Should match the ``varnishd -n``
             option. Amongst other things, this name is used to construct a
             path to the SHM-log file.
 
 -P pidfile  Write pidfile.
 
 -p directory
-            Specify persistence directory. This is where VCL is stored. See
-            ``varnish-agent -h`` to see the compiled in default.
+            Specify persistence directory. This is where VCL is stored.
 
 -q          Quiet mode. Only log/output warnings/errors.
 
@@ -84,15 +86,15 @@ OPTIONS
 
 -S varnishd-secret-file
             Path to the shared secret file, used to authenticate with
-            varnishd.
+            varnish.
 
 -T hostport
             Hostname and port number for the management interface of
-            varnishd.
+            varnish.
 
--t timeout  Timeout in seconds for talking to varnishd.
+-t timeout  Timeout in seconds for talking to ``varnishd``.
 
--u user     User to run as. Defaults to varnish.
+-u user     User to run as. Defaults to ``varnish``.
 
 -V          Print version.
 
