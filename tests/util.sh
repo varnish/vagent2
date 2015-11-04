@@ -228,7 +228,7 @@ start_agent() {
 	-c $AGENT_PORT"
 	echo -e "$ARGS" > $TMPDIR/agent-arguments
 	debug_out "Agent args: $ARGS"
-	if [ $STRACE_AGENT = "y" ]; then
+	if [ "x$STRACE_AGENT" = "xy" ]; then
 		strace -f -o ${TMPDIR}/agent-strace $ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT &
 	else
 		$ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
@@ -307,7 +307,7 @@ test_it_first_line_fail() {
 }
 
 test_it_long() {
-	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(echo -e "$3" | lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2)
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
@@ -315,7 +315,7 @@ test_it_long() {
 }
 
 test_it_long_fail() {
-	FOO=$(lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 <<<"$3")
+	FOO=$(echo -e "$3" | lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2 )
 	if [ "x$?" != "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
