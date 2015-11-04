@@ -250,6 +250,13 @@ init_all() {
 	time_it start_agent
 }
 
+test_strace()
+{
+	! grep -q "$1" $TMPDIR/agent-strace
+	if [ "x$?" = "x0" ]; then pass; else fail "Strace fail: $1 found"; fi
+	inc
+}
+
 test_it() {
 	FOO=$(lwp-request -m $1 http://${PASS}@localhost:$AGENT_PORT/$2 <<<"$3")
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi

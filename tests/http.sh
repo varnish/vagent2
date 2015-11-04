@@ -19,6 +19,4 @@ if echo -e "$FOO" | grep -q "200 OK"; then pass; else fail "Redirect failed to y
 inc
 if echo -e "$FOO" | grep -q "Location: http://localhost:$AGENT_PORT/html/"; then pass; else fail "Location: header incorrect in redirect:" $(echo -e "$FOO" | grep Location); fi
 inc
-#test_it POST echo "Foobar" "Foobar"
-#test_it POST echo "" ""
 exit $ret

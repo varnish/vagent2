@@ -56,12 +56,23 @@ struct vadmin_config_t {
 	int s_arg_fd;
 };
 
+/*
+ * FIXME: we don't really clean up when write() fails. This is not a big
+ * issue in vadmin_run(), where we properly evaluate the return value, but
+ * if varnish was to disconnect mid-authentication for instance, this would
+ * cause us to close the socket, the keep calling cli_write() until the
+ * auth-bit was done.
+ *
+ * We now have a basic test-case for catching that, so if anyone can
+ * produce a test-case where this actually triggers, I'd love to see it.
+ */
 static int
 cli_write(int sock, const char *s)
 {
 	int i, l;
 
 	i = strlen(s);
+	assert(sock >= 0);
 	l = write(sock, s, i);
 	if (i == l)
 		return 1;
@@ -162,6 +173,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		if (core->config->S_arg == NULL) {
 			warnlog(vadmin->logger, "Authentication required and no -S arg found");
 			assert(close(vadmin->sock) == 0);
+			vadmin->sock = -1;
 			return(-1);
 		}
 		if (vadmin->s_arg_fd < 0) {
@@ -173,6 +185,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 			warnlog(vadmin->logger, "Cannot open \"%s\": %s",
 			    core->config->S_arg, strerror(errno));
 			assert(close(vadmin->sock) == 0);
+			vadmin->sock = -1;
 			return (-1);
 		}
 		VCLI_AuthResponse(vadmin->s_arg_fd, answer, buf);
@@ -185,13 +198,17 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 		if (status != CLIS_OK) {
 			warnlog(vadmin->logger, "Failed authentication.");
 			assert(close(vadmin->s_arg_fd) == 0);
+			vadmin->sock = -1;
 			vadmin->s_arg_fd = -1;
 		}
 
 	}
 	if (status != CLIS_OK) {
 		warnlog(vadmin->logger, "Rejected %u\n%s", status, answer);
-		assert(close(vadmin->sock) == 0);
+		if (vadmin->sock >= 0) {
+			assert(close(vadmin->sock) == 0);
+			vadmin->sock = -1;
+		}
 		return (-1);
 	}
 	free(answer);
@@ -201,6 +218,7 @@ cli_sock(struct vadmin_config_t *vadmin, struct agent_core_t *core)
 	if (status != CLIS_OK || strstr(answer, "PONG") == NULL) {
 		warnlog(vadmin->logger, "No pong received from server");
 		assert(close(vadmin->sock) == 0);
+		vadmin->sock = -1;
 		return(-1);
 	}
 	free(answer);
@@ -228,6 +246,11 @@ vadmin_run(struct vadmin_config_t *vadmin, char *cmd, struct ipc_ret_t *ret)
 		return;
 	}
 	
+	if (sock < 0) {
+		ANSWER(ret,400, "Varnishd disconnected");
+		vadmin->state = 0;
+		return;
+	}
 	nret = cli_write(sock, cmd);
 	if (!nret) {
 		warnlog(vadmin->logger, "Communication error with varnishd.");
@@ -257,6 +280,10 @@ read_cmd(void *private, char *msg, struct ipc_ret_t *ret)
 
 	if (vadmin->state == 0)
 		cli_sock(vadmin, core);
+	if (vadmin->state == 0) {
+		ANSWER(ret,400, "Varnishd disconnected");
+		return;
+	}
 	vadmin_run(vadmin, msg, ret);
 }
 
