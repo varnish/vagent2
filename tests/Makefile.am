@@ -12,6 +12,7 @@ TESTS = ban.sh \
 	echo.sh \
 	http.sh \
 	authfail.sh \
+	vpush.sh \
 	readonly.sh
 
 XFAIL_TESTS = vac_register.sh
