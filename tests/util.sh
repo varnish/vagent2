@@ -228,7 +228,12 @@ start_agent() {
 	-c $AGENT_PORT"
 	echo -e "$ARGS" > $TMPDIR/agent-arguments
 	debug_out "Agent args: $ARGS"
-	$ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
+	if [ $STRACE_AGENT = "y" ]; then
+		strace -f -o ${TMPDIR}/agent-strace $ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT &
+	else
+		$ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
+	fi
+		
 	pidwait agent $AGENT_PORT
 }
 
