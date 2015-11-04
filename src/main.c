@@ -107,6 +107,7 @@ static void usage(const char *argv0)
 	    "    -H directory          Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
 	    "    -h                    This help.\n"
 	    "    -K agent-secret-file  File containing username:password for authentication.\n"
+	    "                          Default: " AGENT_CONF_DIR "/agent_secret\n"
 	    "    -n name               Name. Should match varnishd -n option.\n"
 	    "    -P pidfile            Write pidfile.\n"
 	    "    -p directory          Persistence directory: where VCL and parameters\n"
@@ -137,7 +138,7 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->timeout = 5;
 	core->config->p_arg = AGENT_PERSIST_DIR;
 	core->config->H_arg = AGENT_HTML_DIR;
-	core->config->K_arg = "/etc/varnish/agent_secret";
+	core->config->K_arg = AGENT_CONF_DIR "/agent_secret";
 	core->config->loglevel = 2;
 	while ((opt = getopt(argc, argv, "C:c:dg:H:hK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
