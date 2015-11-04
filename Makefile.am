@@ -20,7 +20,7 @@ MAINTAINERCLEANFILES = $(dist_man_MANS)
 
 varnish-agent.1: README.rst
 if HAVE_RST2MAN
-	${RST2MAN} README.rst $@
+	awk '/^\.\. image/ { getline;getline; } {print}' README.rst | ${RST2MAN} > $@
 else
 	@echo "========================================"
 	@echo "You need rst2man installed to make dist"
