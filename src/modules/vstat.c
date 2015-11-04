@@ -150,6 +150,7 @@ static unsigned int vstat_reply(struct http_request *request, void *data)
 static int push_stats(struct vstat_priv_t *vstat)
 {
 	struct ipc_ret_t vret;
+	char *tmp;
 	pthread_mutex_lock(&vstat->lck);
 
 	if (check_reopen(vstat)) {
@@ -158,15 +159,18 @@ static int push_stats(struct vstat_priv_t *vstat)
 	}
 
 	do_json(vstat, vstat->vsb_timer);
-	pthread_mutex_unlock(&vstat->lck);
 	assert(VSB_finish(vstat->vsb_timer) == 0);
+	tmp = strdup(VSB_data(vstat->vsb_timer));
+	assert(tmp);
+	VSB_clear(vstat->vsb_timer);
+	pthread_mutex_unlock(&vstat->lck);
 	if (vstat->push_url) {
 		ipc_run(vstat->curl, &vret,
 			"%s\n%s",vstat->push_url ? vstat->push_url : "http://localhost:8133/",
-			VSB_data(vstat->vsb_timer));
+			tmp);
 		free(vret.answer);
 	}
-	VSB_clear(vstat->vsb_timer);
+	free(tmp);
 	return 0;
 }
 

@@ -104,7 +104,7 @@ issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		slist = curl_slist_append(slist, "Transfer-Encoding:");
 	}
 
-	debuglog(private->logger, "Issuing curl command with url=%s. %s",
+	logger(private->logger, "Issuing curl command with url=%s. %s",
 	    url, data ? "Request body present" : "No request body");
 
 	curl = curl_easy_init();
