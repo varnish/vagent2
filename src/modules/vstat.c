@@ -147,30 +147,34 @@ static unsigned int vstat_reply(struct http_request *request, void *data)
 	return 0;
 }
 
+/*
+ * Push stats to url.
+ *
+ * Must have vstat->lck, as this is called from at least two threads and
+ * access shared resoruces (vstat->push_url and vstat->vsb_timer). 
+ *
+ * The lock ensures that a test will have to wait for the timer to complete
+ * and vice versa.
+ */
 static int push_stats(struct vstat_priv_t *vstat)
 {
 	struct ipc_ret_t vret;
-	char *tmp;
-	pthread_mutex_lock(&vstat->lck);
 
+	if (!vstat->push_url) {
+		logger(vstat->logger,"Tried to push without a URL");
+		return -1;
+	}
 	if (check_reopen(vstat)) {
-		pthread_mutex_unlock(&vstat->lck);
 		return -1;
 	}
 
 	do_json(vstat, vstat->vsb_timer);
 	assert(VSB_finish(vstat->vsb_timer) == 0);
-	tmp = strdup(VSB_data(vstat->vsb_timer));
-	assert(tmp);
+	ipc_run(vstat->curl, &vret, "%s\n%s",vstat->push_url, VSB_data(vstat->vsb_timer));
+	if (vret.status != 200)
+		logger(vstat->logger,"cURL returned %d: %s", vret.status, vret.answer);
 	VSB_clear(vstat->vsb_timer);
-	pthread_mutex_unlock(&vstat->lck);
-	if (vstat->push_url) {
-		ipc_run(vstat->curl, &vret,
-			"%s\n%s",vstat->push_url ? vstat->push_url : "http://localhost:8133/",
-			tmp);
-		free(vret.answer);
-	}
-	free(tmp);
+	free(vret.answer);
 	return 0;
 }
 
@@ -180,10 +184,13 @@ static unsigned int vstat_push_test(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 
 	GET_PRIV(core, vstat);
+	logger(vstat->logger,"Test issued, trying to push stats");
+	pthread_mutex_lock(&vstat->lck);
 	if (push_stats(vstat) < 0)
 		http_reply(request->connection, 500, "Stats pushing failed");
 	else
 		http_reply(request->connection, 200, "Stats pushed");
+	pthread_mutex_unlock(&vstat->lck);
 	return 0;
 }
 
@@ -201,8 +208,8 @@ vstat_push_url(struct http_request *request, void *data)
 		free(vstat->push_url);
 	DUP_OBJ(vstat->push_url, request->data, request->ndata);
 	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
-	http_reply(request->connection, 200, "Url stored");
 	pthread_mutex_unlock(&vstat->lck);
+	http_reply(request->connection, 200, "Url stored");
 	return (0);
 }
 
@@ -214,8 +221,10 @@ static void *vstat_run(void *data)
 	GET_PRIV(core, vstat);
 	while (1) {
 		sleep(1);
+		pthread_mutex_lock(&vstat->lck);
 		if (vstat->push_url && *vstat->push_url)
 			push_stats(vstat);
+		pthread_mutex_unlock(&vstat->lck);
 	}
 	return NULL;
 }
