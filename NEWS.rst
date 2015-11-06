@@ -1,3 +1,24 @@
+Version 4.1.0
+=============
+
+Released:
+
+* Fix Varnish 4.1-compatibility (incompatible with 4.0)
+* /paramjson/foo can now retrieve single parameters.
+* Add javascript varnishstat implementation
+* Add "-r" read-only mode
+* Fix building of manual pages
+* Fix several race conditions related to stats pushing
+* Fix /push/test/stats - it now returns failure on ... failure
+
+Version 4.0.1
+=============
+
+Released: ???
+
+* Varnish 4 support. presumably
+
+
 Version 2.2
 ===========
 
