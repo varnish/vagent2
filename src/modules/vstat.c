@@ -51,16 +51,27 @@
 #include "plugins.h"
 #include "vsb.h"
 
-
-struct vstat_priv_t {
+/*
+ * There are two threads: The http-replier and the background timer for
+ * pushing. Duplicating curl- and logger- fd's is a no-brainer: That's what
+ * it's for. Duplicating *vd and *vsb considerably simplifies things, and
+ * will only cause a slight memory-increase.
+ */
+struct vstat_thread_ctx_t {
 	struct VSM_data *vd;
+	struct vsb *vsb;
 	int curl;
 	int logger;
-	const struct VSC_C_main *VSC_C_main;
-	struct vsb *vsb_http;
-	struct vsb *vsb_timer;
+};
+
+/*
+ * push_url is the only thing requiring a lock.
+ */
+struct vstat_priv_t {
+	struct vstat_thread_ctx_t http;
+	struct vstat_thread_ctx_t timer;
 	char *push_url;
-	pthread_mutex_t lck;
+	pthread_rwlock_t lck;
 };
 
 static int
@@ -97,7 +108,7 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 }
 
 static void
-do_json(struct vstat_priv_t *vstat, struct vsb *out_vsb)
+do_json(struct VSM_data *vd, struct vsb *out_vsb)
 {
 	char time_stamp[20];
 	time_t now;
@@ -106,76 +117,75 @@ do_json(struct vstat_priv_t *vstat, struct vsb *out_vsb)
 	assert(out_vsb);
 	(void)strftime(time_stamp, 20, "%Y-%m-%dT%H:%M:%S", localtime(&now));
 	VSB_printf(out_vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
-	(void)VSC_Iter(vstat->vd, NULL, do_json_cb, out_vsb);
+	(void)VSC_Iter(vd, NULL, do_json_cb, out_vsb);
 	VSB_printf(out_vsb, "\n}\n");
+	assert(VSB_finish(out_vsb) == 0);
 }
 
-static int check_reopen(struct vstat_priv_t *vstat)
+static int check_reopen(struct vstat_thread_ctx_t *ctx)
 {
-	if (VSM_Abandoned(vstat->vd)) {
-		VSM_Close(vstat->vd);
-		return (VSM_Open(vstat->vd) != 0);
+	int ret = 0;
+	if (VSM_Abandoned(ctx->vd)) {
+		VSM_Close(ctx->vd);
+		ret = VSM_Open(ctx->vd) != 0;
 	}
-
-	return (0);
+	if (ret) {
+		logger(ctx->logger, "Failed to open the shmlog");
+	}
+	return ret;
 }
 
 static unsigned int vstat_reply(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
+	struct http_response *resp;
 
 	GET_PRIV(core, vstat);
-	pthread_mutex_lock(&vstat->lck);
 
-	if (check_reopen(vstat)) {
-		pthread_mutex_unlock(&vstat->lck);
+	if (check_reopen(&vstat->http)) {
 		http_reply(request->connection, 500, "Couldn't open shmlog");
 		return 0;
 	}
 
-	do_json(vstat, vstat->vsb_http);
-	pthread_mutex_unlock(&vstat->lck);
-	assert(VSB_finish(vstat->vsb_http) == 0);
-	struct http_response *resp = http_mkresp(request->connection, 200, NULL);
-	resp->data = VSB_data(vstat->vsb_http);
-	resp->ndata = VSB_len(vstat->vsb_http);
+	do_json(vstat->http.vd, vstat->http.vsb);
+
+	resp = http_mkresp(request->connection, 200, NULL);
+	resp->data = VSB_data(vstat->http.vsb);
+	resp->ndata = VSB_len(vstat->http.vsb);
 	http_add_header(resp,"Content-Type","application/json");
 	send_response(resp);
 	http_free_resp(resp);
-	VSB_clear(vstat->vsb_http);
+	VSB_clear(vstat->http.vsb);
 	return 0;
 }
 
 /*
  * Push stats to url.
  *
- * Must have vstat->lck, as this is called from at least two threads and
- * access shared resoruces (vstat->push_url and vstat->vsb_timer). 
- *
- * The lock ensures that a test will have to wait for the timer to complete
- * and vice versa.
+ * Called from different threads due to /push/test/stats
  */
-static int push_stats(struct vstat_priv_t *vstat)
+static int push_stats(struct vstat_priv_t *vstat, struct vstat_thread_ctx_t *ctx)
 {
 	struct ipc_ret_t vret;
-
-	if (!vstat->push_url) {
-		logger(vstat->logger,"Tried to push without a URL");
-		return -1;
-	}
-	if (check_reopen(vstat)) {
+	int ret = 0;
+	pthread_rwlock_rdlock(&vstat->lck);
+	if (!vstat->push_url || !(*vstat->push_url) || check_reopen(ctx)) {
+		pthread_rwlock_unlock(&vstat->lck);
 		return -1;
 	}
 
-	do_json(vstat, vstat->vsb_timer);
-	assert(VSB_finish(vstat->vsb_timer) == 0);
-	ipc_run(vstat->curl, &vret, "%s\n%s",vstat->push_url, VSB_data(vstat->vsb_timer));
-	if (vret.status != 200)
-		logger(vstat->logger,"cURL returned %d: %s", vret.status, vret.answer);
-	VSB_clear(vstat->vsb_timer);
+	do_json(ctx->vd, ctx->vsb);
+	ipc_run(ctx->curl, &vret, "%s\n%s",vstat->push_url, VSB_data(ctx->vsb));
+	pthread_rwlock_unlock(&vstat->lck);
+	VSB_clear(ctx->vsb);
+	if (vret.status != 200) {
+		logger(ctx->logger,"cURL returned %d: %s", vret.status, vret.answer);
+		ret = -1;
+	}
+	assert(vret.answer);
 	free(vret.answer);
-	return 0;
+	return ret;
 }
 
 static unsigned int vstat_push_test(struct http_request *request, void *data)
@@ -184,17 +194,12 @@ static unsigned int vstat_push_test(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 
 	GET_PRIV(core, vstat);
-	logger(vstat->logger,"Test issued, trying to push stats");
-	pthread_mutex_lock(&vstat->lck);
-	if (push_stats(vstat) < 0)
+	if (push_stats(vstat, &vstat->http) < 0)
 		http_reply(request->connection, 500, "Stats pushing failed");
 	else
 		http_reply(request->connection, 200, "Stats pushed");
-	pthread_mutex_unlock(&vstat->lck);
 	return 0;
 }
-
-
 
 static unsigned int
 vstat_push_url(struct http_request *request, void *data)
@@ -203,12 +208,12 @@ vstat_push_url(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 
 	GET_PRIV(core, vstat);
-	pthread_mutex_lock(&vstat->lck);
+	pthread_rwlock_wrlock(&vstat->lck);
 	if (vstat->push_url)
 		free(vstat->push_url);
 	DUP_OBJ(vstat->push_url, request->data, request->ndata);
-	logger(vstat->logger, "Got url: \"%s\"", vstat->push_url);
-	pthread_mutex_unlock(&vstat->lck);
+	logger(vstat->http.logger, "Got url: \"%s\"", vstat->push_url);
+	pthread_rwlock_unlock(&vstat->lck);
 	http_reply(request->connection, 200, "Url stored");
 	return (0);
 }
@@ -221,10 +226,11 @@ static void *vstat_run(void *data)
 	GET_PRIV(core, vstat);
 	while (1) {
 		sleep(1);
-		pthread_mutex_lock(&vstat->lck);
-		if (vstat->push_url && *vstat->push_url)
-			push_stats(vstat);
-		pthread_mutex_unlock(&vstat->lck);
+		/*
+		 * FIXME: This whole thing is bonkers.
+		 */
+		if (push_stats(vstat, &vstat->timer) < 0)
+			sleep(10);
 	}
 	return NULL;
 }
@@ -241,6 +247,17 @@ vstat_start(struct agent_core_t *core, const char *name)
 	return (thread);
 }
 
+static void
+vstat_init_ctx(struct agent_core_t *core, struct vstat_thread_ctx_t *t_ctx)
+{
+	t_ctx->vd = VSM_New();
+	t_ctx->vsb = VSB_new_auto();
+	t_ctx->curl = ipc_register(core,"curl");
+	t_ctx->logger = ipc_register(core,"logger");
+	if (core->config->n_arg)
+		VSC_Arg(t_ctx->vd, 'n', core->config->n_arg);
+}
+
 void
 vstat_init(struct agent_core_t *core)
 {
@@ -249,19 +266,13 @@ vstat_init(struct agent_core_t *core)
 
 	ALLOC_OBJ(priv);
 	plug = plugin_find(core,"vstat");
+	vstat_init_ctx(core,&priv->http);
+	vstat_init_ctx(core,&priv->timer);
 
-	priv->vd = VSM_New();
-	priv->vsb_http = VSB_new_auto();
-	priv->vsb_timer = VSB_new_auto();
 	plug->data = priv;
 	plug->start = vstat_start;
-	priv->curl = ipc_register(core, "curl");
-	priv->logger = ipc_register(core, "logger");
 
-	pthread_mutex_init(&priv->lck, NULL);
-
-	if (core->config->n_arg)
-		VSC_Arg(priv->vd, 'n', core->config->n_arg);
+	pthread_rwlock_init(&priv->lck, NULL);
 
 	http_register_url(core, "/stats", M_GET, vstat_reply, core);
 	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
