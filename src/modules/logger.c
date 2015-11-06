@@ -55,7 +55,8 @@ struct logger_priv_t {
  */
 static int logger_open=0;
 
-static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
+static void
+read_log(void *private, char *msg, struct ipc_ret_t *ret)
 {
 	struct logger_priv_t *log = (struct logger_priv_t *) private;
 	int loglevel;
@@ -72,7 +73,8 @@ static void read_log(void *private, char *msg, struct ipc_ret_t *ret)
 		syslog(LOG_INFO,"%s",msg);
 }
 
-void assert_fail(const char *expr, const char *file, int line, const char *func)
+void
+assert_fail(const char *expr, const char *file, int line, const char *func)
 {
 	char *string;
 	int ret;
@@ -90,7 +92,8 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 	/* NOTREACHED */
 }
 
-void logger_init(struct agent_core_t *core)
+void
+logger_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct logger_priv_t *priv;

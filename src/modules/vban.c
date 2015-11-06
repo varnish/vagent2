@@ -56,7 +56,8 @@ struct vban_priv_t {
 	int vadmin;
 };
 
-static unsigned int vban_reply(struct http_request *request, void *data)
+static unsigned int
+vban_reply(struct http_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vban_priv_t *vban;
@@ -92,7 +93,8 @@ static unsigned int vban_reply(struct http_request *request, void *data)
 	return 0;
 }
 
-void vban_init(struct agent_core_t *core)
+void
+vban_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct vban_priv_t *priv;

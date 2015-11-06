@@ -37,7 +37,7 @@
  *
  * We plan on doing a proper vlog module sometime down the line, where we
  * properly leverage the flexibility of the new logging API in Varnish 4.0.
- *  
+ *
  */
 
 #include <errno.h>
@@ -90,8 +90,10 @@ struct vlog_req_priv {
 	unsigned entries;
 };
 
-static int vlog_cb_func(struct VSL_data *vsl,
-    struct VSL_transaction * const trans[], void *priv) {
+static int
+vlog_cb_func(struct VSL_data *vsl, struct VSL_transaction * const trans[],
+    void *priv)
+{
 	int i;
 	struct vlog_req_priv *vrp = priv;
 	struct VSL_transaction *t;
@@ -120,7 +122,8 @@ static int vlog_cb_func(struct VSL_data *vsl,
 	return (0);
 }
 
-static char *next_slash(const char *p)
+static char *
+next_slash(const char *p)
 {
 	char *ret;
 	ret = strchr(p, '/');
@@ -131,7 +134,8 @@ static char *next_slash(const char *p)
 	return ret;
 }
 
-static unsigned int vlog_reply(struct http_request *request, void *data)
+static unsigned int
+vlog_reply(struct http_request *request, void *data)
 {
 	struct vlog_req_priv vrp = { .limit = 10 };
 	int disp_status;
@@ -269,7 +273,8 @@ static unsigned int vlog_reply(struct http_request *request, void *data)
 	return 0;
 }
 
-void vlog_init(struct agent_core_t *core)
+void
+vlog_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct vlog_priv_t *priv;

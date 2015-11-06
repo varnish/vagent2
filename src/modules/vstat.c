@@ -122,7 +122,8 @@ do_json(struct VSM_data *vd, struct vsb *out_vsb)
 	assert(VSB_finish(out_vsb) == 0);
 }
 
-static int check_reopen(struct vstat_thread_ctx_t *ctx)
+static int
+check_reopen(struct vstat_thread_ctx_t *ctx)
 {
 	int ret = 0;
 	if (VSM_Abandoned(ctx->vd)) {
@@ -135,7 +136,8 @@ static int check_reopen(struct vstat_thread_ctx_t *ctx)
 	return ret;
 }
 
-static unsigned int vstat_reply(struct http_request *request, void *data)
+static unsigned int
+vstat_reply(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
@@ -165,7 +167,8 @@ static unsigned int vstat_reply(struct http_request *request, void *data)
  *
  * Called from different threads due to /push/test/stats
  */
-static int push_stats(struct vstat_priv_t *vstat, struct vstat_thread_ctx_t *ctx)
+static int
+push_stats(struct vstat_priv_t *vstat, struct vstat_thread_ctx_t *ctx)
 {
 	struct ipc_ret_t vret;
 	int ret = 0;
@@ -188,7 +191,8 @@ static int push_stats(struct vstat_priv_t *vstat, struct vstat_thread_ctx_t *ctx
 	return ret;
 }
 
-static unsigned int vstat_push_test(struct http_request *request, void *data)
+static unsigned int
+vstat_push_test(struct http_request *request, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
@@ -218,7 +222,8 @@ vstat_push_url(struct http_request *request, void *data)
 	return (0);
 }
 
-static void *vstat_run(void *data)
+static void *
+vstat_run(void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;

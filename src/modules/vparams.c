@@ -72,7 +72,8 @@ struct param_opt {
 	struct param_opt *next;
 };
 
-static void param_assert(struct param_opt *p)
+static void
+param_assert(struct param_opt *p)
 {
 	assert(p);
 	assert(p->name);
@@ -87,7 +88,8 @@ static void param_assert(struct param_opt *p)
 /*
  * Frees the param and returns NEXT
  */
-static struct param_opt *param_free(struct param_opt *p)
+static struct param_opt *
+param_free(struct param_opt *p)
 {
 	struct param_opt *next;
 	param_assert(p);
@@ -113,7 +115,8 @@ static struct param_opt *param_free(struct param_opt *p)
  *
  * <variable> [value] [unit]\n
  */
-static struct param_opt *get_name_val(const char *raw)
+static struct param_opt *
+get_name_val(const char *raw)
 {
 	struct param_opt *r = calloc(1,sizeof(struct param_opt));
 	char *line = strdup(raw);
@@ -149,7 +152,9 @@ static struct param_opt *get_name_val(const char *raw)
 /*
  * Just skip space characters to avoid indentation meh.
  */
-static char *skip_space(char *p) {
+static char *
+skip_space(char *p)
+{
 	while (*p && (*p == ' ' || *p == '\t'))
 		p++;
 	return p;
@@ -161,7 +166,9 @@ static char *skip_space(char *p) {
  * Value is: <value> [\[unit\]] [(default)]
  *
  */
-static int parse_value(const char *w, struct param_opt *p) {
+static int
+parse_value(const char *w, struct param_opt *p)
+{
 	char *tmp = strdup(w);
 	char *tmp2;
 	char *orig;
@@ -215,7 +222,8 @@ static int parse_value(const char *w, struct param_opt *p) {
 /*
  * Parse an entry after we have the name (and possibly more).
  */
-static char *fill_entry(struct param_opt *p, const char *pos)
+static char *
+fill_entry(struct param_opt *p, const char *pos)
 {
 	char *tmp;
 	char *tmp2;
@@ -281,7 +289,8 @@ static char *fill_entry(struct param_opt *p, const char *pos)
  * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
-static char *vparams_show_json(char *raw)
+static char *
+vparams_show_json(char *raw)
 {
 	struct param_opt *tmp, *top;
 	char *out = NULL, *out2 = NULL, *out3 = NULL;
@@ -362,7 +371,8 @@ static char *vparams_show_json(char *raw)
 	return out2;
 }
 
-static void param_json(struct http_request *request, struct vparams_priv_t *vparams)
+static void
+param_json(struct http_request *request, struct vparams_priv_t *vparams)
 {
 	struct ipc_ret_t vret;
 	char *tmp;
@@ -384,7 +394,8 @@ static void param_json(struct http_request *request, struct vparams_priv_t *vpar
 /*
  * FIXME: Should be simplified/split up.
  */
-static unsigned int vparams_reply(struct http_request *request, void *data)
+static unsigned int
+vparams_reply(struct http_request *request, void *data)
 {
 	const char *arg;
 	struct agent_core_t *core = data;

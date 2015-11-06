@@ -72,7 +72,8 @@ extern int daemon(int, int);
 
 int threads_started = 0;
 
-static char *get_line(const char *filename)
+static char *
+get_line(const char *filename)
 {
 	FILE *fp;
 	char buffer[1024];
@@ -96,7 +97,8 @@ static char *get_line(const char *filename)
 	return strdup(buffer);
 }
 
-static void usage(const char *argv0)
+static void
+usage(const char *argv0)
 {
 	fprintf(stderr,
 	    "usage %s [options]\n"
@@ -125,7 +127,8 @@ static void usage(const char *argv0)
 	    argv0);
 }
 
-static void core_opt(struct agent_core_t *core, int argc, char **argv)
+static void
+core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
 	const char *argv0 = argv[0];
@@ -230,7 +233,8 @@ static void core_opt(struct agent_core_t *core, int argc, char **argv)
  * before they are initialized, as this also include the generic IPC.
  * Otherwise ipc_register() would fail miserably.
  */
-static void core_alloc_plugins(struct agent_core_t *core)
+static void
+core_alloc_plugins(struct agent_core_t *core)
 {
 #define PLUGIN(plug) \
 	plugin_alloc(#plug, core);
@@ -238,7 +242,8 @@ static void core_alloc_plugins(struct agent_core_t *core)
 #undef PLUGIN
 }
 
-static int core_plugins(struct agent_core_t *core)
+static int
+core_plugins(struct agent_core_t *core)
 {
 #define PLUGIN(plug) \
 	plug ## _init(core);
@@ -247,7 +252,8 @@ static int core_plugins(struct agent_core_t *core)
 	return 1;
 }
 
-static void p_open(struct pidfh **pfh, const char *p)
+static void
+p_open(struct pidfh **pfh, const char *p)
 {
 	pid_t otherpid;
 	*pfh = pidfile_open(p, 0600, &otherpid);
@@ -261,7 +267,8 @@ static void p_open(struct pidfh **pfh, const char *p)
 	}
 }
 
-static void v_daemon(struct pidfh **pfh) 
+static void
+v_daemon(struct pidfh **pfh)
 {
 	int ret;
 #ifdef __APPLE__
@@ -281,25 +288,29 @@ static void v_daemon(struct pidfh **pfh)
 /*
  * Change user/group if we can.
  */
-static void sandbox(struct agent_core_t *core)
+static void
+sandbox(struct agent_core_t *core)
 {
 	int ret;
 	struct passwd *pw;
 	if (geteuid() == 0) {
 		pw = getpwnam(core->config->u_arg ? core->config->u_arg : "varnish");
-		if (pw == NULL) {
-			errx(1,"%s is not a valid user\n", core->config->u_arg ? core->config->u_arg: "varnish");
-		}
+		if (pw == NULL)
+			errx(1,"%s is not a valid user\n",
+			    core->config->u_arg ?
+			    core->config->u_arg : "varnish");
 
 		if (!core->config->g_arg) {
 			ret = setgid(pw->pw_gid);
 			assert(ret == 0);
 		} else {
 			struct group *gr;
-			gr = getgrnam(core->config->g_arg ? core->config->g_arg : "varnish");
-			if (gr == NULL) {
-				errx(1,"%s is not a valid group\n", core->config->g_arg ? core->config->g_arg : "varnish");
-			}
+			gr = getgrnam(core->config->g_arg ?
+				      core->config->g_arg : "varnish");
+			if (gr == NULL)
+				errx(1,"%s is not a valid group\n",
+				     core->config->g_arg ?
+				     core->config->g_arg : "varnish");
 			ret = setgid(gr->gr_gid);
 			assert(ret == 0);
 		}
@@ -310,7 +321,8 @@ static void sandbox(struct agent_core_t *core)
 	}
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
 	struct agent_core_t core;
 	struct agent_plugin_t *plug;

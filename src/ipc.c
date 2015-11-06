@@ -73,7 +73,8 @@
  * Write text to a socket. Close it if we fail.
  * Returns true on success.
  */
-static int ipc_write(int sock, const char *s, int len)
+static int
+ipc_write(int sock, const char *s, int len)
 {
 	int l;
 
@@ -89,7 +90,8 @@ static int ipc_write(int sock, const char *s, int len)
  * Write the command, read the result.
  * XXX: VCLI_ReadResult will allocate ret->answer. Caller MUST free it.
  */
-void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
+void
+ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 {
 	assert(data);
 	char buffer[12];
@@ -106,7 +108,8 @@ void ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 /*
  * Parse a command of arbitrary length, execute it, place result in *ret.
  */
-void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
+void
+ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 {
 	va_list ap;
 	char *buffer;
@@ -127,7 +130,8 @@ void ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
  * XXX: Must execute prior to plugins starting, otherwise we might use the
  * ipc structure before it's fully populated.
  */
-int ipc_register(struct agent_core_t *core, const char *name)
+int
+ipc_register(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *v;
 	int sv[2];
@@ -152,7 +156,8 @@ int ipc_register(struct agent_core_t *core, const char *name)
  *
  * Note that &ret must be populated with something we can free().
  */
-static int ipc_cmd(int fd, struct ipc_t *ipc)
+static int
+ipc_cmd(int fd, struct ipc_t *ipc)
 {
 	char buffer[11];
 	struct ipc_ret_t ret;
@@ -191,7 +196,8 @@ static int ipc_cmd(int fd, struct ipc_t *ipc)
  * IPC main loop.
  * Just wait for data on the fds provided, then trigger ipc_cmd().
  */
-static void *ipc_loop(void *data)
+static void *
+ipc_loop(void *data)
 {
 	struct ipc_t *ipc = (struct ipc_t *)data;
 	struct pollfd fds[MAX_LISTENERS+1];
@@ -219,7 +225,8 @@ static void *ipc_loop(void *data)
 /*
  * Should probably be redundant...
  */
-void ipc_init(struct ipc_t *ipc)
+void
+ipc_init(struct ipc_t *ipc)
 {
 	ipc->nlisteners = 0;
 }
@@ -244,7 +251,8 @@ ipc_start(struct agent_core_t *core, const char *name)
  * Sanity.
  */
 
-void ipc_sanity(struct agent_core_t *core)
+void
+ipc_sanity(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	for (plug = core->plugins; plug != NULL; plug = plug->next) {

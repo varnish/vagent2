@@ -44,8 +44,9 @@
 #include "ipc.h"
 
 
-void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
-			 unsigned min, unsigned max, const char *fmt, ...)
+void
+run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
+    unsigned min, unsigned max, const char *fmt, ...)
 {
 	struct ipc_ret_t vret;
 	va_list ap;
@@ -70,7 +71,8 @@ void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
  * Run a varnishadm-command and send the result of that command back to the
  * http connection. If varnishd returns 200, then so do we. Otherwise: 500.
  */
-void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
+void
+run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 {
 	struct ipc_ret_t vret;
 	va_list ap;
@@ -88,7 +90,8 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 	free(vret.answer);
 }
 
-unsigned int help_reply(struct http_request *request, void *data)
+unsigned int
+help_reply(struct http_request *request, void *data)
 {
 	http_reply(request->connection, 200, (char *)data);
 	return 0;

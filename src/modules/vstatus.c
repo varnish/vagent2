@@ -65,7 +65,8 @@ struct vstatus_priv_t {
 	int vadmin;
 };
 
-static unsigned int vstatus_reply(struct http_request *request, void *data)
+static unsigned int
+vstatus_reply(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
@@ -75,7 +76,8 @@ static unsigned int vstatus_reply(struct http_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_stop(struct http_request *request, void *data)
+static unsigned int
+vstatus_stop(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
@@ -85,7 +87,8 @@ static unsigned int vstatus_stop(struct http_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_ping(struct http_request *request, void *data)
+static unsigned int
+vstatus_ping(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
@@ -95,7 +98,8 @@ static unsigned int vstatus_ping(struct http_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_start(struct http_request *request, void *data)
+static unsigned int
+vstatus_start(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
@@ -105,7 +109,8 @@ static unsigned int vstatus_start(struct http_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_panic(struct http_request *request, void *data)
+static unsigned int
+vstatus_panic(struct http_request *request, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
@@ -122,14 +127,16 @@ static unsigned int vstatus_panic(struct http_request *request, void *data)
 	return 0;
 }
 
-static unsigned int vstatus_version(struct http_request *request, void *data)
+static unsigned int
+vstatus_version(struct http_request *request, void *data)
 {
 	(void)data;
 	http_reply(request->connection, 200, VCS_Version "\n");
 	return 0;
 }
 
-static unsigned int vstatus_package_string(struct http_request *request, void *data)
+static unsigned int
+vstatus_package_string(struct http_request *request, void *data)
 {
 	(void)data;
 	http_reply(request->connection, 200, PACKAGE_STRING "\n");

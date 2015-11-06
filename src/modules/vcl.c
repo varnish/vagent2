@@ -62,7 +62,8 @@ struct vcl_list {
 	char ref[11];
 };
 
-static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
+static void
+mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 {
 	int ret;
 	ret = asprintf(&vcl->help, "The following logic can be used:\n"
@@ -87,7 +88,9 @@ static void mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
  * Store VCL to disk if possible. Returns 0 if all went well, -1 on error.
  *
  */
-static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core) {
+static int
+vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core)
+{
 	int ret;
 	char tempfile[PATH_MAX];
 	char target[PATH_MAX];
@@ -126,7 +129,8 @@ static int vcl_persist(int logfd, const char *id, const char *vcl, struct agent_
 /*
  * Set the link for the active VCL.
  */
-static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
+static int
+vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 {
 	int ret;
 	char buf[1024];
@@ -174,7 +178,8 @@ static int vcl_persist_active(int logfd, const char *id, struct agent_core_t *co
 
 /* Check if something is a valid C identifier. */
 
-static int valid_c_ident(const char *ident)
+static int
+valid_c_ident(const char *ident)
 {
 	while (*ident != '\0') {
 		if (!isalnum(*ident) && *ident != '_')
@@ -184,11 +189,9 @@ static int valid_c_ident(const char *ident)
 	return 1;
 }
 
-static int vcl_store(struct http_request *request,
-		      struct vcl_priv_t *vcl,
-		      struct ipc_ret_t *vret,
-		      struct agent_core_t *core,
-		      const char *id)
+static int
+vcl_store(struct http_request *request, struct vcl_priv_t *vcl,
+	struct ipc_ret_t *vret, struct agent_core_t *core, const char *id)
 {
 	int ret;
 	assert(request->data);
@@ -229,7 +232,8 @@ static int vcl_store(struct http_request *request,
  * Takes unformatted vcl.list as input and returns a vsb with the json
  * version. The caller must clean up the vsb.
  */
-static struct vsb *vcl_list_json(char *raw)
+static struct vsb *
+vcl_list_json(char *raw)
 {
 	struct vcl_list tmp;
 	int ret;
@@ -267,7 +271,8 @@ static struct vsb *vcl_list_json(char *raw)
 	return vsb;
 }
 
-static unsigned int vcl_reply(struct http_request *request, void *data)
+static unsigned int
+vcl_reply(struct http_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -416,7 +421,8 @@ static unsigned int vcl_reply(struct http_request *request, void *data)
 	return 0;
 }
 
-void vcl_init(struct agent_core_t *core)
+void
+vcl_init(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
 	struct vcl_priv_t *priv;

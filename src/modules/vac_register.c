@@ -52,7 +52,8 @@ struct vac_register_priv_t {
 	char* vac_url;
 };
 
-static void generate_json(struct vac_register_priv_t *priv)
+static void
+generate_json(struct vac_register_priv_t *priv)
 {
 	assert(priv->vsb_out);
 	VSB_clear(priv->vsb_out);
@@ -69,7 +70,8 @@ static void generate_json(struct vac_register_priv_t *priv)
 	assert(VSB_finish(priv->vsb_out) == 0);
 }
 
-static int send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret)
+static int
+send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret)
 {
 	if (private->vac_url == NULL || *private->vac_url == '\0') {
 		logger(private->logger, "Not registering with the VAC. Unknown vac url. Try using -z");
@@ -106,7 +108,8 @@ vac_register_reply(struct http_request *request, void *data)
 	return (0);
 }
 
-static void *vac_register(void *data)
+static void *
+vac_register(void *data)
 {
 	struct agent_core_t *core = (struct agent_core_t *)data;
 	struct vac_register_priv_t *private;
@@ -138,7 +141,8 @@ vac_register_start(struct agent_core_t *core, const char *name)
 }
 
 void
-vac_register_init(struct agent_core_t *core) {
+vac_register_init(struct agent_core_t *core)
+{
 	struct vac_register_priv_t *priv;
 	struct agent_plugin_t *plug;
 
