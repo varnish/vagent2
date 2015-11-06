@@ -153,20 +153,20 @@ REST interface instead of trying to simulate a Varnish CLI session.
 BUGS
 ====
 
+The agent is multi-threaded, but the HTTP listener is not. As such, the
+agent is vulnerable to DOS by any slow client. This should not be a problem
+if you are using it internally, and if you are exposing it to the public,
+consider sticking it behind Varnish itself (and consider read-only mode
+with ``-r``).
+
 Trying to "use" the boot VCL will regularly cause a "VCL deployed OK but
 not persisted". This is because the agent can only persist VCL if the VCL
 was stored through the agent - the boot vcl was not stored through the
 agent so there is no matching auto-generated VCL for it on disk.
 Workaround: Don't re-use the boot VCL.
 
-The ``vlog`` module is limited. First of all, the limit it provides only
-works on unfiltered commands, and it's disregarded for tags. Secondly, the
-limit is a "head"-type limit now. It will give you the FIRST log entries,
-not the last matching. Additionally it only lists the content of the shmlog
-from the beginning of the file running up to the "here"-marker. If
-``varnishd`` just wrapped around you will get minimal amount of feedback,
-while you'll get a truckload of feedback if you query the module right
-before ``varnishd`` wraps around.
+The ``vlog`` module is limited and the filter largely broken after the
+Varnish 4.0 API changes.
 
 You may also want to add some SSL on top of it. The agent provides
 HTTP Basic authentication, but that is in no way secure as credentials
