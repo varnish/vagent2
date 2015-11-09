@@ -1,17 +1,36 @@
+In addition to direct contributions, there are indirect contributions. PHK
+(Poul-Henning Kamp) deserves thanks for writing Varnish Cache, but in this
+particular project, more for being a teacher to myself and others.
 
-Some of the many people to thank:
+Martin Blix Grydeland wrote the original agent, and provided valuable
+advise during the development of the second varnish agent.
 
-* Poul-Henning Kamp, for showing me countless smart tricks to employ, and
-  also a little bit for writing Varnish Cache.
-* Martin Blix Grydeland, for the original varnish-agent and words of wisdom
-  when it comes to varnishapi usage.
-* Tollef Fog Heen, for poking automake-stuff and jenkins and whatnot until
-  things worked.
-* Lasse Karstensen, for early testing and bug reports.
-* Yves Hwang/Per Buer, for testing on Mac OS X. Not sure you actually
-  deserve a thanks for that though... !@#!@# mac.
-* Norwegian Broadcasting Company (NRK) for contributing with
-  varnishstat-development
+Contributors
+============
+
+In alphabetical order. See git repository for details.
+
+* Brandon Wamboldt
+* Dag Haavi Finstad
+* Dridi Boukelmoune
+* Espen Braastad
+* Federico G. Schwindt
+* Guillaume Delacour
+* Lasse Karstensen
+* Norwegian Broadcasting Company (NRK)
+* Patricio Bruna
+* Per Buer
+* Robson Roberto Souza Peixoto
+* Rubén Romero
+* Tollef Fog Heen
+* Yves Hwang
+
+Sponsors
+========
+
+* Varnish Software is the principal developer of the Varnish Agent.
+* Norwegian Broadcasting Company (NRK) sponsored the development of the
+  JavaScript implementation of varnishstat
 
 src/foreign/
 ============
