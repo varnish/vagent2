@@ -354,7 +354,7 @@ is_running() {
 }
 
 test_json() {
-	NAME="${TMPDIR}/jsontest$N.json"
+	NAME="${TMPDIR}/jsontest$N.$RANDOM.json"
 	lwp-request -m GET "http://${PASS}@localhost:${AGENT_PORT}/$1" > $NAME
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed: $1 failed"; fi
 	inc
@@ -367,7 +367,9 @@ test_json() {
 	fi
 	inc
 	DIFF=$(echo -e "$FOO" | tail -n1 | sed 's/^.*:/:/')
-	if [ "x$DIFF" = "x: ok" ]; then pass; else fail "json failed to validate: $1: $DIFF"; fi
+	if [ "x$DIFF" = "x: ok" ]; then pass; else fail "json failed to validate: $1: $FOO"; fi
+	inc
 	lwp-request -m GET -ed "http://${PASS}@localhost:${AGENT_PORT}/$1" | grep -q 'Content-Type: application/json'
 	if [ "x$?" = "x0" ]; then pass; else fail "json failed content-type check: $1 failed"; fi
+	inc
 }
