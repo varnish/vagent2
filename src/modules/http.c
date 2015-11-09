@@ -60,6 +60,12 @@ struct http_listener {
 
 struct http_priv_t {
 	int logger;
+	/*
+	 * XXX: Used exclusively before the main thread is spun up
+	 * 
+	 * see ipc.c on why this is needed (now).
+	 */
+	int logger2;
 	char *help_page;
 	struct http_listener *listener;
 };
@@ -436,12 +442,12 @@ http_run(void *data)
 	GET_PRIV(core, http);
 	port = atoi(core->config->c_arg);
 	assert(port > 0);
-	logger(http->logger, "HTTP starting on port %i", port);
+	logger(http->logger2, "HTTP starting on port %i", port);
 	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
 	    &answer_to_connection, data, MHD_OPTION_NOTIFY_COMPLETED,
 	    request_completed, NULL, MHD_OPTION_END);
 	if (!d) {
-		warnlog(http->logger, "HTTP failed to start on port %i. "
+		warnlog(http->logger2, "HTTP failed to start on port %i. "
 		    "Agent already running?", port);
 		sleep(1);
 		exit(1);
@@ -516,6 +522,7 @@ http_init(struct agent_core_t *core)
 	ALLOC_OBJ(priv);
 	plug = plugin_find(core, "http");
 	priv->logger = ipc_register(core, "logger");
+	priv->logger2 = ipc_register(core, "logger");
 	plug->data = (void *)priv;
 	plug->start = http_start;
 }

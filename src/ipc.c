@@ -66,6 +66,29 @@
 #include "plugins.h"
 
 /*
+ * This is a safety net.
+ *
+ * IPCs are per-thread. If you have multiple threads, you need to get
+ * multiple handles.
+ *
+ * tid_to_fd tracks what threads have used what handles (for now), and
+ * asserts if you do something bad. It's slightly flawed, in that you need
+ * multiple handles if you want to output some logger-stuff before you spin
+ * up your thread (see modules/http.c for an example of this).
+ */
+static pthread_t tid_to_fd[1024];
+
+static void
+ipc_verify_sock_thread(int sock)
+{
+	if (sock < 1024) {
+		if (tid_to_fd[sock] == 0)
+			tid_to_fd[sock] = pthread_self();
+		assert(tid_to_fd[sock] == pthread_self());
+	}
+}
+
+/*
  * Client
  */
 
@@ -77,7 +100,7 @@ static int
 ipc_write(int sock, const char *s, int len)
 {
 	int l;
-
+	ipc_verify_sock_thread(sock);
 	l = write (sock, s, len);
 	if (len == l)
 		return 1;
