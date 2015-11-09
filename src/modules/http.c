@@ -212,8 +212,13 @@ send_response(struct http_response *resp)
 	char *origin;
 	int ret;
 
+#if (MHD_VERSION >= 0x00090500)
+	response = MHD_create_response_from_buffer(resp->ndata,
+	    (void *)resp->data, MHD_RESPMEM_MUST_COPY);
+#else
 	response = MHD_create_response_from_data(resp->ndata,
 	    (void *)resp->data, MHD_NO, MHD_YES);
+#endif
 	assert(response);
 	for (hdr = resp->headers; hdr; hdr = hdr->next)
 		MHD_add_response_header(response, hdr->key, hdr->value);
