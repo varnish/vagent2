@@ -57,9 +57,10 @@ struct vcl_priv_t {
 };
 
 struct vcl_list {
-	char name[1024];
 	char available[11];
-	char ref[11];
+	char state[5];
+	char temp[5];
+	char name[1024];
 };
 
 static void
@@ -243,7 +244,7 @@ vcl_list_json(char *raw)
 	pos = raw;
 	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
 	do {
-		ret = sscanf(pos, "%10s %6s %s\n", tmp.available, tmp.ref, tmp.name);
+		ret = sscanf(pos, "%10s %4s/%4s  %s\n", tmp.available, tmp.state, tmp.temp, tmp.name);
 		if (ret <= 0) {
 			/*
 			 * FIXME: This should go into the logger
@@ -256,9 +257,10 @@ vcl_list_json(char *raw)
 		VSB_printf(vsb, "%s{\n"
 			"\t\t\t\"name\": \"%s\",\n"
 			"\t\t\t\"status\": \"%s\",\n"
-			"\t\t\t\"refs\": \"%s\"\n"
+			"\t\t\t\"temp\": \"%s\",\n"
+			"\t\t\t\"mode\": \"%s\"\n"
 			"\t\t}",pos != raw ? ",\n\t\t" : "\t\t",
-			tmp.name, tmp.available, tmp.ref);
+			tmp.name, tmp.available, tmp.temp, tmp.state);
 
 		pos = strstr(pos,"\n");
 		if (pos == NULL)
