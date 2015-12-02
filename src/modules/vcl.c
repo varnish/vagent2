@@ -239,12 +239,18 @@ vcl_list_json(char *raw)
 	struct vcl_list tmp;
 	int ret;
 	char *pos;
+	char ref_temp[10];
 	struct vsb *vsb;
 	vsb = VSB_new_auto();
 	pos = raw;
 	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
 	do {
-		ret = sscanf(pos, "%10s %4s/%4s  %s\n", tmp.available, tmp.state, tmp.temp, tmp.name);
+		assert(strlen(pos) > 30);
+		if (pos[30] != ' ') {
+			ret = sscanf(pos, "%10s %4s/%4s  %6s %s\n", tmp.available, tmp.state, tmp.temp, ref_temp, tmp.name);
+		} else {
+			ret = sscanf(pos, "%10s %4s/%4s   %s\n", tmp.available, tmp.state, tmp.temp, tmp.name);
+		}
 		if (ret <= 0) {
 			/*
 			 * FIXME: This should go into the logger
