@@ -83,6 +83,7 @@ function showVCL()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
+	document.getElementById("backend").style.display = "NONE";
 	topActive("vcl");
 }
 
@@ -91,14 +92,26 @@ function showHome()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
+	document.getElementById("backend").style.display = "NONE";
 	topActive("home");
 }
+
+function showBackend()
+{
+	document.getElementById("params").style.display = "NONE";
+	document.getElementById("backend").style.display = "NONE";
+	document.getElementById("vcl").style.display = "NONE";
+	document.getElementById("backend").style.display = "block";
+	topActive("backend");
+}
+
 
 function showParam()
 {
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
+	document.getElementById("backend").style.display = "NONE";
 	list_params();
 	topActive("param");
 }
