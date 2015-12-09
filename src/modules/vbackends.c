@@ -37,37 +37,89 @@
 #include "helpers.h"
 #include "ipc.h"
 #include "plugins.h"
-
+#include "vsb.h"
 #define BACKENDS_HELP \
-"VARNISH REALLY ROCKS \n"
+"GET /backendsjson/ - fetches a list of backends and values\n" \
+"PUT /backends/foo - Takes a single value as input (e.g: 1000) and let you change the admin health value\n" \
+"For more trick go to the HTML backend page\n"
 
 struct vbackends_priv_t {
 	int logger;
 	int vadmin;
 };
 
-struct param_opt {
+struct backend_opt {
 	char *name;
-	char *value;
-	char *unit;
-	char *def;
-	char *description;
-	struct param_opt *next;
+	char *ref;
+	char *admin;
+	char *probe;
 };
+
+#include "syslog.h"
+	
+char* format_line(char*);
+char* format_line(char* line)
+{
+	char *out = NULL;
+//	char *name, *ref, *admin, *probe;
+struct backend_opt backend = {0};
+	char *ptr;
+	int state = 0;
+//	backend = malloc(sizeof (struct backend_opt));
+	backend.name = strtok_r(line, " ", &ptr);
+	backend.ref = strtok_r(NULL, " ",&ptr);
+	backend.admin = strtok_r(NULL, " ",&ptr);
+	backend.probe =  strtok_r(NULL, "\n",&ptr);
+ 
+	state = asprintf(&out, 	"\t{\n" 
+
+	"\t\t\"name\": \"%s\",\n"
+			"\t\t\"ref\": \"%s\",\n"
+			"\t\t\"admin\": \"%s\",\n"
+			"\t\t\"probe\": \"%s\"\n"
+			"\t}",
+			backend.name, backend.ref, backend.admin,
+			backend.probe);
+
+	if(state)
+		return out;
+
+	return out;
+}
+
 
 static char *vbackends_show_json(char *raw)
 {
-	int state;
-	char *out = NULL, *out2 = NULL, *out3 = NULL;
-
-	state = asprintf(&out3, "{\n");
-	state = asprintf(&out, "some json output to be done-->nightmare\n");
-	state= asprintf(&out2, "%s %s %s\n}\n", out3, out, raw);
-	free(out3);
-
+	char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
+	char* tokens;
+	char tmp[1000];
+	int cont = 0;
+	int state = 0;
+	char *ptr;
+	struct vsb *final= VSB_new_auto();
+	tokens = strtok(raw, "\n");
+	syslog(0, "PRIMa %s", tokens);
+	while(tokens != NULL){
+		syslog(0, "TOKENS %s", tokens);
+		strcpy(tmp, (tokens));
+		syslog(0, "TMP %s & cont%d", tmp, cont);
+		tokens = strtok(NULL, "\n");
+		if(cont > 0){
+		ptr = 	format_line(tmp);
+		VSB_cat(final, ptr);
+		if(cont < 3)
+			VSB_cat(final, ",\n");
+		}
+		cont++;
+	}
+	VSB_finish(final);
+	state = asprintf(&out1, "{\n \"backends\" : [\n");
+	state = asprintf(&out2, "%s",VSB_data(final));
+	state = asprintf(&out3, "%s%s\n]\n}\n", out1, out2);
+	VSB_delete(final);
 	if(state)
-		return out2;
-	return out2;
+		return out3;
+	return out3;
 }
 
 static void backends_json(struct http_request *request,
@@ -112,17 +164,13 @@ static unsigned int vbackends_reply(struct http_request *request, void *data)
 		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
-		if (!strcmp(request->url, "/admin_health/")) {
-			run_and_respond(vbackends->vadmin,
-				request->connection,
-				"backend.set_health %s",body);
-		} else {
-			arg = request->url + strlen("/admin_health/");
-			assert(arg && *arg);
-			run_and_respond(vbackends->vadmin,
-				request->connection,
-				"backend.set_health %s %s",arg, body);
-		}
+
+		arg = request->url + strlen("/backends/");
+		assert(arg && *arg);
+		run_and_respond(vbackends->vadmin,
+		    request->connection,
+		    "backend.set_health %s %s",arg, body);
+
 		free(body);
 		return 1;
 
@@ -144,7 +192,7 @@ vbackends_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/admin_health/", M_PUT, vbackends_reply, core);
-	http_register_url(core, "/backendjson/", M_GET, vbackends_reply, core);
-	http_register_url(core, "/backend/", M_GET, help_reply, strdup(BACKENDS_HELP));
+	http_register_url(core, "/backends/", M_PUT, vbackends_reply, core);
+	http_register_url(core, "/backendsjson/", M_GET, vbackends_reply, core);
+	http_register_url(core, "/help/backends", M_GET, help_reply, strdup(BACKENDS_HELP));
 }
