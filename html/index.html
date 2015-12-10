@@ -9,6 +9,8 @@
     <link href="../html/css/bootstrap.min.css" rel="stylesheet">
     <link href="../html/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="../html/css/slider.css" rel="stylesheet">
+    <link href="../html/css/bootstrap-switch.min.css" rel="stylesheet">
+    <link href="../html/css/switch.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -202,18 +204,41 @@
 	      repository</a>.</p>
   	    </div>
 	  </div>
-	  <div class="span9" id="backend" style="DISPLAY: none">
-            <div class="hero-unit">
-	      <h1>Welcome to Backend</h1>
-	      <p>some json will arrive here, I first have to parse it properly-->painfull</p>
-	    </div>
-	  </div>
-	</div>
 
-      </div><!--/row-->
 
-    </div><!--/.fluid-container-->
-  </div>
+
+	  <div id="backend" style="DISPLAY: none">
+	    <div class="row-fluid span12">
+	      <div class="span3">
+		<h1>Backends</h1>
+		<p>List of backends here</p>
+	      </div><!-- span4 -->
+	      <div class="span2">
+		<h1>Health</h1>
+		<div class="onoffswitch">
+		  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
+		  <label class="onoffswitch-label" for="myonoffswitch">
+		    <span class="onoffswitch-inner"></span>
+		    <span class="onoffswitch-switch"></span>
+		  </label>
+		</div><!-- switch -->
+		</div><!-- span2 -->
+		<div class="span7">
+		  <h1>More info</h1>
+
+		  <p>Health -- ReqKB/s -- Reqs -- Resp KB/s -- Responses -- Pipe Hdr -- Pipe Out -- Pipe in</p>
+		</div><!-- span7 -->
+	      </div><!-- span12 -->
+	   
+
+	    
+
+	</div><!--/row-->
+	
+
+
+      </div><!--/.fluid-container-->
+    </div>
     <script src="../html/js/jquery-1.10.2.min.js"></script>
     <script src="../html/js/bootstrap.min.js"></script>
     <script src="../html/js/agent.js"></script>

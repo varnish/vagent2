@@ -99,7 +99,7 @@ function showHome()
 function showBackend()
 {
 	document.getElementById("params").style.display = "NONE";
-	document.getElementById("backend").style.display = "NONE";
+	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("backend").style.display = "block";
 	topActive("backend");
