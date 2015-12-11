@@ -542,8 +542,8 @@ function calculate_client_req(version, now, previous) {
 function update_stats()
 {
 	var d = document.getElementById("stats-btn");
-    var version = document.getElementById("agentVersion").innerHTML;
-	assert(d != null);
+        var version = document.getElementById("agentVersion").innerHTML;
+        assert(d != null);
 	$.ajax({
 		type: "GET",
 		url: urlPrefix() + "/stats",
@@ -643,6 +643,50 @@ function banSmart()
 			out_up();
         }
 	});
+}
+
+function backendName()
+{
+
+	out_clear();
+	agent.out =  + agent.out.backend.name + "\n";
+	
+	out_be();
+}
+
+function out_be()
+{
+	document.getElementById("name_backend").innerHTML = agent.out;
+
+}
+
+function list_backends()
+{
+    $.ajax({
+	type: "GET",
+	url: urlPrefix() + "/backendjson/",
+	timeout: agent.globaltimeout,
+	dataType: "text",
+	success: function (data, textStatus, jqXHR) {
+	    var json = JSON.parse(data);
+	    var list = document.getElementById("name_backend");
+	    var arry = new Array();
+
+	    for (x in json.backends) {
+		arry.push(json.backends[x].name);
+		
+		arry.push("\n");
+		console.log(json.backends[x].name);
+	    }
+	    agent.out = arry.join(" ");
+	    out_be();
+	},
+	error: function (jqXHR, textStatus, errorThrown) {
+	    agent.out = "Failed to list!\n" + errorThrown;
+	    out_be();
+	}
+    });	
+    
 }
 
 function banList()

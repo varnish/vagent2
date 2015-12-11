@@ -49,7 +49,7 @@
 	     href="http://github.com/varnish/vagent2/"
 	     id="agentVersion" class="navbar-link"></a></p>
             <ul class="nav">
-	      <li class="active"id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
+	      <li class="active" id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
 	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
 	      <li id="nav-backend"><a href="#backend" onclick="showBackend()">Backend</a></li>
               <li id="nav-home"><a href="#about" onclick="showHome()">About</a></li>
@@ -205,16 +205,24 @@
   	    </div>
 	  </div>
 
-
-
 	  <div id="backend" style="DISPLAY: none">
-	    <div class="row-fluid span12">
+	    <div class="row-fluid span 12"></div>
+	    <div class="row-fluid">
 	      <div class="span3">
 		<h1>Backends</h1>
-		<p>List of backends here</p>
-	      </div><!-- span4 -->
+	      </div><!-- span3 -->
 	      <div class="span2">
 		<h1>Health</h1>
+	      </div><!-- span2 -->
+	      <div class="span7">
+		<h1>More info</h1>
+	      </div><!-- span7 -->
+	    </div>
+	    <div class="row-fluid">
+	      <div id="name_backend" class="span3">
+		<p><a onclick="list_backends()" href="#"</a>list_backend</p>
+	      </div><!-- span3 -->
+	      <div class="span2">
 		<div class="onoffswitch">
 		  <input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
 		  <label class="onoffswitch-label" for="myonoffswitch">
@@ -222,21 +230,16 @@
 		    <span class="onoffswitch-switch"></span>
 		  </label>
 		</div><!-- switch -->
-		</div><!-- span2 -->
-		<div class="span7">
-		  <h1>More info</h1>
+	      </div><!-- span2 -->
+	      <div class="span7">
+		<p>Health -- ReqKB/s -- Reqs -- Resp KB/s -- Responses -- Pipe Hdr -- Pipe Out -- Pipe in</p>
+	      </div><!-- span7 -->
+	    </div>
+	  </div><!-- backend -->
 
-		  <p>Health -- ReqKB/s -- Reqs -- Resp KB/s -- Responses -- Pipe Hdr -- Pipe Out -- Pipe in</p>
-		</div><!-- span7 -->
-	      </div><!-- span12 -->
-	   
-
-	    
+	  
 
 	</div><!--/row-->
-	
-
-
       </div><!--/.fluid-container-->
     </div>
     <script src="../html/js/jquery-1.10.2.min.js"></script>
