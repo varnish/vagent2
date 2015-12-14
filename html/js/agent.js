@@ -645,49 +645,7 @@ function banSmart()
 	});
 }
 
-function backendName()
-{
 
-	out_clear();
-	agent.out =  + agent.out.backend.name + "\n";
-	
-	out_be();
-}
-
-function out_be()
-{
-	document.getElementById("name_backend").innerHTML = agent.out;
-
-}
-
-function list_backends()
-{
-    $.ajax({
-	type: "GET",
-	url: urlPrefix() + "/backendjson/",
-	timeout: agent.globaltimeout,
-	dataType: "text",
-	success: function (data, textStatus, jqXHR) {
-	    var json = JSON.parse(data);
-	    var list = document.getElementById("name_backend");
-	    var arry = new Array();
-
-	    for (x in json.backends) {
-		arry.push(json.backends[x].name);
-		
-		arry.push("\n");
-		console.log(json.backends[x].name);
-	    }
-	    agent.out = arry.join(" ");
-	    out_be();
-	},
-	error: function (jqXHR, textStatus, errorThrown) {
-	    agent.out = "Failed to list!\n" + errorThrown;
-	    out_be();
-	}
-    });	
-    
-}
 
 function banList()
 {
@@ -801,3 +759,84 @@ updateTop();
 listVCL();
 list_params();
 getVersion();
+
+function render_be_set() {
+    for(i= 0; i< 3; i++) {
+	create_bar_be();
+    }
+}
+
+function create_bar_be(){
+    var lu_0 = document.createElement('lu');
+    var li_0 = document.createElement('li');
+    var input_paramVal = document.createElement('input');
+    input_paramVal.placeholder = "Backend admin health";
+    input_paramVal.id = "param-val";
+    input_paramVal.type = "text";
+    li_0.appendChild( input_paramVal );
+    var button_0 = document.createElement('button');
+    button_0.type = "submit";
+    button_0.className = "btn btn-primary";
+    button_0.appendChild( document.createTextNode("Save") );
+    li_0.appendChild( button_0 );
+    lu_0.appendChild( li_0 );
+    document.getElementById("backend-val").appendChild( lu_0 );
+}
+
+
+
+function list_backends()
+{
+    $.ajax({
+	type: "GET",
+	url: urlPrefix() + "/backendjson/",
+	timeout: agent.globaltimeout,
+	dataType: "text",
+	success: function (data, textStatus, jqXHR) {
+	    var json = JSON.parse(data);
+	    var list = document.getElementById("name_backend");
+	    var arry = new Array();
+	    var health= new Array();
+	    for (x in json.backends) {
+		arry.push(json.backends[x].name)+'<br />';
+		agent.out = arry[x];	   
+		out_be();
+	
+		health.push(json.backends[x].admin)+'<br />';
+		agent.out = health[x];	   
+		out_health();
+	    }
+	},
+	error: function (jqXHR, textStatus, errorThrown) {
+	    agent.out = "Failed to list!\n" + errorThrown;
+	    out_be();
+	}
+    });	
+    
+}
+
+function backendName()
+{
+	out_clear();
+	agent.out =  + agent.out.backend.name + "\n";
+	
+	out_be();
+}
+
+function out_health(){
+    var lu_1 = document.createElement('lu');
+    var li_1 = document.createElement('li');
+    li_1.appendChild( document.createTextNode(agent.out) );
+    lu_1.appendChild( li_1 );
+    document.getElementById("health_backend").appendChild( lu_1 );
+}
+
+function out_be()
+{  
+    var lu_0 = document.createElement('lu');
+    var li_0 = document.createElement('li');
+    li_0.appendChild( document.createTextNode(agent.out) );
+    lu_0.appendChild( li_0 );
+    document.getElementById("name_backend").appendChild( lu_0 );
+}
+
