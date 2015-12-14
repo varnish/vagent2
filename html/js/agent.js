@@ -359,18 +359,22 @@ function paramListDiff()
 	}
 	out_up();
 }
-
-function saveParam()
+/* to be fixed */
+function saveHealth()
 {
-	var pname = document.getElementById("param-sel").value;
-	var pval = document.getElementById("param-val").value;
-	assertText(pname);
-	assertText(pval);
-	out_clear();
+    //var pname = document.getElementById("name_backend");
+    //console.log(pname);
+    //	var pval = document.getElementById("backend-val").value;
+    //console.log(pval);
+    pname = "default";
+    pval = "sick";
+    assertText(pname);
+    assertText(pval);
+    out_clear();
 
 	$.ajax({
 		type: "PUT",
-		url: urlPrefix() + "/param/"+pname,
+		url: urlPrefix() + "/backend/"+pname,
 		timeout: agent.globaltimeout,
 		contentType: "application/xml",
 		data: pval,
@@ -379,7 +383,7 @@ function saveParam()
 			out_up();
 			if (jqXHR.status == 200) {
 				show_status("ok","Parameter saved");
-				list_params();
+				list_backends();
 			} else {
 				show_status("warn","Couldn't save parameter");
 			}
@@ -771,11 +775,12 @@ function create_bar_be(){
     var li_0 = document.createElement('li');
     var input_paramVal = document.createElement('input');
     input_paramVal.placeholder = "Backend admin health";
-    input_paramVal.id = "param-val";
+    input_paramVal.id = "backend-val";
     input_paramVal.type = "text";
     li_0.appendChild( input_paramVal );
     var button_0 = document.createElement('button');
     button_0.type = "submit";
+    button_0.onclick = saveHealth;
     button_0.className = "btn btn-primary";
     button_0.appendChild( document.createTextNode("Save") );
     li_0.appendChild( button_0 );
@@ -838,5 +843,32 @@ function out_be()
     li_0.appendChild( document.createTextNode(agent.out) );
     lu_0.appendChild( li_0 );
     document.getElementById("name_backend").appendChild( lu_0 );
+}
+
+function saveParam()
+{
+	var pname = document.getElementById("param-sel").value;
+	var pval = document.getElementById("param-val").value;
+	assertText(pname);
+	assertText(pval);
+	out_clear();
+
+	$.ajax({
+		type: "PUT",
+		url: urlPrefix() + "/backend/"+pname,
+		timeout: agent.globaltimeout,
+		contentType: "application/xml",
+		data: pval,
+		complete: function( jqXHR, textStatus) {
+			agent.out = jqXHR.responseText;
+			out_up();
+			if (jqXHR.status == 200) {
+				show_status("ok","Parameter saved");
+				list_params();
+			} else {
+				show_status("warn","Couldn't save parameter");
+			}
+		}
+	});
 }
 
