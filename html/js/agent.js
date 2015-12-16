@@ -362,10 +362,10 @@ function paramListDiff()
 /* to be fixed */
 function saveHealth()
 {
-    //var pname = document.getElementById("name_backend");
-    //console.log(pname);
-    //	var pval = document.getElementById("backend-val").value;
-    //console.log(pval);
+    var pname = document.getElementById("name_backend");
+    console.log(pname);
+    var pval = document.getElementById("backend-val").value;
+    console.log(pval);
     pname = "default";
     pval = "sick";
     assertText(pname);
@@ -765,6 +765,8 @@ list_params();
 getVersion();
 
 function render_be_set() {
+    document.getElementById("health_backend").innerHTML= "";
+    document.getElementById("backend-val").innerHTML= "";
     for(i= 0; i< 3; i++) {
 	create_bar_be();
     }
@@ -802,6 +804,8 @@ function list_backends()
 	    var list = document.getElementById("name_backend");
 	    var arry = new Array();
 	    var health= new Array();
+	    document.getElementById("name_backend").innerHTML= "";
+
 	    for (x in json.backends) {
 		arry.push(json.backends[x].name)+'<br />';
 		agent.out = arry[x];	   
@@ -837,7 +841,7 @@ function out_health(){
 }
 
 function out_be()
-{  
+{
     var lu_0 = document.createElement('lu');
     var li_0 = document.createElement('li');
     li_0.appendChild( document.createTextNode(agent.out) );
