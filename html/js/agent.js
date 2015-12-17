@@ -69,7 +69,7 @@ function out_up()
 
 function topActive(head)
 {
-	var navs = new Array('nav-home', 'nav-vcl', 'nav-param');
+	var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-backend');
 	assertText(head);
 
 	for (x in navs) {
@@ -359,36 +359,35 @@ function paramListDiff()
 	}
 	out_up();
 }
-/* to be fixed */
+
 function saveHealth()
 {
-    var pname = document.getElementById("name_backend");
-    console.log(pname);
-    var pval = document.getElementById("backend-val").value;
-    console.log(pval);
-    pname = "default";
-    pval = "sick";
-    assertText(pname);
-    assertText(pval);
+    var tuple = new Array();
+    var keyVal = new Array();
+    var pkeyval = document.getElementById("name-health").value;
+    tuple=pkeyval.split(",");
     out_clear();
-
+    for(x in tuple) {
+	keyVal = tuple[x].split(":");
 	$.ajax({
-		type: "PUT",
-		url: urlPrefix() + "/backend/"+pname,
-		timeout: agent.globaltimeout,
-		contentType: "application/xml",
-		data: pval,
-		complete: function( jqXHR, textStatus) {
-			agent.out = jqXHR.responseText;
-			out_up();
-			if (jqXHR.status == 200) {
-				show_status("ok","Parameter saved");
-				list_backends();
-			} else {
-				show_status("warn","Couldn't save parameter");
-			}
+	    type: "PUT",
+	    url: urlPrefix() + "/backend/"+keyVal[0],
+	    timeout: agent.globaltimeout,
+	    contentType: "application/xml",
+	    data: keyVal[1],
+	    complete: function( jqXHR, textStatus) {
+		agent.out = jqXHR.responseText;
+		out_up();
+		if (jqXHR.status == 200) {
+		    show_status("ok","Admin status saved");
+		    list_backends();
+		} else {
+		    show_status("warn","Couldn't save admin status");
 		}
+	    }
 	});
+	x++;
+    }
 }
 
 function setParamDef()
@@ -763,34 +762,25 @@ updateTop();
 listVCL();
 list_params();
 getVersion();
-
-function render_be_set() {
-    document.getElementById("health_backend").innerHTML= "";
-    document.getElementById("backend-val").innerHTML= "";
-    for(i= 0; i< 3; i++) {
-	create_bar_be();
-    }
-}
+setInterval(function(){list_backends()},1000)
 
 function create_bar_be(){
-    var lu_0 = document.createElement('lu');
-    var li_0 = document.createElement('li');
-    var input_paramVal = document.createElement('input');
-    input_paramVal.placeholder = "Backend admin health";
-    input_paramVal.id = "backend-val";
-    input_paramVal.type = "text";
-    li_0.appendChild( input_paramVal );
-    var button_0 = document.createElement('button');
-    button_0.type = "submit";
-    button_0.onclick = saveHealth;
-    button_0.className = "btn btn-primary";
-    button_0.appendChild( document.createTextNode("Save") );
-    li_0.appendChild( button_0 );
-    lu_0.appendChild( li_0 );
-    document.getElementById("backend-val").appendChild( lu_0 );
+    var form_frm1 = document.createElement('form');
+    form_frm1.id = "frm1";
+    form_frm1.action = "form_action.asp";
+    var input_0 = document.createElement('input');
+    input_0.name = "fname";
+    input_0.type = "text";
+    input_0.id= "name-health"
+    input_0.placeholder = "Backend admin health";
+    form_frm1.appendChild( input_0 );
+    var input_1 = document.createElement('input');
+    input_1.onclick = saveHealth;
+    input_1.value = "Submit";
+    input_1.type = "button";
+    form_frm1.appendChild( input_1 );
+    document.getElementById("backend-val").appendChild( form_frm1 );
 }
-
-
 
 function list_backends()
 {
@@ -805,15 +795,16 @@ function list_backends()
 	    var arry = new Array();
 	    var health= new Array();
 	    document.getElementById("name_backend").innerHTML= "";
-
+	    document.getElementById("health_backend").innerHTML= "";
 	    for (x in json.backends) {
 		arry.push(json.backends[x].name)+'<br />';
 		agent.out = arry[x];	   
 		out_be();
-	
+		
 		health.push(json.backends[x].admin)+'<br />';
 		agent.out = health[x];	   
 		out_health();
+
 	    }
 	},
 	error: function (jqXHR, textStatus, errorThrown) {
@@ -828,25 +819,25 @@ function backendName()
 {
 	out_clear();
 	agent.out =  + agent.out.backend.name + "\n";
-	
 	out_be();
 }
 
-function out_health(){
-    var lu_1 = document.createElement('lu');
-    var li_1 = document.createElement('li');
-    li_1.appendChild( document.createTextNode(agent.out) );
-    lu_1.appendChild( li_1 );
-    document.getElementById("health_backend").appendChild( lu_1 );
+function out_health()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("health_backend").appendChild( tr_0 );
 }
 
 function out_be()
 {
-    var lu_0 = document.createElement('lu');
-    var li_0 = document.createElement('li');
-    li_0.appendChild( document.createTextNode(agent.out) );
-    lu_0.appendChild( li_0 );
-    document.getElementById("name_backend").appendChild( lu_0 );
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("name_backend").appendChild( tr_0 );
 }
 
 function saveParam()
