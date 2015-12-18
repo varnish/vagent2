@@ -204,7 +204,7 @@
 	      repository</a>.</p>
   	    </div>
 	  </div>
-	  <div class="span12" id="backend" style="DISPLAY:none">
+	  <div  id="backend" style="DISPLAY:none">
 	    <div class="span8">
 	      <table class="table">
 		<thead>
@@ -221,9 +221,18 @@
 		</tbody>
 	      </table>
 	    </div>
-	    <div id="backend-val" class="span4">
-               <a href="#" onclick="create_bar_be()">Change Admin Health backend</a>
-	    </div>
+	    <div class="span3">
+	      <h1>N.B.</h1>
+	      <p>Beta version.</p>
+	      <p>If you want to toggle on/off one or more backend(s),
+		the syntax tha needs to be used is very json like.
+		E.G. name:value,name2:value2
+	      </p>
+	      <div class="input-append">
+	        <input type="text" id="name-health" placeholder="name:value,name:value"/>
+	        <button type=submit class="btn btn-primary" onclick="saveHealth()">Save</button>
+	      </div><!--input append -->
+            </div><!--/span-->
 	  </div>
 	</div><!--/row-->
       </div><!--/.fluid-container-->
