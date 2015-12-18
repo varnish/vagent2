@@ -542,6 +542,7 @@ function calculate_client_req(version, now, previous) {
 	}
 }
 
+
 function update_stats()
 {
 	var d = document.getElementById("stats-btn");
@@ -553,6 +554,8 @@ function update_stats()
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
+		    
+		    be_bytes(data);
 			for (i = 0; i < 3; i++) {
 				agent.stats[i] = agent.stats[i+1];
 				}
@@ -764,7 +767,7 @@ list_params();
 getVersion();
 setInterval(function(){list_backends()},1000)
 
-function create_bar_be(){
+/*function create_bar_be(){
     document.getElementById("backend-val").innerHTML= "";
     var form_frm1 = document.createElement('form');
     form_frm1.id = "frm1";
@@ -781,7 +784,7 @@ function create_bar_be(){
     input_1.type = "button";
     form_frm1.appendChild( input_1 );
     document.getElementById("backend-val").appendChild( form_frm1 );
-}
+}*/
 
 function list_backends()
 {
@@ -823,11 +826,50 @@ function list_backends()
     
 }
 
+function be_bytes(data)
+{
+    var arry = Array();
+    var arry2 = Array();
+    var json = JSON.parse(data);
+    document.getElementById("bereq_backend").innerHTML= "";
+    document.getElementById("beresp_backend").innerHTML= "";
+
+    for (x in json.be_bytes) {
+
+	arry.push(json.be_bytes[x].bereq_tot)+'<br />';
+	agent.out = arry[x];	   
+	out_bereq();
+	
+	arry2.push(json.be_bytes[x].beresp_tot)+'<br />';
+	agent.out = arry2[x];	   
+	out_beresp();
+	
+    }
+}
+
 function backendName()
 {
 	out_clear();
 	agent.out =  + agent.out.backend.name + "\n";
 	out_be();
+}
+
+function out_bereq()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("bereq_backend").appendChild( tr_0 );
+}
+
+function out_beresp()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("beresp_backend").appendChild( tr_0 );
 }
 
 function out_probe()
