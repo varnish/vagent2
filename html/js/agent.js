@@ -757,34 +757,7 @@ function getVersion()
 		}
 	});
 }
-$('.btn').button();
-setInterval(function(){status()},10000);
-setInterval(function(){update_stats()},agent.statsInterval * 1000);
-setInterval(function(){updateTop()},5000);
-updateTop();
-listVCL();
-list_params();
-getVersion();
-setInterval(function(){list_backends()},1000)
 
-/*function create_bar_be(){
-    document.getElementById("backend-val").innerHTML= "";
-    var form_frm1 = document.createElement('form');
-    form_frm1.id = "frm1";
-    form_frm1.action = "form_action.asp";
-    var input_0 = document.createElement('input');
-    input_0.name = "fname";
-    input_0.type = "text";
-    input_0.id= "name-health"
-    input_0.placeholder = "name:value,name:value";
-    form_frm1.appendChild( input_0 );
-    var input_1 = document.createElement('input');
-    input_1.onclick = saveHealth;
-    input_1.value = "Save";
-    input_1.type = "button";
-    form_frm1.appendChild( input_1 );
-    document.getElementById("backend-val").appendChild( form_frm1 );
-}*/
 
 function list_backends()
 {
@@ -926,3 +899,12 @@ function saveParam()
 	});
 }
 
+$('.btn').button();
+setInterval(function(){status()},10000);
+setInterval(function(){update_stats()},agent.statsInterval * 1000);
+setInterval(function(){updateTop()},5000);
+updateTop();
+listVCL();
+list_params();
+getVersion();
+setInterval(function(){list_backends()},1000)
