@@ -41,7 +41,7 @@
 
 #define BACKENDS_HELP \
 "GET /backendsjson/ - fetches a list of backends and values\n" \
-"PUT /backends/foo - Takes a single value as input (e.g: 1000) and let you change the admin health value\n" \
+"PUT /backend/foo - Takes a single value as input (e.g: 1000) and let you change the admin health value\n" \
 "For more trick go to the HTML backend page\n"
 
 char* format_line(char*);
