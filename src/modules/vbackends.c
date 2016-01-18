@@ -60,7 +60,7 @@ struct backend_opt {
 
 char *format_line(char* line)
 {
-	struct backend_opt backend = {0};
+	struct backend_opt backend = {};
 	char *out = NULL, *ptr;
 	int state = 0;
 
