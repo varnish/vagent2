@@ -13,6 +13,7 @@ Requires(post): systemd-sysv
 Requires(preun): systemd-units
 Requires(postun): systemd-units
 BuildRequires: systemd-units
+BuildRequires: varnish >= 4.1.0
 %endif
 
 %if 0%{?el5}
