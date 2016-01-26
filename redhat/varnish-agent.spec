@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 4.0.0
+Version: 4.1.0
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -90,6 +90,10 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+
+* Tue Jan 26 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.0
+- Compatible with varnish >= 4.1.0
+
 * Mon May 19 2014 Yves Hwang <yveshwang@gmail.com> - 4.0.0
 - Compatible with varnish >= 4.0.0
 
