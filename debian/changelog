@@ -1,3 +1,9 @@
+varnish-agent (4.1.0) unstable; urgency=low
+
+  * Compatible with varnish >= 4.1.0
+
+ -- Hugo Cruz <hugocruz.software.developer@gmail.com>  Tue, Jan 26 2016 11:26:14 +0100
+
 varnish-agent (4.0.0) unstable; urgency=low
 
   * Compatible with varnish >= 4.0.0
