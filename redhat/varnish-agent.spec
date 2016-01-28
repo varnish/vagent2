@@ -7,6 +7,7 @@ Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Requires: varnish
+Requires: strace
 %if 0%{?fedora} >= 17 || 0%{?rhel} >= 7
 Requires(post): systemd-units
 Requires(post): systemd-sysv
