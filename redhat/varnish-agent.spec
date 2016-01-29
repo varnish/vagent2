@@ -12,8 +12,9 @@ Requires(post): systemd-units
 Requires(post): systemd-sysv
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-BuildRequires: systemd-units
+BuildRequires: systemd-unitss
 BuildRequires: strace
+BuildRequires: varnish
 %endif
 
 %if 0%{?el5}
