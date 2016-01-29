@@ -12,7 +12,7 @@ Requires(post): systemd-units
 Requires(post): systemd-sysv
 Requires(preun): systemd-units
 Requires(postun): systemd-units
-BuildRequires: systemd-unitss
+BuildRequires: systemd-units
 BuildRequires: strace
 BuildRequires: varnish
 %endif
