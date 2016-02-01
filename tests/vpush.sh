@@ -7,7 +7,7 @@ fi
 . util.sh
 init_all
 
-test_it PUT "push/url/stats" "http://pathfinder.kly.no/" "Url stored"
+test_it PUT "push/url/stats" "http://localhost:${VARNISH_PORT}/" "Url stored"
 is_running
 test_it PUT "push/test/stats" "" "Stats pushed"
 test_it PUT "push/url/stats" "http://localhost:${AGENT_PORT}/echo" "Url stored"
