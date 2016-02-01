@@ -230,6 +230,7 @@ start_agent() {
 	debug_out "Agent args: $ARGS"
 	if [ "x$STRACE_AGENT" = "xy" ]; then
 		strace -f -o ${TMPDIR}/agent-strace $ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT &
+		sleep 1
 	else
 		$ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
 	fi
