@@ -1,5 +1,5 @@
 SUBDIRS = include src tests
-EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst debian tests redhat
+EXTRA_DIST = autogen.sh include html INSTALL.rst README.rst debian tests redhat LICENSE NEWS.rst THANKS
 AUTOMAKE_OPTIONS=-Wno-portability -Wno-override
 
 # html/
