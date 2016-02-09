@@ -17,8 +17,9 @@ BuildRequires: strace
 BuildRequires: varnish
 %endif
 
-%if 0%{?rhel} >= 6
+%if 0%{?rhel} = 6
 BuildRequires: strace
+BuildRequires: varnish
 %endif
 
 %if 0%{?el5}
