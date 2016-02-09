@@ -17,15 +17,10 @@ BuildRequires: strace
 BuildRequires: varnish
 %endif
 
-%if 0%{?rhel} = 6
-BuildRequires: strace
-BuildRequires: varnish
-%endif
-
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel
 %else
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel
+BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel strace
 %endif
 
 %description
