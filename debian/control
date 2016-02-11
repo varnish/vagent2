@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
  netcat-openbsd,
- libvarnishapi-dev (>= 4.0),
+ libvarnishapi-dev (>= 4.1),
  pkg-config,
  libmicrohttpd-dev,
  python-docutils,
