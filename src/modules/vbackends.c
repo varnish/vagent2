@@ -61,7 +61,7 @@ struct backend_opt {
 char *format_line(char* line)
 {
 	struct backend_opt backend = {};
-	char *out = NULL, *ptr;
+	char *out = NULL, *ptr = NULL;
 	int state = 0;
 
 	backend.name = strtok_r(line, " ", &ptr);
@@ -86,7 +86,7 @@ static char *vbackends_show_json(char *raw)
 {
 	char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
 	struct vsb *final= VSB_new_auto();
-	char *tokens, *ptr;
+	char *tokens = NULL, *ptr = NULL;
 	char tmp[1000];
 	int raw_len = 0;
 	int state = 0;
@@ -125,7 +125,7 @@ static void backends_json(struct http_request *request,
     struct vbackends_priv_t *vbackends)
 {
 	struct ipc_ret_t vret;
-	char *tmp;
+	char *tmp = NULL;
 	ipc_run(vbackends->vadmin, &vret, "backend.list");
 	if (vret.status == 200) {
 		tmp = vbackends_show_json(vret.answer);
@@ -143,11 +143,11 @@ static void backends_json(struct http_request *request,
 
 static unsigned int vbackends_reply(struct http_request *request, void *data)
 {
-	const char *arg;
+	const char *arg = NULL;
 	struct agent_core_t *core = data;
 	struct agent_plugin_t *plug;
 	struct vbackends_priv_t *vbackends;
-	char *body;
+	char *body = NULL;
 
 	plug = plugin_find(core,"vbackends");
 	vbackends = plug->data;
