@@ -9,6 +9,8 @@
     <link href="../html/css/bootstrap.min.css" rel="stylesheet">
     <link href="../html/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href="../html/css/slider.css" rel="stylesheet">
+    <link href="../html/css/bootstrap-switch.min.css" rel="stylesheet">
+    <link href="../html/css/switch.css" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -47,8 +49,9 @@
 	     href="http://github.com/varnish/vagent2/"
 	     id="agentVersion" class="navbar-link"></a></p>
             <ul class="nav">
-	      <li class="active"id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
+	      <li class="active" id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
 	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
+	      <li id="nav-backend"><a href="#backend" onclick="showBackend()">Backend</a></li>
               <li id="nav-home"><a href="#about" onclick="showHome()">About</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -201,10 +204,43 @@
 	      repository</a>.</p>
   	    </div>
 	  </div>
-	</div>
-      </div><!--/row-->
-    </div><!--/.fluid-container-->
-  </div>
+	  <div  id="backend" style="DISPLAY:none">
+	    <div class="span8">
+	      <table class="table">
+		<thead>
+		  <tr>
+		    <th>Backend</th>
+		    <th>Admin Health</th>
+		    <th>Probe Health</th>
+		    <th>Bereq_bytes</th>
+		    <th>Beresp_bytes</th>
+		  </tr>
+		</thead>
+		<tbody>
+		  <td id="name_backend"></td>
+		  <td id="health_backend"></td>
+		  <td id="probe_backend"></td>
+		  <td id="bereq_backend"></td>
+		  <td id="beresp_backend"></td>
+		</tbody>
+	      </table>
+	    </div>
+	    <div class="span3">
+	      <h1>N.B.</h1>
+	      <p>Beta version.</p>
+	      <p>If you want to toggle on/off one or more backend(s),
+		the syntax that needs to be used is very json like.
+		E.G. name:value,name2:value2
+	      </p>
+	      <div class="input-append">
+	        <input type="text" id="name-health" placeholder="name:value,name:value"/>
+	        <button type=submit class="btn btn-primary" onclick="saveHealth()">Save</button>
+	      </div><!--input append -->
+            </div><!--/span-->
+	  </div>
+	</div><!--/row-->
+      </div><!--/.fluid-container-->
+    </div>
     <script src="../html/js/jquery-1.10.2.min.js"></script>
     <script src="../html/js/bootstrap.min.js"></script>
     <script src="../html/js/agent.js"></script>
