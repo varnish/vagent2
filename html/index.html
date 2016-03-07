@@ -25,7 +25,7 @@
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
 
-  </head>
+  <style type="text/css"></style></head>
   <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
@@ -50,6 +50,8 @@
 	      <li class="active"id="nav-param"><a href="#params" onclick="showParam()">Home</a></li>
 	      <li id="nav-vcl"><a href="#VCL" onclick="showVCL()">VCL</a></li>
               <li id="nav-varnishstatview"><a href="#varnishstatview" onclick="showVarnishstat()">Varnishstat</a></li>
+	      <li id="nav-backend"><a href="#backend" onclick="showBackend()">Backend</a></li>
+
               <li id="nav-home"><a href="#about" onclick="showHome()">About</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -203,7 +205,43 @@
   	    </div>
 	  </div>
 	</div>
-      </div><!--/row-->
+	</div><!---row--->
+          <div  id="backend" style="DISPLAY:none">
+	    <div class="row-fluid">
+            <div class="span8">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Backend</th>
+                    <th>Admin Health</th>
+                    <th>Probe Health</th>
+                    <th>Bereq_bytes</th>
+                    <th>Beresp_bytes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <td id="name_backend"></td>
+                  <td id="health_backend"></td>
+                  <td id="probe_backend"></td>
+                  <td id="bereq_backend"></td>
+                  <td id="beresp_backend"></td>
+                </tbody>
+              </table>
+            </div>
+            <div class="span3">
+              <h1>N.B.</h1>
+              <p>Beta version.</p>
+              <p>If you want to toggle on/off one or more backend(s),
+                the syntax that needs to be used is very json like.
+                E.G. name:value,name2:value2
+              </p>
+              <div class="input-append">
+                <input type="text" id="name-health" placeholder="name:value,name:value"/>
+                <button type=submit class="btn btn-primary" onclick="saveHealth()">Save</button>
+              </div><!--input append -->
+            </div><!--/span-->
+          </div>
+	  </div>
       <div id="varnishstatview" style="DISPLAY: none">
         <div class="row-fluid" >
           <div class="span6">
@@ -261,8 +299,7 @@
             Toggle spark lines
           </button>
           <div id="varnishstat">
-            <div id="varnishstat-inner">
-            </div>
+            <div id="varnishstat-inner"></div>
           </div>
         </div>
     </div><!--/.fluid-container-->

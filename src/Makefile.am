@@ -28,7 +28,8 @@ varnish_agent_SOURCES = \
 	modules/curl.c \
 	modules/vdirect.c \
 	modules/vlog.c \
-	modules/vac_register.c
+	modules/vac_register.c \
+	modules/vbackends.c
 
 varnish_agent_LDADD = \
 	@VARNISHAPI_LIBS@ \

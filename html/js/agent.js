@@ -69,7 +69,7 @@ function out_up()
 
 function topActive(head)
 {
-	var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-varnishstatview');
+	var navs = new Array('nav-home', 'nav-vcl', 'nav-param', 'nav-backend', 'nav-varnishstatview');
 	assertText(head);
 
 	for (x in navs) {
@@ -83,6 +83,7 @@ function showVCL()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
+        document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
@@ -94,10 +95,22 @@ function showHome()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
+        document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
 	topActive("home");
+}
+
+function showBackend()
+{
+        document.getElementById("params").style.display = "NONE";
+        document.getElementById("home").style.display = "NONE";
+        document.getElementById("vcl").style.display = "NONE";
+        document.getElementById("backend").style.display = "block";
+	document.getElementById("varnishstatview").style.display = "NONE";
+	document.getElementById("mainblock").style.display = "NONE";
+        topActive("backend");
 }
 
 function showVarnishstat()
@@ -105,6 +118,7 @@ function showVarnishstat()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "NONE";
+        document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "block";
 	document.getElementById("mainblock").style.display = "NONE";
 	topActive("varnishstatview");
@@ -116,6 +130,7 @@ function showParam()
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
+        document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
@@ -367,6 +382,36 @@ function paramListDiff()
 	out_up();
 }
 
+function saveHealth()
+{
+    var tuple = new Array();
+    var keyVal = new Array();
+    var pkeyval = document.getElementById("name-health").value;
+    tuple=pkeyval.split(",");
+    out_clear();
+    for(x in tuple) {
+        keyVal = tuple[x].split(":");
+        $.ajax({
+            type: "PUT",
+            url: urlPrefix() + "/backend/"+keyVal[0],
+            timeout: agent.globaltimeout,
+            contentType: "application/xml",
+            data: keyVal[1],
+            complete: function( jqXHR, textStatus) {
+                agent.out = jqXHR.responseText;
+                out_up();
+                if (jqXHR.status == 200) {
+                    show_status("ok","Admin status saved");
+                    list_backends();
+                } else {
+                    show_status("warn","Couldn't save admin status");
+                }
+            }
+        });
+        x++;
+    }
+}
+
 function saveParam()
 {
 	var pname = document.getElementById("param-sel").value;
@@ -557,6 +602,7 @@ function update_stats()
 		timeout: agent.globaltimeout,
 		dataType: "text",
 		success: function (data, textStatus, jqXHR) {
+		    be_bytes(data);
 			for (i = 0; i < 3; i++) {
 				agent.stats[i] = agent.stats[i+1];
 				}
@@ -756,6 +802,149 @@ function getVersion()
 		}
 	});
 }
+
+function list_backends()
+{
+    $.ajax({
+        type: "GET",
+        url: urlPrefix() + "/backendjson/",
+        timeout: agent.globaltimeout,
+        dataType: "text",
+        success: function (data, textStatus, jqXHR) {
+            var json = JSON.parse(data);
+            var list = document.getElementById("name_backend");
+            var arry = new Array();
+            var health = new Array();
+            var probe = new Array();
+            document.getElementById("name_backend").innerHTML= "";
+            document.getElementById("health_backend").innerHTML= "";
+            document.getElementById("probe_backend").innerHTML= "";
+
+            for (x in json.backends) {
+	        arry.push(json.backends[x].name)+'<br />';
+                agent.out = arry[x];
+                out_be();
+
+                health.push(json.backends[x].admin)+'<br />';
+                agent.out = health[x];
+                out_health();
+
+                probe.push(json.backends[x].probe)+'<br />';
+                agent.out = probe[x];
+                out_probe();
+
+            }
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            agent.out = "Failed to list!\n" + errorThrown;
+            out_be();
+        }
+    });
+}
+
+function be_bytes(data)
+{
+    var arry = Array();
+    var arry2 = Array();
+    var json = JSON.parse(data);
+    document.getElementById("bereq_backend").innerHTML= "";
+    document.getElementById("beresp_backend").innerHTML= "";
+
+    for (x in json.be_bytes) {
+
+        arry.push(json.be_bytes[x].bereq_tot)+'<br />';
+        agent.out = arry[x];
+        out_bereq();
+
+        arry2.push(json.be_bytes[x].beresp_tot)+'<br />';
+        agent.out = arry2[x];
+        out_beresp();
+
+    }
+}
+
+function backendName()
+{
+        out_clear();
+        agent.out =  + agent.out.backend.name + "\n";
+        out_be();
+}
+
+function out_bereq()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("bereq_backend").appendChild( tr_0 );
+}
+
+function out_beresp()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("beresp_backend").appendChild( tr_0 );
+}
+
+function out_probe()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("probe_backend").appendChild( tr_0 );
+}
+
+function out_health()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("health_backend").appendChild( tr_0 );
+}
+
+
+
+function out_be()
+{
+    var tr_0 = document.createElement('tr');
+    var td_0 = document.createElement('td');
+    td_0.appendChild( document.createTextNode(agent.out) );
+    tr_0.appendChild( td_0 );
+    document.getElementById("name_backend").appendChild( tr_0 );
+}
+
+function saveParam()
+{
+        var pname = document.getElementById("param-sel").value;
+        var pval = document.getElementById("param-val").value;
+        assertText(pname);
+        assertText(pval);
+        out_clear();
+
+        $.ajax({
+                type: "PUT",
+                url: urlPrefix() + "/backend/"+pname,
+                timeout: agent.globaltimeout,
+                contentType: "application/xml",
+                data: pval,
+                complete: function( jqXHR, textStatus) {
+                        agent.out = jqXHR.responseText;
+                        out_up();
+                        if (jqXHR.status == 200) {
+                                show_status("ok","Parameter saved");
+                                list_params();
+                        } else {
+                                show_status("warn","Couldn't save parameter");
+                        }
+                }
+        });
+}
+
+
 $('.btn').button();
 setInterval(function(){status()},10000);
 setInterval(function(){update_stats()},agent.statsInterval * 1000);
@@ -764,3 +953,4 @@ updateTop();
 listVCL();
 list_params();
 getVersion();
+setInterval(function(){list_backends()},1000)
