@@ -50,6 +50,11 @@
 #include "ipc.h"
 #include "plugins.h"
 #include "vsb.h"
+int cont = 0;
+uint64_t  beresp_hdr = 0, beresp_body = 0;
+uint64_t  bereq_hdr = 0, bereq_body = 0;
+int n_be = 0;
+int creepy_math(void *priv, const struct VSC_point *const pt);
 
 /*
  * There are two threads: The http-replier and the background timer for
@@ -107,6 +112,51 @@ do_json_cb(void *priv, const struct VSC_point * const pt)
 	return (0);
 }
 
+int
+creepy_math(void *priv, const struct VSC_point *const pt)
+{
+        const struct VSC_section *sec;
+        uint64_t val;
+
+        struct vsb *out_vsb = priv;
+
+        if (pt == NULL)
+                return (0);
+
+        val = *(const volatile uint64_t *)pt->ptr;
+        sec = pt->section;
+        if(!strcmp(sec->fantom->type,"MAIN")){
+                if(!strcmp(pt->desc->name, "n_backend")){
+                        n_be = (int)val;
+                }
+        }
+        if (!strcmp(sec->fantom->type, "VBE")) {
+                if(!strcmp(pt->desc->name, "bereq_hdrbytes"))
+                        bereq_hdr = val;
+                if(!strcmp(pt->desc->name, "bereq_bodybytes")) {
+                        bereq_body = val;
+                        VSB_cat(out_vsb, "{\"ident\":\"");
+                        VSB_cat(out_vsb, pt->section->fantom->ident);
+                        VSB_printf(out_vsb,"\", \"bereq_tot\": %" PRIu64 ",",
+                            bereq_body + bereq_hdr);
+                }
+
+                if(!strcmp(pt->desc->name, "beresp_hdrbytes"))
+                        beresp_hdr = val;
+                if(!strcmp(pt->desc->name, "beresp_bodybytes")) {
+                        beresp_body = val;
+                        VSB_printf(out_vsb,"\"beresp_tot\": %" PRIu64 "}",
+                            beresp_body + beresp_hdr);
+                        if(cont < (n_be - 1)) {
+                                VSB_cat(out_vsb, ",\n\t\t");
+                              cont++;
+                        }
+                }
+        }
+        return(0);
+}
+
+
 static void
 do_json(struct VSM_data *vd, struct vsb *out_vsb)
 {
@@ -118,6 +168,11 @@ do_json(struct VSM_data *vd, struct vsb *out_vsb)
 	(void)strftime(time_stamp, 20, "%Y-%m-%dT%H:%M:%S", localtime(&now));
 	VSB_printf(out_vsb, "{\n\t\"timestamp\": \"%s\"", time_stamp);
 	(void)VSC_Iter(vd, NULL, do_json_cb, out_vsb);
+ VSB_cat(out_vsb, ",\n\t\"be_bytes\": [");
+        (void)VSC_Iter(vd, NULL, creepy_math, out_vsb);
+        VSB_cat(out_vsb, "]\n");
+        cont= 0;
+
 	VSB_printf(out_vsb, "\n}\n");
 	assert(VSB_finish(out_vsb) == 0);
 }
