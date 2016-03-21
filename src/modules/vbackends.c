@@ -65,7 +65,6 @@ char *format_line(char* line)
         int state = 0;
 
         backend.name = strtok_r(line, " ", &ptr);
-	// backend.ref = strtok_r(NULL, " ",&ptr);
         backend.admin = strtok_r(NULL, " ",&ptr);
         backend.probe =  strtok_r(NULL, "\n",&ptr);
 
@@ -84,7 +83,8 @@ static char *vbackends_show_json(char *raw)
 {
         char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
         struct vsb *final= VSB_new_auto();
-        char *tokens, *ptr;
+	char *ptr = NULL;
+        char *tokens;
         char tmp[1000];
         int raw_len = 0;
         int state = 0;
