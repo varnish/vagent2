@@ -53,7 +53,6 @@ struct vbackends_priv_t {
 
 struct backend_opt {
         char *name;
-	// char *ref;
         char *admin;
         char *probe;
 };
@@ -64,8 +63,10 @@ char *format_line(char* line)
         char *out = NULL, *ptr;
         int state = 0;
 
+	if(line == NULL)
+		return NULL;
+
         backend.name = strtok_r(line, " ", &ptr);
-	// backend.ref = strtok_r(NULL, " ",&ptr);
         backend.admin = strtok_r(NULL, " ",&ptr);
         backend.probe =  strtok_r(NULL, "\n",&ptr);
 
