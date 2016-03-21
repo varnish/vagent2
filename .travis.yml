@@ -7,8 +7,8 @@ before_install:
   - sudo apt-get install apt-transport-https netcat-openbsd
     libcurl4-openssl-dev libmicrohttpd-dev libwww-perl python-demjson
     python-docutils
-  - git clone https://github.com/varnish/Varnish-Cache
-  - cd Varnish-Cache && ./autogen.sh && ./configure --prefix=/usr &&
+  - git clone https://github.com/varnishcache/varnish-cache
+  - cd varnish-cache && ./autogen.sh && ./configure --prefix=/usr &&
     make && sudo make install && cd ..
   - ./autogen.sh
 script:
