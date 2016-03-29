@@ -85,7 +85,7 @@ static char *vbackends_show_json(char *raw)
 {
         char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
         struct vsb *final= VSB_new_auto();
-        char *tokens, *ptr;
+        char *tokens = NULL, *ptr = NULL;
         char tmp[1000];
         int raw_len = 0;
         int state = 0;
