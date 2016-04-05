@@ -168,7 +168,7 @@ function reset_status()
 			}
 		}
 	});
-}	
+}
 
 function show_status(state,message)
 {
@@ -334,7 +334,7 @@ function list_params()
 			out_up();
 		}
 	});
-	
+
 }
 
 function paramChange()
@@ -465,7 +465,7 @@ function deployVCL()
 			clog("error");
 			clog(jqXHR);
 			clog(textStatus);
-			clog(errorThrown);	
+			clog(errorThrown);
 		},
 		complete: function( jqXHR, textStatus) {
 			if (jqXHR.status == "200") {
@@ -474,7 +474,7 @@ function deployVCL()
 			} else {
 				show_status("warn","vcl deploy failed");
 			}
-			out_up();	
+			out_up();
 		}
 	});
 }
@@ -607,7 +607,7 @@ function update_stats()
 				agent.stats[i] = agent.stats[i+1];
 				}
 			agent.stats[3] = JSON.parse(data);
-            
+
 			var n_req = 0;
 			var n_n_req = 0;
 			for (i = 3; agent.stats[i-1] != null; i--) {
@@ -822,15 +822,15 @@ function list_backends()
 
             for (x in json.backends) {
 	        arry.push(json.backends[x].name)+'<br />';
-                agent.out = arry[x];       
+                agent.out = arry[x];
                 out_be();
-                
+
                 health.push(json.backends[x].admin)+'<br />';
-                agent.out = health[x];     
+                agent.out = health[x];
                 out_health();
-                
+
                 probe.push(json.backends[x].probe)+'<br />';
-                agent.out = probe[x];      
+                agent.out = probe[x];
                 out_probe();
 
             }
@@ -839,7 +839,7 @@ function list_backends()
             agent.out = "Failed to list!\n" + errorThrown;
             out_be();
         }
-    }); 
+    });
 }
 
 function be_bytes(data)
@@ -853,13 +853,11 @@ function be_bytes(data)
     for (x in json.be_bytes) {
 
         arry.push(json.be_bytes[x].bereq_tot)+'<br />';
-        agent.out = arry[x];       
+        agent.out = arry[x];
         out_bereq();
-        
         arry2.push(json.be_bytes[x].beresp_tot)+'<br />';
-        agent.out = arry2[x];      
+        agent.out = arry2[x];
         out_beresp();
-        
     }
 }
 
