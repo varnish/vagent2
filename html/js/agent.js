@@ -83,7 +83,7 @@ function showVCL()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "block";
-        document.getElementById("backend").style.display = "NONE";
+    document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
@@ -95,7 +95,7 @@ function showHome()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "block";
 	document.getElementById("vcl").style.display = "NONE";
-        document.getElementById("backend").style.display = "NONE";
+    document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
@@ -104,10 +104,10 @@ function showHome()
 
 function showBackend()
 {
-        document.getElementById("params").style.display = "NONE";
-        document.getElementById("home").style.display = "NONE";
-        document.getElementById("vcl").style.display = "NONE";
-        document.getElementById("backend").style.display = "block";
+    document.getElementById("params").style.display = "NONE";
+    document.getElementById("home").style.display = "NONE";
+    document.getElementById("vcl").style.display = "NONE";
+    document.getElementById("backend").style.display = "block";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "NONE";
         topActive("backend");
@@ -118,7 +118,7 @@ function showVarnishstat()
 	document.getElementById("params").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("vcl").style.display = "NONE";
-        document.getElementById("backend").style.display = "NONE";
+    document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "block";
 	document.getElementById("mainblock").style.display = "NONE";
 	topActive("varnishstatview");
@@ -130,7 +130,7 @@ function showParam()
 	document.getElementById("vcl").style.display = "NONE";
 	document.getElementById("home").style.display = "NONE";
 	document.getElementById("params").style.display = "block";
-        document.getElementById("backend").style.display = "NONE";
+    document.getElementById("backend").style.display = "NONE";
 	document.getElementById("varnishstatview").style.display = "NONE";
 	document.getElementById("mainblock").style.display = "block";
 	stopVarnishstat();
@@ -569,11 +569,11 @@ function verify_varnish_stat(version, data) {
 function calculate_client_req(version, now, previous) {
 	if( verify_varnish_stat(version, previous)) {
 		if( version.indexOf("4.") != -1 ) {
-			return (now["MAIN.client_req"].value - previous["MAIN.client_req"].value)
-				+ (now["MAIN.client_req_400"].value - previous["MAIN.client_req_400"].value)
-				+ (now["MAIN.client_req_411"].value - previous["MAIN.client_req_411"].value)
-				+ (now["MAIN.client_req_413"].value - previous["MAIN.client_req_413"].value)
-				+ (now["MAIN.client_req_417"].value - previous["MAIN.client_req_417"].value);
+			return (now["MAIN.client_req"] !== undefined ? now["MAIN.client_req"].value - previous["MAIN.client_req"].value : null)
+				+ (now["MAIN.client_req_400"] !== undefined ? now["MAIN.client_req_400"].value - previous["MAIN.client_req_400"].value : null)
+				+ (now["MAIN.client_req_411"] !== undefined ? now["MAIN.client_req_411"].value - previous["MAIN.client_req_411"].value : null)
+				+ (now["MAIN.client_req_413"] !== undefined ? now["MAIN.client_req_413"].value - previous["MAIN.client_req_413"].value : null)
+				+ (now["MAIN.client_req_417"] !== undefined ?  now["MAIN.client_req_417"].value - previous["MAIN.client_req_417"].value : null);
 		} else {
 			return now.client_req.value - previous.client_req.value;
 		}
