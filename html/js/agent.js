@@ -669,7 +669,8 @@ function updateTop()
 			d.innerHTML = tmp;
 		},
 		error: function( jqXHR, textStatus, errorThrown) {
-			d.innerHTML = "Couldn't get stats: " + err;
+			var d = document.getElementById("out");
+			d.innerHTML = "Couldn't get stats: " + errorThrown;
 			clog(jqXHR);
 			clog(textStatus);
 			clog(errorThrown);
