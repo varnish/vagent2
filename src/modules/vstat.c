@@ -170,8 +170,6 @@ do_json(struct VSM_data *vd, struct vsb *out_vsb)
 	(void)VSC_Iter(vd, NULL, do_json_cb, out_vsb);
  VSB_cat(out_vsb, ",\n\t\"be_bytes\": [");
         (void)VSC_Iter(vd, NULL, creepy_math, out_vsb);
-        // remove last comma
-        VSB_setpos(out_vsb, out_vsb->s_len - 4);
         VSB_cat(out_vsb, "]\n");
         cont= 0;
 
