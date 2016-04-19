@@ -194,7 +194,7 @@ start_varnish() {
 		-a 127.0.0.1:0 \
 		-T 127.0.0.1:0 \
 		-s malloc,50m \
-		-S "$TMPDIR/secret" 
+		-S "$TMPDIR/secret"
 
 	FOO=""
 	for i in x x x x x x x x x x; do
@@ -234,7 +234,7 @@ start_agent() {
 	else
 		$ORIGPWD/../src/varnish-agent ${ARGS} >$AGENT_STDOUT
 	fi
-		
+
 	pidwait agent $AGENT_PORT
 }
 
@@ -271,6 +271,9 @@ test_it_code() {
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 	CODE=$(echo -e "$FOO" | grep -v "^$1" | head -n1 | cut -f1 -d' ')
+	if [ -z $CODE  ]; then
+		CODE=$(echo -e "$FOO" | grep -e "^$1" | head -n1 | cut -f4 -d' ')
+	fi
 	if [ "x$CODE" = "x$4" ]; then pass; else fail "$*: $FOO"; fi
 	inc
 }
