@@ -33,7 +33,7 @@ Required component for running the Varnish Administration Console (VAC) from Var
 %setup
 
 %build
-./configure --prefix=/usr --localstatedir=/var/lib
+./configure --prefix=/usr --localstatedir=/var/lib --sysconfdir=/etc
 make VERBOSE=1
 
 %check
@@ -50,6 +50,7 @@ install -D redhat/varnish-agent.initrc      %{buildroot}/etc/init.d/varnish-agen
 %endif
 mkdir -p %{buildroot}/etc/varnish
 touch %{buildroot}/etc/varnish/agent_secret
+
 mkdir -p %{buildroot}/var/lib/varnish-agent
 
 %clean
