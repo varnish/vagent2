@@ -856,11 +856,9 @@ function be_bytes(data)
         arry.push(json.be_bytes[x].bereq_tot)+'<br />';
         agent.out = arry[x];
         out_bereq();
-
         arry2.push(json.be_bytes[x].beresp_tot)+'<br />';
         agent.out = arry2[x];
         out_beresp();
-
     }
 }
 

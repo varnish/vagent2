@@ -53,7 +53,7 @@ struct vbackends_priv_t {
 
 struct backend_opt {
         char *name;
-	// char *ref;
+        // char *ref;
         char *admin;
         char *probe;
 };
@@ -61,8 +61,11 @@ struct backend_opt {
 char *format_line(char* line)
 {
         struct backend_opt backend = {};
-        char *out = NULL, *ptr;
+        char *out = NULL, *ptr = NULL;
         int state = 0;
+
+	    if(line == NULL)
+		    return NULL;
 
         backend.name = strtok_r(line, " ", &ptr);
         backend.admin = strtok_r(NULL, " ",&ptr);
@@ -83,8 +86,7 @@ static char *vbackends_show_json(char *raw)
 {
         char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
         struct vsb *final= VSB_new_auto();
-	char *ptr = NULL;
-        char *tokens;
+        char *tokens = NULL, *ptr = NULL;
         char tmp[1000];
         int raw_len = 0;
         int state = 0;
@@ -192,5 +194,3 @@ vbackends_init(struct agent_core_t *core)
         http_register_url(core, "/help/backend", M_GET,
             help_reply, strdup(BACKENDS_HELP));
 }
-
-
