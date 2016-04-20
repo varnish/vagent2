@@ -1,5 +1,5 @@
 Source: varnish-agent
-Section: varnish-4.0/web
+Section: varnish-4.1/web
 Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
 Build-Depends: debhelper (>= 7),
