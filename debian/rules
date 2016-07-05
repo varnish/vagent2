@@ -12,6 +12,9 @@ override_dh_install:
 override_dh_auto_test:
 	$(MAKE) check || ( tail -n +1 tests/*.log ; false )
 
+override_dh_strip:
+    dh_strip --dbg-package=varnish-agent-dbg
+
 override_dh_gencontrol:
 	if [ -n "$$DEBIAN_OVERRIDE_BINARY_VERSION" ]; then \
 		dh_gencontrol -- -v$$DEBIAN_OVERRIDE_BINARY_VERSION; \
@@ -21,6 +24,3 @@ override_dh_gencontrol:
 
 %:
 	dh $@
-
-override_dh_strip:
-	dh_strip --dbg-package=varnish-agent-dbg
