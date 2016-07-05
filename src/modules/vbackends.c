@@ -53,7 +53,6 @@ struct vbackends_priv_t {
 
 struct backend_opt {
         char *name;
-        // char *ref;
         char *admin;
         char *probe;
 };
@@ -116,6 +115,9 @@ static char *vbackends_show_json(char *raw)
         state = asprintf(&out2, "%s",VSB_data(final));
         state = asprintf(&out3, "%s%s\n]\n}\n", out1, out2);
         VSB_delete(final);
+	free(ptr);
+	free(out1);
+	free(out2);
 
         assert(state);
         return out3;
