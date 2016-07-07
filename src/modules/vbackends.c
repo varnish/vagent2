@@ -42,7 +42,7 @@
 #define BACKENDS_HELP \
 "GET /backendsjson/ - fetches a list of backends and values\n" \
 "PUT /backend/foo - Takes a single value as input (e.g: 1000) and let you change the admin health value\n" \
-"For more trick go to the HTML backend page\n"
+"For more tricks go to the HTML backend page\n"
 
 char* format_line(char*);
 
@@ -53,7 +53,6 @@ struct vbackends_priv_t {
 
 struct backend_opt {
         char *name;
-        // char *ref;
         char *admin;
         char *probe;
 };
@@ -106,6 +105,7 @@ static char *vbackends_show_json(char *raw)
                         VSB_cat(final, ptr);
                         if(sum < raw_len)
                                 VSB_cat(final, ",\n");
+                        free(ptr);
                 }
                 cont++;
         }
@@ -116,6 +116,8 @@ static char *vbackends_show_json(char *raw)
         state = asprintf(&out2, "%s",VSB_data(final));
         state = asprintf(&out3, "%s%s\n]\n}\n", out1, out2);
         VSB_delete(final);
+        free(out1);
+        free(out2);
 
         assert(state);
         return out3;
