@@ -161,62 +161,80 @@ skip_space(char *p)
 }
 
 /*
- * Prase:
- *
- * Value is: <value> [\[unit\]] [(default)]
- *
+ * Backward search of character in a string.
  */
-static int
+static const char *
+strbchr(const char *b, const char *s, char c)
+{
+	assert(b < s);
+	assert(*s != c);
+	while (s > b) {
+		if (*s == c)
+			return (s);
+		s--;
+	}
+	return (NULL);
+}
+
+/*
+ * Parse a field value, grabbing the unit if any. Detect whether this value is
+ * the default one.
+ */
+static void
 parse_value(const char *w, struct param_opt *p)
 {
-	char *tmp = strdup(w);
-	char *tmp2;
-	char *orig;
-	orig = tmp;
-	tmp2 = strchr(tmp,'\n');
-	assert(tmp2);
-	*tmp2 = '\0';
+	const char *def = NULL, *eos, *unit, *eov;
 
-	/*
-	 * Special handling of " (read: cc_command).
-	 * XXX: This is a bit subtle: First we skip past the first one,
-	 * then we set the last one to \0. But we have to keep tmp2
-	 * relevant, otherwise finding the default would be really hard...
-	 */
-	if (*tmp == '"') {
-		tmp++;
-		tmp2 = strchr(tmp,'"');
-		*tmp2 = '\0';
-		tmp2++;
-	} else {
-		tmp2 = strchr(tmp, ' ');
+	eos = strchr(w, '\n');
+	assert(eos != NULL);
+	eos--;
+
+	if (*eos == ')') {
+		def = strbchr(w, eos, ' ');
+		assert(def > w);
+		if (strncmp(def, " (default)\n", sizeof(" (default)\n") - 1))
+			def = NULL;
+		else
+			eos = def - 1;
 	}
-	if (tmp2) {
-		*tmp2 = '\0';
+
+	if (*eos == ']') {
+		unit = strbchr(w, eos, '[');
+		assert(unit > w);
+		eov = unit - 2;
+		assert(eov[1] == ' ');
+		unit++;
 	}
+	else {
+		unit = NULL;
+		eov = eos;
+	}
+
+	/* XXX: needs proper handling of spaces in strings. */
+	if (*w == '"') {
+		assert(*eov == '"');
+		assert(unit == NULL);
+		w++;
+		eov--;
+	}
+
+	assert(eov >= w);
 	assert(p->value == NULL);
-	p->value = strdup(tmp);
-	if (!tmp2) {
-		free(orig);
-		return 0;
+	p->value = strndup(w, 1 + eov - w); /* eov is inclusive */
+	assert(p->value != NULL);
+
+	if (unit != NULL) {
+		assert(*eos == ']');
+		assert(p->unit == NULL);
+		p->unit = strndup(unit, eos - unit);
+		assert(p->unit != NULL);
 	}
-	tmp = tmp2+1;
-	if (*tmp == '[') {
-		int mark = 0;
-		tmp2 = strchr(tmp,']');
-		assert(tmp2);
-		tmp2++;
-		if (*tmp2 == ' ')
-			mark = 1;
-		*tmp2 = '\0';
-		p->unit = strdup(tmp);
-		if (mark)
-			tmp = tmp2+1;
-	}
-	if (*tmp == '(') {
+
+	if (def != NULL) {
+		assert(p->def == NULL);
 		p->def = strdup(p->value);
+		assert(p->def != NULL);
 	}
-	return 1;
 }
 
 /*
@@ -238,6 +256,7 @@ fill_entry(struct param_opt *p, const char *pos)
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Default is: ", tmp, strlen("Default is: "))) {
+		assert(p->def == NULL);
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		*tmp2 = '\0';
