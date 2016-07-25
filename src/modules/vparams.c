@@ -155,26 +155,26 @@ parse_name(const char *raw, struct param_opt *p)
  * Parse a field value, grabbing the unit if any. Detect whether this value is
  * the default one.
  */
-static void
+static const char *
 parse_value(const char *w, struct param_opt *p)
 {
-	const char *def = NULL, *eos, *unit, *eov;
+	const char *def = NULL, *eol, *cursor, *unit, *eov;
 
-	eos = strchr(w, '\n');
-	assert(eos != NULL);
-	eos--;
+	eol = strchr(w, '\n');
+	assert(eol != NULL);
+	cursor = eol - 1;
 
-	if (*eos == ')') {
-		def = strbchr(w, eos, ' ');
+	if (*cursor == ')') {
+		def = strbchr(w, cursor, ' ');
 		assert(def > w);
 		if (strncmp(def, " (default)\n", sizeof(" (default)\n") - 1))
 			def = NULL;
 		else
-			eos = def - 1;
+			cursor = def - 1;
 	}
 
-	if (*eos == ']') {
-		unit = strbchr(w, eos, '[');
+	if (*cursor == ']') {
+		unit = strbchr(w, cursor, '[');
 		assert(unit > w);
 		eov = unit - 2;
 		assert(eov[1] == ' ');
@@ -182,7 +182,7 @@ parse_value(const char *w, struct param_opt *p)
 	}
 	else {
 		unit = NULL;
-		eov = eos;
+		eov = cursor;
 	}
 
 	/* XXX: needs proper handling of spaces in strings. */
@@ -199,9 +199,9 @@ parse_value(const char *w, struct param_opt *p)
 	assert(p->value != NULL);
 
 	if (unit != NULL) {
-		assert(*eos == ']');
+		assert(*cursor == ']');
 		assert(p->unit == NULL);
-		p->unit = strndup(unit, eos - unit);
+		p->unit = strndup(unit, cursor - unit);
 		assert(p->unit != NULL);
 	}
 
@@ -210,6 +210,8 @@ parse_value(const char *w, struct param_opt *p)
 		p->def = strdup(p->value);
 		assert(p->def != NULL);
 	}
+
+	return (eol);
 }
 
 /*
@@ -224,8 +226,7 @@ fill_entry(struct param_opt *p, const char *pos)
 	tmp = skip_space(pos);
 	assert(tmp);
 	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
-		parse_value(tmp+strlen("Value is: "), p);
-		tmp = strchr(tmp, '\n');
+		tmp = parse_value(tmp+strlen("Value is: "), p);
 		assert(tmp);
 		tmp++;
 		tmp = skip_space(tmp);
