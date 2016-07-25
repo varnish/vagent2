@@ -106,50 +106,6 @@ param_free(struct param_opt *p)
 }
 
 /*
- * Parse a hopefully generic 'name'-string (first string).
- *
- * Returns a malloc'ed param_opt.
- *
- * Some fields are optional: default and unit MIGHT be filled in, depending
- * on output.
- *
- * <variable> [value] [unit]\n
- */
-static struct param_opt *
-get_name_val(const char *raw)
-{
-	struct param_opt *r = calloc(1,sizeof(struct param_opt));
-	char *line = strdup(raw);
-	char *tmp = strchr(line,'\n');
-	char *tmp2;
-	assert(tmp);
-	*tmp = '\0';
-
-	tmp = strchr(line,' ');
-	if (tmp)
-		*tmp = '\0';
-	r->name = strdup(line);
-	assert(r->name);
-	assert(*(r->name));
-	if (!tmp) {
-		free(line);
-		return r;
-	}
-	tmp++;
-	tmp2 = strchr(tmp,' ');
-	if (tmp2)
-		*tmp2 = '\0';
-	r->value = strdup(tmp);
-	if (!tmp2) {
-		free(line);
-		return r;
-	}
-	r->unit = strdup(tmp2+1);
-	free(line);
-	return r;
-}
-
-/*
  * Just skip space characters to avoid indentation meh.
  */
 static char *
@@ -174,6 +130,25 @@ strbchr(const char *b, const char *s, char c)
 		s--;
 	}
 	return (NULL);
+}
+
+static const char *
+parse_name(const char *raw, struct param_opt *p)
+{
+	const char *eol;
+
+	assert(raw != NULL);
+	assert(p != NULL);
+
+	assert(skip_space((char *)raw) == raw);
+	eol = strchr(raw, '\n');
+	assert(eol != NULL);
+
+	assert(p->name == NULL);
+	p->name = strndup(raw, eol - raw);
+	assert(p->name != NULL);
+
+	return (eol);
 }
 
 /*
@@ -314,21 +289,11 @@ vparams_show_json(char *raw)
 	struct param_opt *tmp, *top;
 	char *out = NULL, *out2 = NULL, *out3 = NULL;
 	int state = 0;
-	tmp = malloc(sizeof (struct param_opt));
 	top = NULL;
-	tmp->next = NULL;
 
 	/*
 	 * param.show -l output:
 	 *
-	 * V3:
-	 * (parameter) (value) \[(unit|)\]
-	 *             Default is (value)
-	 *             (description line 1)
-	 *             ..
-	 *             (description line n)
-	 *
-	 * V4/4.1:
 	 * (parameter)
 	 *   Value is: (value) [\[(unit)\]] [\(default\)]
 	 *   [Default is: (value)]
@@ -340,12 +305,12 @@ vparams_show_json(char *raw)
 	 *   (description line n)
 	 */
 
-	char *pos = raw;
+	const char *pos = raw;
 	while(pos && *pos) {
-		tmp = get_name_val(pos);
+		tmp = calloc(1, sizeof *tmp);
 		assert(tmp);
-		pos = strchr(pos, '\n');
-		assert(pos);
+		pos = parse_name(pos, tmp);
+		assert(pos && *pos == '\n');
 		pos++;
 		pos = fill_entry(tmp, pos);
 		tmp->next = top;
