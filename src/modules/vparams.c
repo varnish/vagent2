@@ -108,8 +108,8 @@ param_free(struct param_opt *p)
 /*
  * Just skip space characters to avoid indentation meh.
  */
-static char *
-skip_space(char *p)
+static const char *
+skip_space(const char *p)
 {
 	while (*p && (*p == ' ' || *p == '\t'))
 		p++;
@@ -215,13 +215,13 @@ parse_value(const char *w, struct param_opt *p)
 /*
  * Parse an entry after we have the name (and possibly more).
  */
-static char *
+static const char *
 fill_entry(struct param_opt *p, const char *pos)
 {
-	char *tmp;
-	char *tmp2;
+	const char *tmp;
+	const char *tmp2;
 	assert(*pos);
-	tmp = skip_space(strdup(pos));
+	tmp = skip_space(pos);
 	assert(tmp);
 	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
 		parse_value(tmp+strlen("Value is: "), p);
@@ -234,24 +234,21 @@ fill_entry(struct param_opt *p, const char *pos)
 		assert(p->def == NULL);
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
-		*tmp2 = '\0';
-		p->def = strdup(tmp);
+		p->def = strndup(tmp, tmp2 - tmp);
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Minimum is: ", tmp, strlen("Minimum is: "))) {
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
-		*tmp2 = '\0';
-		p->min = strdup(tmp);
+		p->min = strndup(tmp, tmp2 - tmp);
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
 	if (!strncmp("Maximum is: ", tmp, strlen("Maximum is: "))) {
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
-		*tmp2 = '\0';
-		p->max = strdup(tmp);
+		p->max = strndup(tmp, tmp2 - tmp);
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
@@ -263,7 +260,7 @@ fill_entry(struct param_opt *p, const char *pos)
 		tmp = skip_space(tmp);
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
-		*tmp2 = '\0';
+		*(char *)tmp2 = '\0'; // XXX: cheating temporarily
 		strncat(desc,tmp,2047);
 		strncat(desc," ",2047);
 		tmp = tmp2+1;
