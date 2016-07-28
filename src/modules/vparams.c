@@ -235,7 +235,7 @@ extract_description(const char *pos, char *buf, size_t len)
 		}
 
 		if (*pos == '\n')
-			return (pos + 1)
+			return (pos + 1);
 
 		pos = skip_space(pos);
 		assert(pos != NULL);
