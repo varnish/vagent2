@@ -214,8 +214,53 @@ parse_value(const char *w, struct param_opt *p)
 	return (eol);
 }
 
+static const char *
+extract_description(const char *pos, char *buf, size_t len)
+{
+	const char *sep = "", *eol;
+	size_t l;
+
+	assert(*pos == '\n');
+
+	 while (*pos ==  '\n') {
+		pos++;
+
+		if (*pos == '\n' && pos[1] == ' ') {
+			assert(len > 2);
+			l = snprintf(buf, len, "\\n\\n");
+			len -= l;
+			buf += l;
+			sep = "";
+			continue;
+		}
+
+		if (*pos == '\n')
+			return (pos + 1)
+
+		pos = skip_space(pos);
+		assert(pos != NULL);
+		eol = strchr(pos, '\n');
+		if (eol == NULL)
+			eol = strchr(pos, '\0');
+		assert(eol != NULL);
+		assert(eol > pos);
+
+		l = strlen(sep) + (eol - pos);
+		assert(len > l);
+		(void)snprintf(buf, l + 1, "%s%s", sep, pos);
+		len -= l;
+		buf += l;
+		sep = " ";
+		pos = eol;
+	}
+
+	return (pos);
+}
+
 /*
  * Parse an entry after we have the name (and possibly more).
+ *
+ * XXX: cleanup needed
  */
 static const char *
 fill_entry(struct param_opt *p, const char *pos)
@@ -253,21 +298,9 @@ fill_entry(struct param_opt *p, const char *pos)
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
+
 	char desc[2048];
-	desc[0] = '\0';
-	if (*tmp == '\n')
-		tmp++;
-	while(1) {
-		tmp = skip_space(tmp);
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		*(char *)tmp2 = '\0'; // XXX: cheating temporarily
-		strncat(desc,tmp,2047);
-		strncat(desc," ",2047);
-		tmp = tmp2+1;
-		if (*tmp != ' ' && *tmp != '\n')
-			break;
-	}
+	tmp = extract_description(tmp, desc, sizeof desc);
 	p->description = strdup(desc);
 	return tmp;
 }
