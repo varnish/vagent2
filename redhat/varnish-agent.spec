@@ -94,7 +94,7 @@ fi
 
 %changelog
 
-* Thu aug 04 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.1
+* Thu Aug 4 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.1
 - Several memory leak fixes
 
 * Tue Jan 26 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.0
