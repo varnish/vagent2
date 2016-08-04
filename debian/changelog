@@ -1,3 +1,9 @@
+varnish-agent (4.1.1) unstable; urgency=low
+
+  * Several memory leak fixes
+
+-- Hugo Cruz <hugo.software.developer@gmail.com>  Thu, 04 Aug 2016 13:52:14 +0200
+
 varnish-agent (4.1.0) unstable; urgency=low
 
   * Compatible with varnish >= 4.1.0
