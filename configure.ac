@@ -72,7 +72,7 @@ AC_LINK_IFELSE(
 AC_CHECK_FUNCS([dirfd __fpurge getexecname getline sysconf])
 m4_ifndef([PKG_PROG_PKG_CONFIG], [m4_fatal([pkg.m4 missing, please install pkg-config])])
 PKG_PROG_PKG_CONFIG
-PKG_CHECK_MODULES([VARNISHAPI],[varnishapi >= 4.0.0])
+PKG_CHECK_MODULES([VARNISHAPI],[varnishapi >= 4.0.0 varnishapi < 4.1])
 PKG_CHECK_MODULES([MICROHTTPD],[libmicrohttpd])
 PKG_CHECK_MODULES([LIBCURL],[libcurl])
 
