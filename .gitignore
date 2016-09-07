@@ -29,6 +29,9 @@ src/varnish-agent
 varnish-agent.1
 include/vcs_version.h
 
+# Packaging
+varnish-agent-*.tar.gz
+
 # Test stuff
 tests/*.log
 tests/*.trs
