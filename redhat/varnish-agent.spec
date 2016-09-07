@@ -17,10 +17,21 @@ BuildRequires: systemd-units
 %endif
 
 %if 0%{?el5}
-BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel
+BuildRequires: curl-devel
 %else
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel
+BuildRequires: libcurl-devel
 %endif
+BuildRequires: libedit-devel
+BuildRequires: libmicrohttpd-devel
+BuildRequires: nc
+BuildRequires: perl-libwww-perl
+BuildRequires: python-demjson
+BuildRequires: python-docutils
+
+BuildRequires: varnish >= 4.0
+BuildRequires: varnish <  4.1
+BuildRequires: pkgconfig(varnishapi) >= 4.0
+BuildRequires: pkgconfig(varnishapi) <  4.1
 
 %description
 Varnish Agent is a small daemon meant to communicate with Varnish and other
