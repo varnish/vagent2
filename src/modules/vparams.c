@@ -142,7 +142,7 @@ static char *vparams_show_json(char *raw)
 					word[i] = '\0';
 				}
 			}
-			
+
 			while(word[--i] == ' ');
 			if (word[i] == '"') {
 				assert(word[0] == '"');
@@ -164,7 +164,7 @@ static char *vparams_show_json(char *raw)
 				tmp->unit = strdup(word);
 				i = 0;
 			}
-			
+
 			if (raw[pos] == '\n')
 				pos++;
 			term = strstr(raw+pos, "Default is: ");
@@ -225,7 +225,7 @@ static char *vparams_show_json(char *raw)
 		}
 		pos++;
 	}
-	
+
 	state = asprintf(&out3, "{\n");
 	assert(state);
 	for (tmp = top; tmp != NULL; ) {

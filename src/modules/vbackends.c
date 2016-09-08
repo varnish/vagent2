@@ -119,7 +119,7 @@ static char *vbackends_show_json(char *raw)
 	VSB_delete(final);
 	free(out1);
 	free(out2);
-	
+
 	assert(state);
 	return out3;
 }
