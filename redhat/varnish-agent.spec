@@ -40,10 +40,10 @@ varnish-related services to allow remote control and monitoring of Varnish.
 Required component for running the Varnish Administration Console (VAC) from Varnish Software.
 
 %prep
-%setup
+%setup -q
 
 %build
-./configure --prefix=/usr --localstatedir=/var/lib
+%configure
 make VERBOSE=1
 
 %check
