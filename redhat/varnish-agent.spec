@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 4.0.1
+Version: 4.0.2
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -102,6 +102,12 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+
+* Mon Sep 12 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.0.2
+- Backend endpoint
+- Ability to add a CA certificate for use by the Curl module.
+- Memory leak fixes.
+
 * Mon Mar 16 2015 Dag Haavi Finstad <daghf@varnish-software.com> - 4.0.1
 - Fix for a crash in handling of a specific malformed request.
 - #120 Fix memory leaks relating to the curl and stats modules.
