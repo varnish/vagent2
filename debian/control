@@ -23,3 +23,16 @@ Description: Varnish Agent is a small daemon meant to communicate with
  monitoring of Varnish. Required component for running the Varnish
  Administration Console (VAC) from Varnish Software.
 
+ Package: varnish-agent-dbg
+ Architecture: any
+ Section: varnish-4.0/debug
+ Priority: extra
+ Depends:
+     varnish-agent (= ${binary:Version}),
+     ${misc:Depends}
+ Description: debugging symbols for varnish-agent
+     Varnish Agent is a small daemon meant to communicate with
+     Varnish and other varnish-related services to allow remote control and
+     monitoring of Varnish. Required component for running the Varnish
+     Administration Console (VAC) from Varnish Software.
+     This package contains the debugging symbols for varnish-agent.
