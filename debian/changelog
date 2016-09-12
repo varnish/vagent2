@@ -1,3 +1,10 @@
+varnish-agent (4.0.2) wheezy; urgency=low
+  * Backend endpoint
+  * Ability to add a CA certificate for use by the cURL module.
+  * Memory leak fixes.
+
+ -- Hugo Cruz <hugo.software.developer@gmail.com>  Mon, 12 Sep 2016 14:23:10 +0100
+
 varnish-agent (4.0.1) unstable; urgency=low
   * Fix for a crash in handling of a specific malformed request.
   * #120 Fix memory leaks relating to the curl and stats modules.
