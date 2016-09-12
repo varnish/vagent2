@@ -8,11 +8,12 @@ Build-Depends: debhelper (>= 7),
  pkg-config,
  libmicrohttpd-dev,
  python-docutils,
- varnish | varnish-plus,
+ varnish (>= 4.0) | varnish-plus (>= 4.0) | varnish (<= 4.1) | varnish-plus (<= 4.1),
  libcurl4-gnutls-dev | libcurl-dev,
  libwww-perl,
  python-demjson,
- net-tools
+ net-tools,
+ strace
 Standards-Version: 3.8.1
 
 Package: varnish-agent
@@ -23,3 +24,16 @@ Description: Varnish Agent is a small daemon meant to communicate with
  monitoring of Varnish. Required component for running the Varnish
  Administration Console (VAC) from Varnish Software.
 
+Package: varnish-agent-dbg
+Architecture: any
+Section: varnish-4.0/debug
+Priority: extra
+Depends:
+    varnish-agent (= ${binary:Version}),
+    ${misc:Depends}
+Description: debugging symbols for varnish-agent
+    Varnish Agent is a small daemon meant to communicate with
+    Varnish and other varnish-related services to allow remote control and
+    monitoring of Varnish. Required component for running the Varnish
+    Administration Console (VAC) from Varnish Software.
+    This package contains the debugging symbols for varnish-agent.
