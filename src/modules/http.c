@@ -279,9 +279,8 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
-		if (!strncmp(lp->url, request->url, strlen(lp->url))) {
-			if (!(lp->method & request->method))
-				return (0);
+		if (!strncmp(lp->url, request->url, strlen(lp->url)) &&
+				(lp->method & request->method)) {
 			lp->cb(request, lp->data);
 			return (1);
 		}
