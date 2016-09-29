@@ -280,152 +280,197 @@ vcl_list_json(char *raw)
 }
 
 static unsigned int
-vcl_reply(struct http_request *request, void *data)
+vcl_json(struct http_request *request, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
+	struct ipc_ret_t vret;
+	struct vsb *json;
 	struct http_response *resp;
+
+	GET_PRIV(core, vcl);
+
+	assert(!strncmp(request->url, "/vcljson/", strlen("/vcljson/")));
+	assert(request->method == M_GET);
+
+	ipc_run(vcl->vadmin, &vret, "vcl.list");
+	if (vret.status == 400) {
+		http_reply(request->connection, 500, vret.answer);
+	} else {
+		json = vcl_list_json(vret.answer);
+		assert(VSB_finish(json) == 0);
+		resp = http_mkresp(request->connection, 200, NULL);
+		resp->data = VSB_data(json);
+		resp->ndata = VSB_len(json);
+		http_add_header(resp, "Content-Type", "application/json");
+		send_response(resp);
+		http_free_resp(resp);
+		VSB_clear(json);
+		VSB_delete(json);
+	}
+	free(vret.answer);
+	return 0;
+}
+
+
+static unsigned int
+vcl_listshow(struct http_request *request, void *data)
+{
+	struct agent_core_t *core = data;
+	struct vcl_priv_t *vcl;
+	struct ipc_ret_t vret;
+
+	GET_PRIV(core, vcl);
+
+	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+	assert(request->method == M_GET);
+
+	if (!strcmp(request->url, "/vcl/"))
+		ipc_run(vcl->vadmin, &vret, "vcl.list");
+	else
+		ipc_run(vcl->vadmin, &vret, "vcl.show %s",
+				request->url + strlen("/vcl/"));
+
+	if (vret.status == 400)
+		http_reply(request->connection, 500, vret.answer);
+	else
+		http_reply(request->connection, 200, vret.answer);
+
+	free(vret.answer);
+	return 0;
+}
+
+static unsigned int
+vcl_push(struct http_request *request, void *data)
+{
+	struct agent_core_t *core = data;
+	struct vcl_priv_t *vcl;
 	struct ipc_ret_t vret;
 	char id[ID_LEN + 1];
-	int ret;
 	int status;
 
 	GET_PRIV(core, vcl);
 
-	if (request->method == M_GET) {
-		if (!strcmp(request->url, "/vclactive") || !strcmp(request->url,"/vclactive/")) {
-			/*
-			 * vcl.list output:
-			 *
-			 * V3/4 : (active|available|discarded) (refcnt) (name)
-			 * V4.1 : (active|available|discarded) (state) \
-			 *            (busycnt|) (name)
-			 */
-			ipc_run(vcl->vadmin,&vret,"vcl.list");
-			if (vret.status == 400) {
-				http_reply(request->connection, 500, vret.answer);
-			} else {
-				char **tp, *tok[5];
-				char *p, *last;
-				char *line;
+	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+	assert(request->method == M_POST || request->method == M_PUT);
 
-				memset(tok, '\0', sizeof(tok));
-				for (p = vret.answer, last = NULL;
-				    (line = strtok_r(p, "\n", &last));
-				    p = NULL) {
-					if (strncmp("active", line, 6))
-						continue;
-					last = NULL;
-					for (p = line, tp = tok;
-					    tp < &tok[4] &&
-					    (*tp = strtok_r(p, " ", &last));
-					    p = NULL) {
-						if (**tp != '\0')
-							tp++;
-                                        }
-				}
-				if (!tok[2] || !tok[3]) {
-					http_reply(request->connection,
-					    500, "No active VCL");
-				} else {
-					strcpy(vret.answer,
-					    tok[3] ? tok[3] : tok[2]);
-					http_reply(request->connection,
-					    200, vret.answer);
-				}
-			}
-			free(vret.answer);
-			return 0;
-		} else if (!strcmp(request->url, "/vcl") || !strcmp(request->url,"/vcl/")) {
-			ipc_run(vcl->vadmin, &vret, "vcl.list");
-			if (vret.status == 400) {
-				http_reply(request->connection, 500, vret.answer);
-			} else {
-				http_reply(request->connection, 200, vret.answer);
-			}
-			free(vret.answer);
-			return 0;
-		} else if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
-			ipc_run(vcl->vadmin, &vret, "vcl.show %s", request->url + strlen("/vcl/"));
-			if (vret.status == 400) {
-				http_reply(request->connection, 500, vret.answer);
-			} else {
-				http_reply(request->connection, 200, vret.answer);
-			}
-			free(vret.answer);
-			return 0;
-		} else if(!strcmp(request->url, "/vcljson/")) {
-			struct vsb *json;
-			ipc_run(vcl->vadmin, &vret, "vcl.list");
-			if (vret.status == 400) {
-				http_reply(request->connection, 500, vret.answer);
-			} else {
-				json = vcl_list_json(vret.answer);
-				assert(VSB_finish(json) == 0);
-				resp = http_mkresp(request->connection, 200, NULL);
-				resp->data = VSB_data(json);
-				resp->ndata = VSB_len(json);
-				http_add_header(resp, "Content-Type", "application/json");
-				send_response(resp);
-				http_free_resp(resp);
-				VSB_clear(json);
-				VSB_delete(json);
-			}
-			free(vret.answer);
-			return 0;
-		} else {
-			http_reply(request->connection, 500, "Invalid VCL-url.");
-			return 0;
-		}
-	} else if (request->method == M_POST) {
+	if (request->method == M_POST)
 		snprintf(id, sizeof(id), "%ju", (uintmax_t) time(NULL));
+	else
+		snprintf(id, sizeof(id), "%s", request->url + strlen("/vcl/"));
+
+	if (!strlen(id))
+		http_reply(request->connection, 400, "Bad URL?");
+	else {
 		status = vcl_store(request, vcl, &vret, core, id);
 		http_reply(request->connection, status, vret.answer);
 		free(vret.answer);
-		return 0;
-	} else if (request->method == M_PUT) {
-		if (!strncmp(request->url,"/vcl/",strlen("/vcl/"))) {
-			if (strlen(request->url) >= 6) {
-				status = vcl_store(request, vcl, &vret, core,
-				                   request->url + strlen("/vcl/"));
-				http_reply(request->connection, status, vret.answer);
-				free(vret.answer);
-				return 0;
-			} else {
-				http_reply(request->connection, 400, "Bad URL?");
-				return 0;
-			}
-		} else if (!strncmp(request->url, "/vcldeploy/",strlen("/vcldeploy/"))) {
-			ipc_run(vcl->vadmin, &vret, "vcl.use %s",
-				request->url + strlen("/vcldeploy/"));
-			if (vret.status == 200) {
-				ret = vcl_persist_active(vcl->logger, request->url + strlen("/vcldeploy/"), core);
-			}
-			if (vret.status == 200 && ret)
-				http_reply(request->connection, 500, "Deployed ok, but NOT PERSISTED.");
-			else if (vret.status == 200 && ret == 0)
-				http_reply(request->connection, 200, vret.answer);
-			else
-				http_reply(request->connection, 500, vret.answer);
-			free(vret.answer);
-			return 0;
-		}
-	} else if (request->method == M_DELETE) {
-		if (!strncmp(request->url, "/vcl/", strlen("/vcl/"))) {
-			ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
-				request->url + strlen("/vcl/"));
-			if (vret.status == 400 || vret.status == 106) {
-				http_reply(request->connection, 500, vret.answer);
-			} else {
-				http_reply(request->connection, 200, vret.answer);
-			}
-			free(vret.answer);
-			return 0;
-		}
-	} else {
-		return http_reply(request->connection, 500, "Unknown request?");
 	}
-	assert("Shouldn't get here" == NULL);
+	return 0;
+}
+
+static unsigned int
+vcl_delete(struct http_request *request, void *data)
+{
+	struct agent_core_t *core = data;
+	struct vcl_priv_t *vcl;
+	struct ipc_ret_t vret;
+
+	GET_PRIV(core, vcl);
+
+	assert(request->method == M_DELETE);
+	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+
+	ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
+			request->url + strlen("/vcl/"));
+	if (vret.status == 400 || vret.status == 106) {
+		http_reply(request->connection, 500, vret.answer);
+	} else {
+		http_reply(request->connection, 200, vret.answer);
+	}
+	free(vret.answer);
+	return 0;
+}
+
+static unsigned int
+vcl_active(struct http_request *request, void *data)
+{
+	struct agent_core_t *core = data;
+	struct vcl_priv_t *vcl;
+	struct ipc_ret_t vret;
+	char **tp, *tok[5];
+	char *p, *last;
+	char *line;
+
+	assert(!strncmp(request->url, "/vclactive/", strlen("/vclactive/")));
+	assert(request->method == M_GET);
+	GET_PRIV(core, vcl);
+
+	/*
+	 * vcl.list output:
+	 *
+	 * V3/4 : (active|available|discarded) (refcnt) (name)
+	 * V4.1 : (active|available|discarded) (state) \
+	 *            (busycnt|) (name)
+	 */
+	ipc_run(vcl->vadmin,&vret,"vcl.list");
+	if (vret.status == 400) {
+		http_reply(request->connection, 500, vret.answer);
+		free(vret.answer);
+		return 0;
+	}
+	memset(tok, '\0', sizeof(tok));
+	for (p = vret.answer, last = NULL;
+			(line = strtok_r(p, "\n", &last));
+			p = NULL) {
+		if (strncmp("active", line, 6))
+			continue;
+		last = NULL;
+		for (p = line,
+				tp = tok;
+				tp < &tok[4] && (*tp = strtok_r(p, " ", &last));
+				p = NULL) {
+			if (**tp != '\0')
+				tp++;
+		}
+	}
+	if (!tok[2] || !tok[3]) {
+		http_reply(request->connection, 500, "No active VCL");
+	} else {
+		strcpy(vret.answer, tok[3] ? tok[3] : tok[2]);
+		http_reply(request->connection, 200, vret.answer);
+	}
+	free(vret.answer);
+	return 0;
+}
+
+static unsigned int
+vcl_deploy(struct http_request *request, void *data)
+{
+	struct agent_core_t *core = data;
+	struct vcl_priv_t *vcl;
+	struct ipc_ret_t vret;
+	int ret;
+
+	GET_PRIV(core, vcl);
+
+	assert(!strncmp(request->url, "/vcldeploy/", strlen("/vcldeploy/")));
+	assert(request->method == M_PUT);
+
+	ipc_run(vcl->vadmin, &vret, "vcl.use %s",
+			request->url + strlen("/vcldeploy/"));
+	if (vret.status == 200) {
+		ret = vcl_persist_active(vcl->logger,
+				request->url + strlen("/vcldeploy/"), core);
+	}
+	if (vret.status == 200 && ret)
+		http_reply(request->connection, 500,
+				"Deployed ok, but NOT PERSISTED.");
+	else if (vret.status == 200)
+		http_reply(request->connection, 200, vret.answer);
+	else
+		http_reply(request->connection, 500, vret.answer);
+	free(vret.answer);
 	return 0;
 }
 
@@ -441,9 +486,11 @@ vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	mk_help(core, priv);
-	http_register_url(core, "/vcljson/", M_GET, vcl_reply, core);
-	http_register_url(core, "/vcl/", M_DELETE | M_PUT | M_GET | M_POST, vcl_reply, core);
-	http_register_url(core, "/vclactive", M_GET , vcl_reply, core);
-	http_register_url(core, "/vcldeploy/", M_PUT , vcl_reply, core);
+	http_register_url(core, "/vcljson/", M_GET, vcl_json, core);
+	http_register_url(core, "/vcl/", M_GET, vcl_listshow, core);
+	http_register_url(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
+	http_register_url(core, "/vcl/", M_DELETE, vcl_delete, core);
+	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
+	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }
