@@ -66,8 +66,7 @@ struct vcl_list {
 static void
 mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 {
-	int ret;
-	ret = asprintf(&vcl->help, "The following logic can be used:\n"
+	assert(0 < asprintf(&vcl->help, "The following logic can be used:\n"
 		"GET /vcl/ - Fetch a list of VCLs (e.g: vcl.list)\n"
 		"GET /vcl/vclname - Fetch the vcl named vclname (vcl.show)\n"
 		"POST /vcl/ - Upload a new VCL, named dynamically. (vcl.inline).\n"
@@ -81,8 +80,7 @@ mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 		"That way, you can start varnishd with the most recent VCL\n"
 		"by using:\n"
 		"\"varnishd (...) -f %s/boot.vcl\"\n",
-		core->config->p_arg, core->config->p_arg, core->config->p_arg);
-	assert(ret>0);
+		core->config->p_arg, core->config->p_arg, core->config->p_arg));
 }
 
 /*
@@ -92,7 +90,6 @@ mk_help(struct agent_core_t *core, struct vcl_priv_t *vcl)
 static int
 vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *core)
 {
-	int ret;
 	char tempfile[PATH_MAX];
 	char target[PATH_MAX];
 	int fd = -1;
@@ -100,8 +97,7 @@ vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *cor
 	snprintf(target, sizeof(target), "%s/%s.auto.vcl", core->config->p_arg, id);
 	snprintf(tempfile, sizeof(tempfile), "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
 
-	ret = unlink(tempfile);
-	if (ret < 0 && errno != ENOENT) {
+	if (unlink(tempfile) < 0 && errno != ENOENT) {
 		warnlog(logfd, "Removing temporary file '%s' failed: %s", tempfile, strerror(errno));
 		return -1;
 	}
@@ -112,15 +108,11 @@ vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *cor
 		return -1;
 	}
 
-	ret = write(fd, (const void *)vcl, strlen(vcl));
-	assert(ret > 0);
-	ret = fsync(fd);
-	assert(ret >= 0);
-	ret = close(fd);
-	assert(ret >= 0);
-	fd = -1;
-	ret = rename(tempfile, target);
-	if (ret) {
+	assert(0 <  write(fd, (const void *)vcl, strlen(vcl)));
+	assert(0 <= fsync(fd));
+	assert(0 <= close(fd));
+
+	if (rename(tempfile, target)) {
 		warnlog(logfd, "rename of %s to %s failed. Dunno quite what to do. errno: %d(%s)", tempfile, target, errno, strerror(errno));
 		return -1;
 	}
