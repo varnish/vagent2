@@ -177,7 +177,6 @@ vlog_reply(struct http_request *request, void *data)
 		tag_re = strdup(p);
 		char *tmp2 = strchr(tag_re, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
-		p = next_slash(p);
 	}
 	
 	vrp.answer = VSB_new_auto();
