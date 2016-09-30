@@ -319,7 +319,6 @@ vparams_show_json(char *raw)
 {
 	struct param_opt *tmp, *top;
 	char *out = NULL, *out2 = NULL, *out3 = NULL;
-	tmp = malloc(sizeof (struct param_opt));
 	top = NULL;
 
 	/*
