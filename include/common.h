@@ -120,7 +120,7 @@ extern int threads_started;
 #define warnlog(l,fmt,...) loggerraw(l, 1, fmt, ##__VA_ARGS__)
 #define debuglog(l,fmt,...) loggerraw(l, 3, fmt, ##__VA_ARGS__)
 
-void assert_fail(const char *expr, const char *file, int line, const char *func);
+void assert_fail(const char *expr, const char *file, int line, const char *func)  __attribute__((__noreturn__));
 
 #define assert(expr) \
   	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
