@@ -363,6 +363,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 	assert(core->config->userpass);
 
 	log_request(connection, http, method, url);
+	request.method = 0;
 	if (core->config->r_arg && strcmp(method, "GET") &&
 	    strcmp(method, "HEAD") && strcmp(method, "OPTIONS")) {
 		logger(http->logger,
