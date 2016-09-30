@@ -97,6 +97,7 @@ vcl_persist(int logfd, const char *id, const char *vcl, struct agent_core_t *cor
 	snprintf(target, sizeof(target), "%s/%s.auto.vcl", core->config->p_arg, id);
 	snprintf(tempfile, sizeof(tempfile), "%s/.tmp.%s.auto.vcl", core->config->p_arg, id);
 
+	errno = 0;
 	if (unlink(tempfile) < 0 && errno != ENOENT) {
 		warnlog(logfd, "Removing temporary file '%s' failed: %s", tempfile, strerror(errno));
 		return -1;
@@ -149,6 +150,7 @@ vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 	}
 
 	ret = unlink(active_tmp);
+	errno = 0;
 	if (ret && errno != ENOENT) {
 		warnlog(logfd, "Failed to unlink %s: %s", active_tmp, strerror(errno));
 		return -1;
