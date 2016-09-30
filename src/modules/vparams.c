@@ -319,7 +319,7 @@ vparams_show_json(char *raw)
 {
 	struct param_opt *tmp, *top;
 	char *out = NULL, *out2 = NULL, *out3 = NULL;
-	int state = 0;
+	tmp = malloc(sizeof (struct param_opt));
 	top = NULL;
 
 	/*
@@ -361,27 +361,25 @@ vparams_show_json(char *raw)
 		param_assert(tmp);
 	}
 
-	state = asprintf(&out3, "{\n");
-	assert(state);
+	assert(asprintf(&out3, "{\n"));
 	for (tmp = top; tmp != NULL; ) {
 		param_assert(tmp);
-		state = asprintf(&out, "\t\"%s\": {\n"
+		assert(asprintf(&out, "\t\"%s\": {\n"
 			"\t\t\"value\": \"%s\",\n"
 			"\t\t\"default\": \"%s\",\n"
 			"\t\t\"unit\": \"%s\",\n"
 			"\t\t\"description\": \"%s\"\n"
 			"\t}",
 			tmp->name, tmp->value, tmp->def,
-			tmp->unit, tmp->description);
-		assert(state);
-		state = asprintf(&out2, "%s%s%s", out3, out, (tmp->next) ? ",\n":"");
-		assert(state);
+			tmp->unit, tmp->description));
+		assert(asprintf(&out2, "%s%s%s", out3, out,
+					(tmp->next) ? ",\n":""));
 		free(out);
 		free(out3);
 		out3 = out2;
 		tmp = param_free(tmp);
 	}
-	state = asprintf(&out2, "%s\n}\n", out3);
+	assert(asprintf(&out2, "%s\n}\n", out3));
 	free(out3);
 	return out2;
 }
