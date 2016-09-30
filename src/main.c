@@ -222,10 +222,6 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 		errx(1, "Username and password string does not contain a colon. Format: \"username:password\"");
 	*core->config->password = '\0';
 	core->config->password++;
-
-
-	argc -= optind;
-	argv += optind;
 }
 
 /*
