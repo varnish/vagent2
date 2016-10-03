@@ -80,7 +80,8 @@ html_reply(struct http_request *request, void *data)
 			free(tmp);
 		return 0;
 	}
-	if (url_stub[0] == '/' || strstr(url_stub,"/../") || !strncmp(url_stub,"../",strlen("../"))) {
+	if (url_stub[0] == '/' || strstr(url_stub,"/../") ||
+			STARTS_WITH(url_stub, "../")) {
 		http_reply(request->connection, 500, "Invalid URL");
 		return 0;
 	}
