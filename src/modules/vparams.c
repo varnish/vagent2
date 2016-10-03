@@ -413,19 +413,17 @@ vparams_reply(struct http_request *request, void *data)
 		return 1;
 	}
 	if (request->method == M_GET) {
-		if (!strcmp(request->url,"/param/")) {
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.show");
-			return 1;
-		} else {
+		if (!strcmp(request->url,"/param"))
+			arg = "";
+		else if (!strncmp(request->url,"/param/", strlen("/param/")))
 			arg = request->url + strlen("/param/");
-			assert(arg && *arg);
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.show %s", arg);
+		else {
+			http_reply(request->connection, 500, "Failed");
 			return 1;
 		}
+		run_and_respond(vparams->vadmin, request->connection,
+				"param.show %s", arg);
+		return 1;
 	} else if (request->method == M_PUT) {
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
