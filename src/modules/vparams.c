@@ -437,7 +437,7 @@ vparams_reply(struct http_request *request, void *data)
 				"param.set %s",body);
 		} else {
 			arg = request->url + strlen("/param/");
-			assert(arg && *arg);
+			assert(arg);
 			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.set %s %s",arg, body);
