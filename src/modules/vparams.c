@@ -308,11 +308,6 @@ fill_entry(struct param_opt *p, const char *pos)
 }
 
 /*
- * I hate myself and I want to die.
- *
- * This should be cleaned up considerably. Numerous flaws (e.g: word-size
- * mix). Unmanageable. Ugly. Fugly. Etc.
- *
  * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
