@@ -113,7 +113,7 @@ param_free(struct param_opt *p)
 static const char *
 skip_space(const char *p)
 {
-	while (*p && (*p == ' ' || *p == '\t'))
+	while (*p && isblank(*p))
 		p++;
 	return p;
 }
