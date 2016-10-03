@@ -272,13 +272,13 @@ fill_entry(struct param_opt *p, const char *pos)
 	assert(*pos);
 	tmp = skip_space(pos);
 	assert(tmp);
-	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
+	if (STARTS_WITH(tmp, "Value is: ")) {
 		tmp = parse_value(tmp+strlen("Value is: "), p);
 		assert(tmp);
 		tmp++;
 		tmp = skip_space(tmp);
 	}
-	if (!strncmp("Default is: ", tmp, strlen("Default is: "))) {
+	if (STARTS_WITH(tmp, "Default is: ")) {
 		assert(p->def == NULL);
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
@@ -286,14 +286,14 @@ fill_entry(struct param_opt *p, const char *pos)
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
-	if (!strncmp("Minimum is: ", tmp, strlen("Minimum is: "))) {
+	if (STARTS_WITH(tmp, "Minimum is: ")) {
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		p->min = strndup(tmp, tmp2 - tmp);
 		tmp = tmp2+1;
 		tmp = skip_space(tmp);
 	}
-	if (!strncmp("Maximum is: ", tmp, strlen("Maximum is: "))) {
+	if (STARTS_WITH(tmp, "Maximum is: ")) {
 		tmp2 = strchr(tmp,'\n');
 		assert(tmp2);
 		p->max = strndup(tmp, tmp2 - tmp);
@@ -410,14 +410,14 @@ vparams_reply(struct http_request *request, void *data)
 
 	GET_PRIV(core, vparams);
 
-	if (!strncmp(request->url, "/paramjson/", strlen("/paramjson/")) && request->method == M_GET) {
+	if (STARTS_WITH(request->url, "/paramjson/") && request->method == M_GET) {
 		param_json(request, vparams);
 		return 1;
 	}
 	if (request->method == M_GET) {
 		if (!strcmp(request->url,"/param"))
 			arg = "";
-		else if (!strncmp(request->url,"/param/", strlen("/param/")))
+		else if (STARTS_WITH(request->url,"/param/"))
 			arg = request->url + strlen("/param/");
 		else {
 			http_reply(request->connection, 500, "Failed");

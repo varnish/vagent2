@@ -153,4 +153,6 @@ do {					\
 	assert(plug);			\
 } while(0)
 
+#define STARTS_WITH(string, match) !strncmp(string, match, strlen(match))
+
 #endif

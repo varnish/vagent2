@@ -284,7 +284,7 @@ vcl_json(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(!strncmp(request->url, "/vcljson/", strlen("/vcljson/")));
+	assert(STARTS_WITH(request->url, "/vcljson/"));
 	assert(request->method == M_GET);
 
 	if (strcmp(request->url, "/vcljson") &&
@@ -323,7 +323,7 @@ vcl_listshow(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+	assert(STARTS_WITH(request->url, "/vcl/"));
 	assert(request->method == M_GET);
 
 	if (!strcmp(request->url, "/vcl/"))
@@ -352,7 +352,7 @@ vcl_push(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+	assert(STARTS_WITH(request->url, "/vcl/"));
 	assert(request->method == M_POST || request->method == M_PUT);
 
 	if (request->method == M_POST)
@@ -380,7 +380,7 @@ vcl_delete(struct http_request *request, void *data)
 	GET_PRIV(core, vcl);
 
 	assert(request->method == M_DELETE);
-	assert(!strncmp(request->url, "/vcl/", strlen("/vcl/")));
+	assert(STARTS_WITH(request->url, "/vcl/"));
 
 	ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
 			request->url + strlen("/vcl/"));
@@ -403,7 +403,7 @@ vcl_active(struct http_request *request, void *data)
 	char *p, *last;
 	char *line;
 
-	assert(!strncmp(request->url, "/vclactive/", strlen("/vclactive/")));
+	assert(STARTS_WITH(request->url, "/vclactive/"));
 	assert(request->method == M_GET);
 	GET_PRIV(core, vcl);
 
@@ -455,7 +455,7 @@ vcl_deploy(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(!strncmp(request->url, "/vcldeploy/", strlen("/vcldeploy/")));
+	assert(STARTS_WITH(request->url, "/vcldeploy/"));
 	assert(request->method == M_PUT);
 
 	ipc_run(vcl->vadmin, &vret, "vcl.use %s",
