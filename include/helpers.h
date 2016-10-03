@@ -42,4 +42,6 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 			 unsigned min, unsigned max, const char *fmt, ...);
 
+size_t check_endpoint(const char *url, const char *endpoint);
+const char *url_arg(const char *url, const char *endpoint);
 #endif

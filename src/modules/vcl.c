@@ -330,7 +330,7 @@ vcl_listshow(struct http_request *request, void *data)
 		ipc_run(vcl->vadmin, &vret, "vcl.list");
 	else
 		ipc_run(vcl->vadmin, &vret, "vcl.show %s",
-				request->url + strlen("/vcl/"));
+				url_arg(request->url, "/vcl/"));
 
 	if (vret.status == 200)
 		http_reply(request->connection, 200, vret.answer);
@@ -358,7 +358,7 @@ vcl_push(struct http_request *request, void *data)
 	if (request->method == M_POST)
 		snprintf(id, sizeof(id), "vcl%ju", (uintmax_t) time(NULL));
 	else
-		snprintf(id, sizeof(id), "%s", request->url + strlen("/vcl/"));
+		snprintf(id, sizeof(id), "%s", url_arg(request->url, "/vcl/"));
 
 	if (!strlen(id))
 		http_reply(request->connection, 400, "Bad URL?");
@@ -383,7 +383,7 @@ vcl_delete(struct http_request *request, void *data)
 	assert(STARTS_WITH(request->url, "/vcl/"));
 
 	ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
-			request->url + strlen("/vcl/"));
+			url_arg(request->url, "/vcl/"));
 	if (vret.status == 400 || vret.status == 106) {
 		http_reply(request->connection, 500, vret.answer);
 	} else {
@@ -459,10 +459,10 @@ vcl_deploy(struct http_request *request, void *data)
 	assert(request->method == M_PUT);
 
 	ipc_run(vcl->vadmin, &vret, "vcl.use %s",
-			request->url + strlen("/vcldeploy/"));
+			url_arg(request->url, "/vcldeploy/"));
 	if (vret.status == 200) {
 		ret = vcl_persist_active(vcl->logger,
-				request->url + strlen("/vcldeploy/"), core);
+				url_arg(request->url, "/vcldeploy/"), core);
 	}
 	if (vret.status == 200 && ret)
 		http_reply(request->connection, 500,
