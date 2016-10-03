@@ -40,6 +40,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vsb.h>
+
 #include "common.h"
 #include "http.h"
 #include "helpers.h"
@@ -314,12 +316,10 @@ fill_entry(struct param_opt *p, const char *pos)
  * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
-static char *
-vparams_show_json(char *raw)
+static void
+vparams_show_json(struct vsb *json, char *raw)
 {
-	struct param_opt *tmp, *top;
-	char *out = NULL, *out2 = NULL, *out3 = NULL;
-	top = NULL;
+	struct param_opt *tmp = NULL, *top = NULL;
 
 	/*
 	 * param.show -l output:
@@ -360,42 +360,39 @@ vparams_show_json(char *raw)
 		param_assert(tmp);
 	}
 
-	assert(asprintf(&out3, "{\n"));
+	VSB_cat(json, "{");
 	for (tmp = top; tmp != NULL; ) {
 		param_assert(tmp);
-		assert(asprintf(&out, "\t\"%s\": {\n"
+		VSB_printf(json, "\n\t\"%s\": {\n"
 			"\t\t\"value\": \"%s\",\n"
 			"\t\t\"default\": \"%s\",\n"
 			"\t\t\"unit\": \"%s\",\n"
 			"\t\t\"description\": \"%s\"\n"
-			"\t}",
+			"\t}\n",
 			tmp->name, tmp->value, tmp->def,
-			tmp->unit, tmp->description));
-		assert(asprintf(&out2, "%s%s%s", out3, out,
-					(tmp->next) ? ",\n":""));
-		free(out);
-		free(out3);
-		out3 = out2;
+			tmp->unit, tmp->description);
 		tmp = param_free(tmp);
 	}
-	assert(asprintf(&out2, "%s\n}\n", out3));
-	free(out3);
-	return out2;
+	VSB_cat(json, "}");
 }
 
 static void
 param_json(struct http_request *request, struct vparams_priv_t *vparams)
 {
 	struct ipc_ret_t vret;
-	char *tmp;
+	struct http_response *resp;
+	struct vsb *json;
 	const char *param = (request->url) + strlen("/paramjson/");
 	ipc_run(vparams->vadmin, &vret, "param.show %s", *param ? param : "-l");
 	if (vret.status == 200) {
-		tmp = vparams_show_json(vret.answer);
-		struct http_response *resp = http_mkresp(request->connection, 200, tmp);
+		json = VSB_new_auto();
+		assert(json);
+		vparams_show_json(json, vret.answer);
+		VSB_finish(json);
+		resp = http_mkresp(request->connection, 200, VSB_data(json));
 		http_add_header(resp,"Content-Type","application/json");
 		send_response(resp);
-		free(tmp);
+		VSB_delete(json);
 		http_free_resp(resp);
 	} else {
 		http_reply(request->connection, 500, vret.answer);
