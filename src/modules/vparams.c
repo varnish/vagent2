@@ -379,7 +379,7 @@ param_json(struct http_request *request, struct vparams_priv_t *vparams)
 	struct ipc_ret_t vret;
 	struct http_response *resp;
 	struct vsb *json;
-	const char *param = (request->url) + strlen("/paramjson/");
+	const char *param = url_arg(request->url, "/paramjson");
 	ipc_run(vparams->vadmin, &vret, "param.show %s", *param ? param : "-l");
 	if (vret.status == 200) {
 		json = VSB_new_auto();
@@ -415,14 +415,7 @@ vparams_reply(struct http_request *request, void *data)
 		return 1;
 	}
 	if (request->method == M_GET) {
-		if (!strcmp(request->url,"/param"))
-			arg = "";
-		else if (STARTS_WITH(request->url,"/param/"))
-			arg = request->url + strlen("/param/");
-		else {
-			http_reply(request->connection, 500, "Failed");
-			return 1;
-		}
+		arg = url_arg(request->url, "/param");
 		run_and_respond(vparams->vadmin, request->connection,
 				"param.show %s", arg);
 		return 1;
@@ -438,8 +431,7 @@ vparams_reply(struct http_request *request, void *data)
 				request->connection,
 				"param.set %s",body);
 		} else {
-			arg = request->url + strlen("/param/");
-			assert(arg);
+			arg = url_arg(request->url, "/param");
 			run_and_respond(vparams->vadmin,
 				request->connection,
 				"param.set %s %s",arg, body);

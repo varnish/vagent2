@@ -37,8 +37,10 @@
 #include <string.h>
 #include <errno.h>
 
+
 #include "common.h"
 #include "http.h"
+#include <helpers.h>
 #include "ipc.h"
 #include "plugins.h"
 
@@ -60,7 +62,9 @@ html_reply(struct http_request *request, void *data)
 	struct html_priv_t *html;
 
 	GET_PRIV(core, html);
-	const char *url_stub = (strlen(request->url) > strlen("/html/")) ? request->url + strlen("/html/") : "index.html";
+	const char *url_stub = url_arg(request->url,"/html");
+	if (!*url_stub)
+		url_stub = "index.html";
 	if (strlen(request->url) == strlen("/html")) {
 		char *host_header = http_get_header(request->connection,"Host");
 		char *tmp = NULL;

@@ -34,6 +34,7 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <microhttpd.h>
@@ -95,4 +96,36 @@ help_reply(struct http_request *request, void *data)
 {
 	http_reply(request->connection, 200, (char *)data);
 	return 0;
+}
+
+/* check that the url correspond to the actual, and return position of the
+ * first non-enpoint char */
+size_t
+check_endpoint(const char *url, const char *endpoint)
+{
+	size_t len;
+
+	assert(url);
+	assert(endpoint);
+	assert(STARTS_WITH(url, endpoint));
+
+	len = strlen(endpoint);
+
+	if (endpoint[len - 1] == '/')
+		return (len);
+	else if (url[len] == '/' || url[len] == '\0')
+		return (len + 1);
+
+	return (0);
+}
+
+/* return the argument of an endpoint */
+const char *
+url_arg(const char *url, const char *endpoint)
+{
+	size_t len = check_endpoint(url, endpoint);
+
+	assert(len);
+
+	return (url + len);
 }
