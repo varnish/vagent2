@@ -332,10 +332,10 @@ vcl_listshow(struct http_request *request, void *data)
 		ipc_run(vcl->vadmin, &vret, "vcl.show %s",
 				request->url + strlen("/vcl/"));
 
-	if (vret.status == 400)
-		http_reply(request->connection, 500, vret.answer);
-	else
+	if (vret.status == 200)
 		http_reply(request->connection, 200, vret.answer);
+	else
+		http_reply(request->connection, 400, vret.answer);
 
 	free(vret.answer);
 	return 0;
