@@ -358,6 +358,8 @@ vparams_show_json(struct vsb *json, char *raw)
 	VSB_cat(json, "{");
 	for (tmp = top; tmp != NULL; ) {
 		param_assert(tmp);
+		if (tmp != top)
+			 VSB_cat(json, ",");
 		VSB_printf(json, "\n\t\"%s\": {\n"
 			"\t\t\"value\": \"%s\",\n"
 			"\t\t\"default\": \"%s\",\n"
