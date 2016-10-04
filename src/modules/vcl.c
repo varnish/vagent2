@@ -347,7 +347,7 @@ vcl_push(struct http_request *request, void *data)
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
 	struct ipc_ret_t vret;
-	char id[ID_LEN + 1];
+	char id[ID_LEN + 3 + 1];
 	int status;
 
 	GET_PRIV(core, vcl);
