@@ -81,14 +81,12 @@ char *format_line(char* line)
         return out;
 }
 
-static char *vbackends_show_json(char *raw)
+static void
+vbackends_show_json(struct vsb *json, char *raw)
 {
-        char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
-        struct vsb *final= VSB_new_auto();
         char *tokens = NULL, *ptr = NULL;
         char tmp[1000];
         int raw_len = 0;
-        int state = 0;
         int cont = 0;
         int sum = 0;
 
@@ -96,46 +94,40 @@ static char *vbackends_show_json(char *raw)
         tokens = strtok(raw, "\n");
         sum = sum + strlen(tokens);
 
+	VSB_cat(json, "{\n \"backends\" : [\n");
         while(tokens != NULL){
                 strcpy(tmp, (tokens));
                 tokens = strtok(NULL, "\n");
                 sum = sum + strlen(tmp);
                 if(cont > 0){
                         ptr = format_line(tmp);
-                        VSB_cat(final, ptr);
+                        VSB_cat(json, ptr);
                         if(sum < raw_len)
-                                VSB_cat(final, ",\n");
+                                VSB_cat(json, ",\n");
                         free(ptr);
                 }
                 cont++;
         }
 
-        VSB_finish(final);
-
-        state = asprintf(&out1, "{\n \"backends\" : [\n");
-        state = asprintf(&out2, "%s",VSB_data(final));
-        state = asprintf(&out3, "%s%s\n]\n}\n", out1, out2);
-        VSB_delete(final);
-        free(out1);
-        free(out2);
-
-        assert(state);
-        return out3;
+        VSB_cat(json, "\n]\n}\n");
 }
 
 static void backends_json(struct http_request *request,
     struct vbackends_priv_t *vbackends)
 {
+	struct vsb *json;
         struct ipc_ret_t vret;
-        char *tmp;
         ipc_run(vbackends->vadmin, &vret, "backend.list");
         if (vret.status == 200) {
-                tmp = vbackends_show_json(vret.answer);
+		json = VSB_new_auto();
+		assert(json);
+                vbackends_show_json(json, vret.answer);
+		VSB_finish(json);
                 struct http_response *resp = http_mkresp(request->connection,
-                    200, tmp);
+                    200, VSB_data(json));
                 http_add_header(resp,"Content-Type","application/json");
                 send_response(resp);
-                free(tmp);
+		VSB_delete(json);
                 http_free_resp(resp);
         } else {
                 http_reply(request->connection, 500, vret.answer);
