@@ -47,7 +47,7 @@ TIME=$(date +%s)
 test_vcl_file data/smallvcl
 test_vcl_file data/longvcl
 test_it_long PUT vcl/foo "$DUMMYVCL" ""
-test_it_long_fail PUT vcl/foo "$DUMMYVCL" "Already a VCL program named foo"
+test_it_long_fail PUT vcl/foo "$DUMMYVCL" "Already a VCL\( program\)\? named foo"
 test_it_long_fail PUT "vcl/foo-bar-baz" "$DUMMYVCL" "VCL name is not valid"
 mkdir $TMPDIR/vcl/foo2.auto.vcl
 test_it_long_fail PUT vcl/foo2 "$DUMMYVCL" "VCL stored in varnish OK, but persisting to disk failed."
