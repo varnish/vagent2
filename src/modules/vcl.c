@@ -287,6 +287,13 @@ vcl_json(struct http_request *request, void *data)
 	assert(!strncmp(request->url, "/vcljson/", strlen("/vcljson/")));
 	assert(request->method == M_GET);
 
+	if (strcmp(request->url, "/vcljson") &&
+		       strcmp(request->url, "/vcljson/")) {
+		http_reply(request->connection, 404,
+				"/vcljson takes no argument");
+		return (0);
+	}
+
 	ipc_run(vcl->vadmin, &vret, "vcl.list");
 	if (vret.status == 400) {
 		http_reply(request->connection, 500, vret.answer);
