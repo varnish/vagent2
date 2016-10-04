@@ -356,7 +356,7 @@ vcl_push(struct http_request *request, void *data)
 	assert(request->method == M_POST || request->method == M_PUT);
 
 	if (request->method == M_POST)
-		snprintf(id, sizeof(id), "%ju", (uintmax_t) time(NULL));
+		snprintf(id, sizeof(id), "vcl%ju", (uintmax_t) time(NULL));
 	else
 		snprintf(id, sizeof(id), "%s", request->url + strlen("/vcl/"));
 
