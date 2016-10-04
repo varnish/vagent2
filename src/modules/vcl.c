@@ -135,6 +135,7 @@ vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 	 * FIXME: need to move things into place to avoid disaster if we
 	 * crash during update, leaving no active vcl in place.
 	 */
+	errno = 0;
 	snprintf(buf, sizeof buf, "%s/%s.auto.vcl", core->config->p_arg, id);
 	snprintf(active_tmp, sizeof active_tmp, "%s/boot.vcl.tmp", core->config->p_arg);
 	snprintf(active, sizeof active, "%s/boot.vcl", core->config->p_arg);
@@ -150,7 +151,6 @@ vcl_persist_active(int logfd, const char *id, struct agent_core_t *core)
 	}
 
 	ret = unlink(active_tmp);
-	errno = 0;
 	if (ret && errno != ENOENT) {
 		warnlog(logfd, "Failed to unlink %s: %s", active_tmp, strerror(errno));
 		return -1;
