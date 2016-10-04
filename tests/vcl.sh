@@ -42,7 +42,6 @@ test_it_long GET vcl/ "" "active"
 test_it_long GET vcl/boot "" "backend"
 test_it_fail GET vcljson/foo "" "/vcljson takes no argument"
 test_it_long POST vcl/ "$DUMMYVCL" "VCL compiled."
-TIME=$(date +%s)
 
 test_vcl_file data/smallvcl
 test_vcl_file data/longvcl
@@ -64,8 +63,7 @@ test_it GET vclactive/ "" "foo2"
 if diff -q data/smallvcl $TMPDIR/vcl/boot.vcl; then pass; else fail "boot.vcl isnt data/smallvcl"; fi
 inc
 
-TIME2=$(date +%s)
-if [ "x${TIME}" = "x${TIME2}" ]; then sleep 1; fi
+sleep 1
 test_it_long POST vcl/ "$DUMMYVCL" "VCL compiled."
 
 exit $ret
