@@ -125,15 +125,15 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 #define assert(expr) \
   	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
 
+#define AZ(expr)			\
+do {					\
+	assert((expr) == 0);		\
+} while(0)
+
 #define ALLOC_OBJ(to)			\
 do {					\
 	(to) = calloc(sizeof *(to), 1);	\
 	assert((to) != NULL);		\
-} while(0)
-
-#define AZ(expr)			\
-do {					\
-	assert((expr) == 0);		\
 } while(0)
 
 #define DUP_OBJ(to, from, len)		\
