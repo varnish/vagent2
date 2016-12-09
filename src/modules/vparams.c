@@ -278,28 +278,20 @@ fill_entry(struct param_opt *p, const char *pos)
 		tmp++;
 		tmp = skip_space(tmp);
 	}
-	if (STARTS_WITH(tmp, "Default is: ")) {
-		assert(p->def == NULL);
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->def = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
+#define PARSE_VALUE(name, field)			\
+	if (STARTS_WITH(tmp, #name " is: ")) {		\
+		tmp += sizeof #name " is:";		\
+		assert(p->field == NULL);		\
+		tmp2 = strchr(tmp,'\n');		\
+		assert(tmp2);				\
+		p->field = strndup(tmp, tmp2 - tmp);	\
+		tmp = tmp2+1;				\
+		tmp = skip_space(tmp);			\
 	}
-	if (STARTS_WITH(tmp, "Minimum is: ")) {
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->min = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
-	}
-	if (STARTS_WITH(tmp, "Maximum is: ")) {
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->max = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
-	}
+	PARSE_VALUE(Default, def)
+	PARSE_VALUE(Minimum, min)
+	PARSE_VALUE(Maximum, max)
+#undef PARSE_VALUE
 
 	char desc[2048];
 	tmp = extract_description(tmp, desc, sizeof desc);
