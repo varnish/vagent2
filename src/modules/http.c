@@ -280,7 +280,7 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
 		if (STARTS_WITH(request->url, lp->url) &&
-				(lp->method & request->method)) {
+		    (lp->method & request->method)) {
 			lp->cb(request, lp->data);
 			return (1);
 		}

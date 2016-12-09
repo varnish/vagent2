@@ -104,7 +104,7 @@ param_free(struct param_opt *p)
 	free(p->max);
 	next = p->next;
 	free(p);
-	return next;
+	return (next);
 }
 
 /*
@@ -115,7 +115,7 @@ skip_space(const char *p)
 {
 	while (*p && isblank(*p))
 		p++;
-	return p;
+	return (p);
 }
 
 /*
@@ -304,7 +304,7 @@ fill_entry(struct param_opt *p, const char *pos)
 	char desc[2048];
 	tmp = extract_description(tmp, desc, sizeof desc);
 	p->description = strdup(desc);
-	return tmp;
+	return (tmp);
 }
 
 /*
@@ -343,31 +343,29 @@ vparams_show_json(struct vsb *json, char *raw)
 		/*
 		 * Sort of silly, but simplifies cleanup
 		 */
-		if (!tmp->unit) {
+		if (!tmp->unit)
 			tmp->unit = strdup("");
-		}
-		if (!tmp->min) {
+		if (!tmp->min)
 			tmp->min = strdup("");
-		}
-		if (!tmp->max) {
+		if (!tmp->max)
 			tmp->max = strdup("");
-		}
 		param_assert(tmp);
 	}
 
-	VSB_cat(json, "{");
-	for (tmp = top; tmp != NULL; ) {
+	VSB_cat(json, "{\n");
+	for (tmp = top; tmp != NULL;) {
 		param_assert(tmp);
 		if (tmp != top)
-			 VSB_cat(json, ",");
-		VSB_printf(json, "\n\t\"%s\": {\n"
-			"\t\t\"value\": \"%s\",\n"
-			"\t\t\"default\": \"%s\",\n"
-			"\t\t\"unit\": \"%s\",\n"
-			"\t\t\"description\": \"%s\"\n"
-			"\t}\n",
-			tmp->name, tmp->value, tmp->def,
-			tmp->unit, tmp->description);
+			VSB_cat(json, ",\n");
+		VSB_printf(json,
+		    "\t\"%s\": {\n"
+		    "\t\t\"value\": \"%s\",\n"
+		    "\t\t\"default\": \"%s\",\n"
+		    "\t\t\"unit\": \"%s\",\n"
+		    "\t\t\"description\": \"%s\"\n"
+		    "\t}\n",
+		    tmp->name, tmp->value, tmp->def, tmp->unit,
+		    tmp->description);
 		tmp = param_free(tmp);
 	}
 	VSB_cat(json, "}");
@@ -385,15 +383,15 @@ param_json(struct http_request *request, struct vparams_priv_t *vparams)
 		json = VSB_new_auto();
 		assert(json);
 		vparams_show_json(json, vret.answer);
-		VSB_finish(json);
+		AZ(VSB_finish(json));
 		resp = http_mkresp(request->connection, 200, VSB_data(json));
 		http_add_header(resp,"Content-Type","application/json");
 		send_response(resp);
 		VSB_delete(json);
 		http_free_resp(resp);
-	} else {
-		http_reply(request->connection, 500, vret.answer);
 	}
+	else
+	    http_reply(request->connection, 500, vret.answer);
 	free(vret.answer);
 }
 
@@ -410,38 +408,37 @@ vparams_reply(struct http_request *request, void *data)
 
 	GET_PRIV(core, vparams);
 
-	if (STARTS_WITH(request->url, "/paramjson/") && request->method == M_GET) {
+	if (STARTS_WITH(request->url, "/paramjson/") &&
+	    request->method == M_GET) {
 		param_json(request, vparams);
-		return 1;
+		return (1);
 	}
 	if (request->method == M_GET) {
 		arg = url_arg(request->url, "/param");
 		run_and_respond(vparams->vadmin, request->connection,
-				"param.show %s", arg);
-		return 1;
-	} else if (request->method == M_PUT) {
+		    "param.show %s", arg);
+		return (1);
+	}
+	else if (request->method == M_PUT) {
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
 		body = strdup(request->data);
 		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
-		if (!strcmp(request->url, "/param/")) {
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.set %s",body);
-		} else {
+		if (!strcmp(request->url, "/param/"))
+			run_and_respond(vparams->vadmin, request->connection,
+			    "param.set %s", body);
+		else {
 			arg = url_arg(request->url, "/param");
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.set %s %s",arg, body);
+			run_and_respond(vparams->vadmin, request->connection,
+			    "param.set %s %s", arg, body);
 		}
 		free(body);
-		return 1;
-
+		return (1);
 	}
 	http_reply(request->connection, 500, "Failed");
-	return 1;
+	return (1);
 }
 
 void

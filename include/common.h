@@ -106,21 +106,26 @@ extern int threads_started;
  * The "l < 0" thing is allow main.c to use the logger() too.
  */
 
-#define loggerraw(l, level, fmt, ...) do { \
-	struct ipc_ret_t logger_thing_int; \
-	if (threads_started == 0 || l < 0) \
-		printf("%s (%s:%d): " fmt "\n" , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
-	else {\
-		ipc_run(l, &logger_thing_int, #level "%s (%s:%d): " fmt , __func__, __FILE__, __LINE__, ##__VA_ARGS__); \
-		free(logger_thing_int.answer); \
-	} \
+#define loggerraw(l, level, fmt, ...)					\
+	do {								\
+	struct ipc_ret_t logger_thing_int;				\
+	if (threads_started == 0 || l < 0)				\
+		printf("%s (%s:%d): " fmt "\n" ,			\
+		    __func__, __FILE__, __LINE__, ##__VA_ARGS__);	\
+	else {								\
+		ipc_run(l, &logger_thing_int,				\
+		    #level "%s (%s:%d): " fmt ,				\
+		    __func__, __FILE__, __LINE__, ##__VA_ARGS__);	\
+		free(logger_thing_int.answer);				\
+	}								\
 } while(0)
 
 #define logger(l,fmt,...) loggerraw(l, 2, fmt, ##__VA_ARGS__)
 #define warnlog(l,fmt,...) loggerraw(l, 1, fmt, ##__VA_ARGS__)
 #define debuglog(l,fmt,...) loggerraw(l, 3, fmt, ##__VA_ARGS__)
 
-void assert_fail(const char *expr, const char *file, int line, const char *func)  __attribute__((__noreturn__));
+void assert_fail(const char *expr, const char *file, int line, const char *func)
+    __attribute__((__noreturn__));
 
 #define assert(expr)								\
 	do									\
@@ -131,29 +136,29 @@ void assert_fail(const char *expr, const char *file, int line, const char *func)
 #define AN(expr)	assert((expr) != 0)
 #define AZ(expr)	assert((expr) == 0)
 
-#define ALLOC_OBJ(to)			\
-do {					\
-	(to) = calloc(sizeof *(to), 1);	\
-	AN(to);				\
-} while(0)
+#define ALLOC_OBJ(to)				\
+	do {					\
+		(to) = calloc(sizeof *(to), 1);	\
+		AN(to);				\
+	} while(0)
 
-#define DUP_OBJ(to, from, len)		\
-do {					\
-	AN(from);			\
-	(to) = malloc((len) + 1);	\
-	AN(to);				\
-	memcpy((to), (from), (len));	\
-	(to)[(len)] = '\0';		\
-} while(0)
+#define DUP_OBJ(to, from, len)			\
+	do {					\
+		AN(from);			\
+		(to) = malloc((len) + 1);	\
+		AN(to);				\
+		memcpy((to), (from), (len));	\
+		(to)[(len)] = '\0';		\
+	} while(0)
 
-#define GET_PRIV(core, plug)		\
-do {					\
-	struct agent_plugin_t *pp;	\
-	pp = plugin_find(core, #plug);	\
-	plug = pp->data;		\
-	AN(plug);			\
-} while(0)
+#define GET_PRIV(core, plug)			\
+	do {					\
+		struct agent_plugin_t *pp;	\
+		pp = plugin_find(core, #plug);	\
+		plug = pp->data;		\
+		AN(plug);			\
+	} while(0)
 
-#define STARTS_WITH(string, match) !strncmp(string, match, strlen(match))
+#define STARTS_WITH(string, match) (!strncmp(string, match, strlen(match)))
 
 #endif
