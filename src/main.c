@@ -73,28 +73,32 @@ extern int daemon(int, int);
 int threads_started = 0;
 
 static char *
-get_line(const char *filename)
+get_first_line(const char *filename)
 {
 	FILE *fp;
 	char buffer[1024];
-	unsigned int s;
-	char *tmp;
+	size_t len;
+	char *eol;
 	fp = fopen(filename, "r");
 	if (!fp) {
 		warn("Cannot open file %s for reading", filename);
-		return NULL;
+		return (NULL);
 	}
 
-	assert(fp);
-
-	s = fread(buffer, 1, sizeof(buffer), fp);
-	assert(s>0);
-	buffer[s+1] = '\0';
-	tmp = strchr(buffer,'\n');
-	if (tmp)
-		*tmp = '\0';
+	len = fread(buffer, 1, sizeof buffer, fp);
+	assert(len > 0 || feof(fp));
 	fclose(fp);
-	return strdup(buffer);
+	if (len == 0)
+		return (NULL);
+
+	eol = strchr(buffer,'\n');
+	if (eol)
+		*eol = '\0';
+	else if (len == sizeof buffer)
+		errx(1, "Password line too large.");
+
+	buffer[len + 1] = '\0';
+	return (strdup(buffer));
 }
 
 static void
@@ -199,7 +203,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 'V':
 			fprintf(stderr, PACKAGE_STRING
-			    "\nCopyright (c) 2012-2015 Varnish Software Group\n");
+			    "\nCopyright (c) 2012-2016 Varnish Software Group\n");
 			exit(1);
 			break;
 		case 'v':
@@ -211,15 +215,20 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 		}
 	}
 
-	assert(core->config->K_arg);	
-	core->config->userpass = get_line(core->config->K_arg);
-	if (!core->config->userpass) {
-		errx(1,"No password present. Put one in %s using \"user:password\" format", core->config->K_arg);
-	}
+	assert(core->config->K_arg);
+	core->config->userpass = get_first_line(core->config->K_arg);
+	if (!core->config->userpass)
+		errx(1,
+		    "No password present."
+		    " Put one in %s using \"user:password\" format",
+		    core->config->K_arg);
 	core->config->user = strdup(core->config->userpass);
 	core->config->password = strchr(core->config->user, ':');
-	if (core->config->password == NULL || *(core->config->password + 1)== '\0')
-		errx(1, "Username and password string does not contain a colon. Format: \"username:password\"");
+	if (core->config->password == NULL ||
+	    *(core->config->password + 1)== '\0')
+		errx(1,
+		    "Username and password string does not contain a colon.\n"
+		    "Format: \"username:password\"");
 	*core->config->password = '\0';
 	core->config->password++;
 }
