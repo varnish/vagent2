@@ -122,25 +122,26 @@ extern int threads_started;
 
 void assert_fail(const char *expr, const char *file, int line, const char *func)  __attribute__((__noreturn__));
 
-#define assert(expr) \
-  	((expr) ? (void)(0) : assert_fail(#expr, __FILE__, __LINE__, __func__));
+#define assert(expr)								\
+	do									\
+		if (!(expr))							\
+			assert_fail(#expr, __FILE__, __LINE__, __func__);	\
+	while (0)
 
-#define AZ(expr)			\
-do {					\
-	assert((expr) == 0);		\
-} while(0)
+#define AN(expr)	assert((expr) != 0)
+#define AZ(expr)	assert((expr) == 0)
 
 #define ALLOC_OBJ(to)			\
 do {					\
 	(to) = calloc(sizeof *(to), 1);	\
-	assert((to) != NULL);		\
+	AN(to);				\
 } while(0)
 
 #define DUP_OBJ(to, from, len)		\
 do {					\
-	assert((from) != NULL);		\
+	AN(from);			\
 	(to) = malloc((len) + 1);	\
-	assert((to) != NULL);		\
+	AN(to);				\
 	memcpy((to), (from), (len));	\
 	(to)[(len)] = '\0';		\
 } while(0)
@@ -150,7 +151,7 @@ do {					\
 	struct agent_plugin_t *pp;	\
 	pp = plugin_find(core, #plug);	\
 	plug = pp->data;		\
-	assert(plug);			\
+	AN(plug);			\
 } while(0)
 
 #define STARTS_WITH(string, match) !strncmp(string, match, strlen(match))
