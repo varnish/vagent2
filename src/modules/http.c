@@ -129,7 +129,7 @@ send_auth_response(struct MHD_Connection *connection)
 	resp = http_mkresp(connection, 401, "Authorize, please.\n\n"
 	    "If Varnish Agent was installed from packages, the "
 	    "/etc/varnish/agent_secret file contains generated "
-	    "credentials.");
+	    "credentials.\n");
 	http_add_header(resp, "WWW-Authenticate",
 	    "Basic realm=varnish-agent");
 	send_response(resp);
