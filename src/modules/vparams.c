@@ -353,14 +353,16 @@ vparams_show_json(struct vsb *json, char *raw)
 		    "\t\"%s\": {\n"
 		    "\t\t\"value\": \"%s\",\n"
 		    "\t\t\"default\": \"%s\",\n"
+		    "\t\t\"min\": \"%s\",\n"
+		    "\t\t\"max\": \"%s\",\n"
 		    "\t\t\"unit\": \"%s\",\n"
 		    "\t\t\"description\": \"%s\"\n"
-		    "\t}\n",
-		    tmp->name, tmp->value, tmp->def, tmp->unit,
-		    tmp->description);
+		    "\t}",
+		    tmp->name, tmp->value, tmp->def, tmp->min, tmp->max,
+		    tmp->unit, tmp->description);
 		tmp = param_free(tmp);
 	}
-	VSB_cat(json, "}");
+	VSB_cat(json, "\n}");
 }
 
 static void
