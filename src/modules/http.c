@@ -54,6 +54,7 @@ struct http_listener {
 	char *url;
 	unsigned int method;
 	callback_t cb;
+	callback2_t cb2;
 	void *data;
 	struct http_listener *next;
 };
@@ -281,7 +282,10 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
 		if (STARTS_WITH(request->url, lp->url) &&
 		    (lp->method & request->method)) {
-			lp->cb(request, lp->data);
+			if (lp->cb)
+				lp->cb(request, lp->data);
+			else
+				lp->cb2(request, NULL, lp->data);
 			return (1);
 		}
 	}
@@ -477,6 +481,27 @@ http_register_url(struct agent_core_t *core, const char *url,
 	assert(lp->url);
 	lp->method = method;
 	lp->cb = cb;
+	lp->data = data;
+	lp->next = http->listener;
+	http->listener = lp;
+	return (1);
+}
+
+int
+http_register_url2(struct agent_core_t *core, const char *url,
+    unsigned int method, callback2_t cb, void *data)
+{
+	struct http_listener *lp;
+	struct http_priv_t *http;
+
+	assert(cb);
+
+	ALLOC_OBJ(lp);
+	GET_PRIV(core, http);
+	lp->url = strdup(url);
+	assert(lp->url);
+	lp->method = method;
+	lp->cb2 = cb;
 	lp->data = data;
 	lp->next = http->listener;
 	http->listener = lp;
