@@ -389,6 +389,19 @@ param_json(struct http_request *request, struct vparams_priv_t *vparams)
 	free(vret.answer);
 }
 
+static unsigned int
+vparams_json_reply(struct http_request *request, const char *arg, void *data)
+{
+	struct vparams_priv_t *vparams;
+	struct agent_core_t *core = data;
+
+	(void)arg;
+	GET_PRIV(core, vparams);
+
+	param_json(request, vparams);
+	return (1);
+}
+
 /*
  * FIXME: Should be simplified/split up.
  */
@@ -402,11 +415,6 @@ vparams_reply(struct http_request *request, void *data)
 
 	GET_PRIV(core, vparams);
 
-	if (STARTS_WITH(request->url, "/paramjson/") &&
-	    request->method == M_GET) {
-		param_json(request, vparams);
-		return (1);
-	}
 	if (request->method == M_GET) {
 		arg = url_arg(request->url, "/param");
 		run_and_respond(vparams->vadmin, request->connection,
@@ -448,6 +456,7 @@ vparams_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
-	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
+	http_register_url2(core, "/paramjson/", M_GET, vparams_json_reply,
+			core);
 	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }
