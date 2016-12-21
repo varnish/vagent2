@@ -148,33 +148,32 @@ vbackends_json_reply(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vbackends_reply(struct http_request *request, void *data)
+vbackends_reply(struct http_request *request, const char *arg, void *data)
 {
-	const char *arg;
 	struct vbackends_priv_t *vbackends;
 	struct agent_core_t *core = data;
 	struct agent_plugin_t *plug;
 	char *body;
+	char *mark;
+
+	assert(request->method == M_PUT);
+
+	if (!arg) {
+		http_reply(request->connection, 500, "Failed");
+		return (1);
+	}
 
 	plug = plugin_find(core,"vbackends");
 	vbackends = plug->data;
 
-	if (request->method == M_PUT) {
-		char *mark;
-		assert(((char *)request->data)[request->ndata] == '\0');
-		body = strdup(request->data);
-		mark = strchr(body,'\n');
-		if (mark)
-			*mark = '\0';
-		arg = request->url + strlen("/backend/");
-		assert(arg && *arg);
-		run_and_respond(vbackends->vadmin, request->connection,
-		    "backend.set_health %s %s", arg, body);
-		free(body);
-		return (1);
-	}
-
-	http_reply(request->connection, 500, "Failed");
+	assert(((char *)request->data)[request->ndata] == '\0');
+	body = strdup(request->data);
+	mark = strchr(body,'\n');
+	if (mark)
+		*mark = '\0';
+	run_and_respond(vbackends->vadmin, request->connection,
+			"backend.set_health %s %s", arg, body);
+	free(body);
 	return (1);
 }
 
@@ -190,7 +189,7 @@ vbackends_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/backend/", M_PUT, vbackends_reply, core);
+	http_register_path(core, "/backend/", M_PUT, vbackends_reply, core);
 	http_register_path(core, "/backendjson/", M_GET,
 			vbackends_json_reply, core);
 	http_register_url(core, "/help/backend", M_GET,
