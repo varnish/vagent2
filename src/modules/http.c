@@ -53,7 +53,7 @@
 struct http_listener {
 	char *url;
 	unsigned int method;
-	callback2_t cb2;
+	callback_t cb;
 	void *data;
 	struct http_listener *next;
 };
@@ -289,7 +289,7 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 				continue;
 			while (*arg == '/')
 				arg++;
-			lp->cb2(request, arg, lp->data);
+			lp->cb(request, arg, lp->data);
 			return (1);
 		}
 	}
@@ -472,7 +472,7 @@ http_run(void *data)
 
 int
 http_register_url2(struct agent_core_t *core, const char *url,
-    unsigned int method, callback2_t cb, void *data)
+    unsigned int method, callback_t cb, void *data)
 {
 	struct http_listener *lp;
 	struct http_priv_t *http;
@@ -484,7 +484,7 @@ http_register_url2(struct agent_core_t *core, const char *url,
 	lp->url = strdup(url);
 	assert(lp->url);
 	lp->method = method;
-	lp->cb2 = cb;
+	lp->cb = cb;
 	lp->data = data;
 	lp->next = http->listener;
 	http->listener = lp;
