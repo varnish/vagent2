@@ -76,6 +76,6 @@ vdirect_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core, "vadmin");
 	plug->data = (void *)priv;
 	http_register_url2(core, "/direct", M_POST, vdirect_reply, core);
-	http_register_url(core, "/help/direct", M_GET, help_reply,
+	http_register_url2(core, "/help/direct", M_GET, help_reply,
 	    strdup(DIRECT_HELP));
 }
