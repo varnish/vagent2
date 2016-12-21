@@ -62,33 +62,32 @@ vban_reply(struct http_request *request, const char *arg, void *data)
 	struct agent_core_t *core = data;
 	struct vban_priv_t *vban;
 	char *body;
+	char *mark;
 
 	GET_PRIV(core, vban);
 
 	if (request->method == M_GET) {
 		run_and_respond(vban->vadmin, request->connection, "ban.list");
 		return 0;
-	} else {
-		char *mark;
-		assert(((char *)request->data)[request->ndata] == '\0');
-		body = strdup(request->data);
-		mark = strchr(body,'\n');
-		if (mark)
-			*mark = '\0';
-		if (!arg)
-			run_and_respond(vban->vadmin, request->connection, "ban %s", body);
-		else {
-			const char *path = request->url + strlen("/ban");
-			if (request->ndata != 0) {
-				http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
-			} else {
-				assert(request->ndata == 0);
-				run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "/%s",path);
-			}
-		}
-		free(body);
-		return 0;
 	}
+
+	assert(((char *)request->data)[request->ndata] == '\0');
+	body = strdup(request->data);
+	mark = strchr(body,'\n');
+	if (mark)
+		*mark = '\0';
+	if (!arg)
+		run_and_respond(vban->vadmin, request->connection, "ban %s", body);
+	else {
+		const char *path = request->url + strlen("/ban");
+		if (request->ndata != 0) {
+			http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
+		} else {
+			assert(request->ndata == 0);
+			run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "/%s",path);
+		}
+	}
+	free(body);
 
 	return 0;
 }
