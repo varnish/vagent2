@@ -65,13 +65,14 @@ struct vstatus_priv_t {
 	int vadmin;
 };
 
-#define REPLY_FUNC(string)					\
+#define REPLY_FUNC(string)						\
 static unsigned int							\
-vstatus_## string(struct http_request *request, void *data)	\
+vstatus_## string(struct http_request *request, const char *arg, void *data)\
 {									\
 	struct vstatus_priv_t *vstatus;					\
 	struct agent_core_t *core = data;				\
 									\
+	(void)arg;							\
 	GET_PRIV(core, vstatus);					\
 	run_and_respond(vstatus->vadmin,request->connection, #string);	\
 	return 0;							\
@@ -128,12 +129,12 @@ vstatus_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/status", M_GET, vstatus_status, core);
-	http_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
-	http_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
+	http_register_url2(core, "/status", M_GET, vstatus_status, core);
+	http_register_url2(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
+	http_register_url2(core, "/start", M_PUT | M_POST, vstatus_start, core);
 	http_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
 	http_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
 	http_register_url(core, "/version", M_GET, vstatus_version, core);
 	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
-	http_register_url(core, "/ping", M_GET, vstatus_ping, core);
+	http_register_url2(core, "/ping", M_GET, vstatus_ping, core);
 }
