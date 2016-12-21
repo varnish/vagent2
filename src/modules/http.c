@@ -53,7 +53,6 @@
 struct http_listener {
 	char *url;
 	unsigned int method;
-	callback_t cb;
 	callback2_t cb2;
 	void *data;
 	struct http_listener *next;
@@ -282,19 +281,15 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
 		if (STARTS_WITH(request->url, lp->url) &&
-		    (lp->method & request->method)) {
-			if (lp->cb)
-				lp->cb(request, lp->data);
-			else {
-				arg = request->url + strlen(lp->url);
-				if (arg[0] == '\0')
-					arg = NULL;
-				else if (arg[0] != '/')
-					continue;
-				while (*arg == '/')
-					arg++;
-				lp->cb2(request, arg, lp->data);
-			}
+				(lp->method & request->method)) {
+			arg = request->url + strlen(lp->url);
+			if (arg[0] == '\0')
+				arg = NULL;
+			else if (arg[0] != '/')
+				continue;
+			while (*arg == '/')
+				arg++;
+			lp->cb2(request, arg, lp->data);
 			return (1);
 		}
 	}
