@@ -196,12 +196,13 @@ check_reopen(struct vstat_thread_ctx_t *ctx)
 }
 
 static unsigned int
-vstat_reply(struct http_request *request, void *data)
+vstat_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
 	struct http_response *resp;
 
+	(void)arg;
 	GET_PRIV(core, vstat);
 
 	if (check_reopen(&vstat->http)) {
@@ -338,7 +339,7 @@ vstat_init(struct agent_core_t *core)
 
 	pthread_rwlock_init(&priv->lck, NULL);
 
-	http_register_url(core, "/stats", M_GET, vstat_reply, core);
+	http_register_path(core, "/stats", M_GET, vstat_reply, core);
 	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
 	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 }
