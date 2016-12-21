@@ -252,11 +252,12 @@ push_stats(struct vstat_priv_t *vstat, struct vstat_thread_ctx_t *ctx)
 }
 
 static unsigned int
-vstat_push_test(struct http_request *request, void *data)
+vstat_push_test(struct http_request *request, const char *arg, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
 
+	(void)arg;
 	GET_PRIV(core, vstat);
 	if (push_stats(vstat, &vstat->http) < 0)
 		http_reply(request->connection, 500, "Stats pushing failed");
@@ -340,6 +341,6 @@ vstat_init(struct agent_core_t *core)
 	pthread_rwlock_init(&priv->lck, NULL);
 
 	http_register_path(core, "/stats", M_GET, vstat_reply, core);
-	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
+	http_register_path(core, "/push/test/stats", M_PUT, vstat_push_test, core);
 	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 }
