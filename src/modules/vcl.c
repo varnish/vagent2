@@ -391,7 +391,7 @@ vcl_push(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vcl_delete(struct http_request *request, void *data)
+vcl_delete(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -402,8 +402,7 @@ vcl_delete(struct http_request *request, void *data)
 	assert(request->method == M_DELETE);
 	assert(STARTS_WITH(request->url, "/vcl/"));
 
-	ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
-	    url_arg(request->url, "/vcl/"));
+	ipc_run(vcl->vadmin, &vret, "vcl.discard %s", arg);
 	if (vret.status == 400 || vret.status == 106)
 		http_reply(request->connection, 500, vret.answer);
 	else
@@ -506,7 +505,7 @@ vcl_init(struct agent_core_t *core)
 	http_register_path(core, "/vcljson/", M_GET, vcl_json, core);
 	http_register_path(core, "/vcl/", M_GET, vcl_listshow, core);
 	http_register_path(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
-	http_register_url(core, "/vcl/", M_DELETE, vcl_delete, core);
+	http_register_path(core, "/vcl/", M_DELETE, vcl_delete, core);
 	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
 	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
