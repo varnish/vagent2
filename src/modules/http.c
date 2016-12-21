@@ -471,7 +471,7 @@ http_run(void *data)
 }
 
 int
-http_register_url2(struct agent_core_t *core, const char *url,
+http_register_url(struct agent_core_t *core, const char *url,
     unsigned int method, callback_t cb, void *data)
 {
 	struct http_listener *lp;

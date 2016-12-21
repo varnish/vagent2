@@ -169,5 +169,5 @@ vac_register_init(struct agent_core_t *core)
 	plug->start = vac_register_start;
 
 	//httpd register
-	http_register_url2(core, "/vac_register", M_POST, vac_register_reply, priv);
+	http_register_url(core, "/vac_register", M_POST, vac_register_reply, priv);
 }

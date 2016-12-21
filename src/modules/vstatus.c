@@ -114,16 +114,16 @@ vstatus_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url2(core, "/status", M_GET, vstatus_status, core);
-	http_register_url2(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
-	http_register_url2(core, "/start", M_PUT | M_POST, vstatus_start, core);
-	http_register_url2(core, "/panic", M_GET | M_DELETE, vstatus_panic,
+	http_register_url(core, "/status", M_GET, vstatus_status, core);
+	http_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
+	http_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
+	http_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic,
 			core);
-	http_register_url2(core, "/help/panic", M_GET, help_reply,
+	http_register_url(core, "/help/panic", M_GET, help_reply,
 			strdup(PANIC_HELP));
-	http_register_url2(core, "/version", M_GET, help_reply,
+	http_register_url(core, "/version", M_GET, help_reply,
 			strdup(VCS_Version "\n"));
-	http_register_url2(core, "/package_string", M_GET, help_reply,
+	http_register_url(core, "/package_string", M_GET, help_reply,
 			strdup(PACKAGE_STRING "\n"));
-	http_register_url2(core, "/ping", M_GET, vstatus_ping, core);
+	http_register_url(core, "/ping", M_GET, vstatus_ping, core);
 }

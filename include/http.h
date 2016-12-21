@@ -129,6 +129,6 @@ int http_reply_len(struct MHD_Connection *, int, const char *, unsigned);
  * they don't have overlapping methods.
  */
 
-int http_register_url2(struct agent_core_t *core, const char *url,
+int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method, callback_t cb, void *data);
 #endif

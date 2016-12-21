@@ -129,5 +129,5 @@ html_init(struct agent_core_t *core)
 	plug = plugin_find(core,"html");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
-	http_register_url2(core, "/html", M_GET, html_reply, core);
+	http_register_url(core, "/html", M_GET, html_reply, core);
 }

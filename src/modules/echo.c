@@ -97,6 +97,6 @@ echo_init(struct agent_core_t *core)
 	 * request like that is encountered, the echo_reply function will
 	 * be called with "priv" as the last argument.
 	 */
-	http_register_url2(core, "/echo", M_POST | M_PUT | M_GET,
+	http_register_url(core, "/echo", M_POST | M_PUT | M_GET,
 	    echo_reply, priv);
 }

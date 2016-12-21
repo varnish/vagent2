@@ -282,5 +282,5 @@ vlog_init(struct agent_core_t *core)
 	plug = plugin_find(core,"vlog");
 	plug->data = priv;
 
-	http_register_url2(core, "/log", M_GET, vlog_reply, core);
+	http_register_url(core, "/log", M_GET, vlog_reply, core);
 }

@@ -341,7 +341,7 @@ vstat_init(struct agent_core_t *core)
 
 	pthread_rwlock_init(&priv->lck, NULL);
 
-	http_register_url2(core, "/stats", M_GET, vstat_reply, core);
-	http_register_url2(core, "/push/test/stats", M_PUT, vstat_push_test, core);
-	http_register_url2(core, "/push/url/stats", M_PUT, vstat_push_url, core);
+	http_register_url(core, "/stats", M_GET, vstat_reply, core);
+	http_register_url(core, "/push/test/stats", M_PUT, vstat_push_test, core);
+	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 }
