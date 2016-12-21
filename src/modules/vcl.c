@@ -362,7 +362,7 @@ vcl_listshow(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vcl_push(struct http_request *request, void *data)
+vcl_push(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -378,7 +378,7 @@ vcl_push(struct http_request *request, void *data)
 	if (request->method == M_POST)
 		snprintf(id, sizeof(id), "vcl%ju", (uintmax_t) time(NULL));
 	else
-		snprintf(id, sizeof(id), "%s", url_arg(request->url, "/vcl/"));
+		snprintf(id, sizeof(id), "%s", arg);
 
 	if (!strlen(id))
 		http_reply(request->connection, 400, "Bad URL?");
@@ -505,7 +505,7 @@ vcl_init(struct agent_core_t *core)
 	mk_help(core, priv);
 	http_register_path(core, "/vcljson/", M_GET, vcl_json, core);
 	http_register_path(core, "/vcl/", M_GET, vcl_listshow, core);
-	http_register_url(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
+	http_register_path(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
 	http_register_url(core, "/vcl/", M_DELETE, vcl_delete, core);
 	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
 	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
