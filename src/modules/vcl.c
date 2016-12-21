@@ -463,7 +463,7 @@ vcl_active(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vcl_deploy(struct http_request *request, void *data)
+vcl_deploy(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -475,12 +475,9 @@ vcl_deploy(struct http_request *request, void *data)
 	assert(STARTS_WITH(request->url, "/vcldeploy/"));
 	assert(request->method == M_PUT);
 
-	ipc_run(vcl->vadmin, &vret, "vcl.use %s",
-	    url_arg(request->url, "/vcldeploy/"));
-	if (vret.status == 200) {
-		ret = vcl_persist_active(vcl->logger,
-		    url_arg(request->url, "/vcldeploy/"), core);
-	}
+	ipc_run(vcl->vadmin, &vret, "vcl.use %s", arg);
+	if (vret.status == 200)
+		ret = vcl_persist_active(vcl->logger, arg, core);
 	if (vret.status == 200 && ret)
 		http_reply(request->connection, 500,
 		    "Deployed ok, but NOT PERSISTED.");
@@ -509,6 +506,6 @@ vcl_init(struct agent_core_t *core)
 	http_register_url2(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
 	http_register_url2(core, "/vcl/", M_DELETE, vcl_delete, core);
 	http_register_url2(core, "/vclactive", M_GET , vcl_active, core);
-	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
+	http_register_url2(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }
