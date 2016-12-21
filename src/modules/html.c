@@ -50,7 +50,7 @@ struct html_priv_t {
 };
 
 static unsigned int
-html_reply(struct http_request *request, void *data)
+html_reply(struct http_request *request, const char *arg, void *data)
 {
 	int ret;
 	int fd;
@@ -62,10 +62,7 @@ html_reply(struct http_request *request, void *data)
 	struct html_priv_t *html;
 
 	GET_PRIV(core, html);
-	const char *url_stub = url_arg(request->url,"/html");
-	if (!*url_stub)
-		url_stub = "index.html";
-	if (strlen(request->url) == strlen("/html")) {
+	if (!arg) {
 		char *host_header = http_get_header(request->connection,"Host");
 		char *tmp = NULL;
 		resp = http_mkresp(request->connection, 301, NULL);
@@ -83,13 +80,12 @@ html_reply(struct http_request *request, void *data)
 		if (tmp)
 			free(tmp);
 		return 0;
-	}
-	if (url_stub[0] == '/' || strstr(url_stub,"/../") ||
-			STARTS_WITH(url_stub, "../")) {
+	} else if (strstr(arg, "/../") ||
+			STARTS_WITH(arg, "../")) {
 		http_reply(request->connection, 500, "Invalid URL");
 		return 0;
 	}
-	snprintf(path, sizeof(path), "%s/%s", core->config->H_arg, url_stub);
+	snprintf(path, sizeof(path), "%s/%s", core->config->H_arg, arg);
 	ret = stat(path, &sbuf);
 	if (ret < 0) {
 		warnlog(html->logger, "Stat failed for %s. Errnno %d: %s.", path,errno,strerror(errno));
@@ -133,5 +129,5 @@ html_init(struct agent_core_t *core)
 	plug = plugin_find(core,"html");
 	priv->logger = ipc_register(core,"logger");
 	plug->data = (void *)priv;
-	http_register_url(core, "/html", M_GET, html_reply, core);
+	http_register_url2(core, "/html", M_GET, html_reply, core);
 }
