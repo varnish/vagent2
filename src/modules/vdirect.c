@@ -46,11 +46,13 @@ struct vdirect_priv_t {
 };
 
 static unsigned int
-vdirect_reply(struct http_request *request, void *data)
+vdirect_reply(struct http_request *request, const char * arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vdirect_priv_t *vdirect;
 	char *cmd, *p;
+
+	(void)arg;
 
 	GET_PRIV(core, vdirect);
 	DUP_OBJ(cmd, request->data, request->ndata);
@@ -73,7 +75,7 @@ vdirect_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core, "logger");
 	priv->vadmin = ipc_register(core, "vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/direct", M_POST, vdirect_reply, core);
+	http_register_url2(core, "/direct", M_POST, vdirect_reply, core);
 	http_register_url(core, "/help/direct", M_GET, help_reply,
 	    strdup(DIRECT_HELP));
 }
