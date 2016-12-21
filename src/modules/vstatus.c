@@ -102,22 +102,6 @@ vstatus_panic(struct http_request *request, const char *arg, void *data)
 	return 0;
 }
 
-static unsigned int
-vstatus_version(struct http_request *request, void *data)
-{
-	(void)data;
-	http_reply(request->connection, 200, VCS_Version "\n");
-	return 0;
-}
-
-static unsigned int
-vstatus_package_string(struct http_request *request, void *data)
-{
-	(void)data;
-	http_reply(request->connection, 200, PACKAGE_STRING "\n");
-	return 0;
-}
-
 void
 vstatus_init(struct agent_core_t *core)
 {
@@ -135,8 +119,11 @@ vstatus_init(struct agent_core_t *core)
 	http_register_path(core, "/start", M_PUT | M_POST, vstatus_start, core);
 	http_register_path(core, "/panic", M_GET | M_DELETE, vstatus_panic,
 			core);
-	http_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
-	http_register_url(core, "/version", M_GET, vstatus_version, core);
-	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
+	http_register_url(core, "/help/panic", M_GET, help_reply,
+			strdup(PANIC_HELP));
+	http_register_url(core, "/version", M_GET, help_reply,
+			strdup(VCS_Version "\n"));
+	http_register_url(core, "/package_string", M_GET, help_reply,
+			strdup(PACKAGE_STRING "\n"));
 	http_register_path(core, "/ping", M_GET, vstatus_ping, core);
 }
