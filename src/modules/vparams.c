@@ -454,5 +454,5 @@ vparams_init(struct agent_core_t *core)
 	http_register_path(core, "/param/", M_PUT | M_GET, vparams_reply, core);
 	http_register_path(core, "/paramjson/", M_GET, vparams_json_reply,
 			core);
-	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
+	http_register_path(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }

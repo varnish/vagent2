@@ -33,7 +33,8 @@
  * Generic http resonder that takes a char * as data and echos it back.
  * Used for /help/ stuff.
  */
-unsigned int help_reply(struct http_request *request, void *data);
+unsigned int help_reply(struct http_request *request, const char *arg,
+		void *data);
 
 /*
  * Run the command given on fmt and respond to the connection.

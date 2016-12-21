@@ -104,5 +104,5 @@ vban_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	http_register_path(core, "/ban", M_GET | M_POST, vban_reply, core);
-	http_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
+	http_register_path(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
 }

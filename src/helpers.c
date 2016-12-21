@@ -92,8 +92,9 @@ run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 }
 
 unsigned int
-help_reply(struct http_request *request, void *data)
+help_reply(struct http_request *request, const char *arg, void *data)
 {
+	(void)arg;
 	http_reply(request->connection, 200, (char *)data);
 	return 0;
 }

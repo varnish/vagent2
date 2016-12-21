@@ -507,5 +507,5 @@ vcl_init(struct agent_core_t *core)
 	http_register_path(core, "/vcl/", M_DELETE, vcl_delete, core);
 	http_register_path(core, "/vclactive", M_GET , vcl_active, core);
 	http_register_path(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
-	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
+	http_register_path(core, "/help/vcl", M_GET, help_reply, priv->help);
 }

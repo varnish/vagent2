@@ -119,11 +119,11 @@ vstatus_init(struct agent_core_t *core)
 	http_register_path(core, "/start", M_PUT | M_POST, vstatus_start, core);
 	http_register_path(core, "/panic", M_GET | M_DELETE, vstatus_panic,
 			core);
-	http_register_url(core, "/help/panic", M_GET, help_reply,
+	http_register_path(core, "/help/panic", M_GET, help_reply,
 			strdup(PANIC_HELP));
-	http_register_url(core, "/version", M_GET, help_reply,
+	http_register_path(core, "/version", M_GET, help_reply,
 			strdup(VCS_Version "\n"));
-	http_register_url(core, "/package_string", M_GET, help_reply,
+	http_register_path(core, "/package_string", M_GET, help_reply,
 			strdup(PACKAGE_STRING "\n"));
 	http_register_path(core, "/ping", M_GET, vstatus_ping, core);
 }
