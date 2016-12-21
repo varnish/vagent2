@@ -336,7 +336,7 @@ vcl_json(struct http_request *request, const char *arg, void *data)
 
 
 static unsigned int
-vcl_listshow(struct http_request *request, void *data)
+vcl_listshow(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -347,11 +347,10 @@ vcl_listshow(struct http_request *request, void *data)
 	assert(STARTS_WITH(request->url, "/vcl/"));
 	assert(request->method == M_GET);
 
-	if (!strcmp(request->url, "/vcl/"))
+	if (!arg)
 		ipc_run(vcl->vadmin, &vret, "vcl.list");
 	else
-		ipc_run(vcl->vadmin, &vret, "vcl.show %s",
-		    url_arg(request->url, "/vcl/"));
+		ipc_run(vcl->vadmin, &vret, "vcl.show %s", arg);
 
 	if (vret.status == 200)
 		http_reply(request->connection, 200, vret.answer);
@@ -505,7 +504,7 @@ vcl_init(struct agent_core_t *core)
 	plug->data = (void *)priv;
 	mk_help(core, priv);
 	http_register_url2(core, "/vcljson/", M_GET, vcl_json, core);
-	http_register_url(core, "/vcl/", M_GET, vcl_listshow, core);
+	http_register_url2(core, "/vcl/", M_GET, vcl_listshow, core);
 	http_register_url(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
 	http_register_url(core, "/vcl/", M_DELETE, vcl_delete, core);
 	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
