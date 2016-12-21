@@ -65,49 +65,22 @@ struct vstatus_priv_t {
 	int vadmin;
 };
 
-static unsigned int
-vstatus_reply(struct http_request *request, void *data)
-{
-	struct vstatus_priv_t *vstatus;
-	struct agent_core_t *core = data;
-
-	GET_PRIV(core, vstatus);
-	run_and_respond(vstatus->vadmin,request->connection,"status");
-	return 0;
+#define REPLY_FUNC(string)					\
+static unsigned int							\
+vstatus_## string(struct http_request *request, void *data)	\
+{									\
+	struct vstatus_priv_t *vstatus;					\
+	struct agent_core_t *core = data;				\
+									\
+	GET_PRIV(core, vstatus);					\
+	run_and_respond(vstatus->vadmin,request->connection, #string);	\
+	return 0;							\
 }
 
-static unsigned int
-vstatus_stop(struct http_request *request, void *data)
-{
-	struct vstatus_priv_t *vstatus;
-	struct agent_core_t *core = data;
-
-	GET_PRIV(core, vstatus);
-	run_and_respond(vstatus->vadmin,request->connection,"stop");
-	return 0;
-}
-
-static unsigned int
-vstatus_ping(struct http_request *request, void *data)
-{
-	struct vstatus_priv_t *vstatus;
-	struct agent_core_t *core = data;
-
-	GET_PRIV(core, vstatus);
-	run_and_respond(vstatus->vadmin,request->connection,"ping");
-	return 0;
-}
-
-static unsigned int
-vstatus_start(struct http_request *request, void *data)
-{
-	struct vstatus_priv_t *vstatus;
-	struct agent_core_t *core = data;
-
-	GET_PRIV(core, vstatus);
-	run_and_respond(vstatus->vadmin,request->connection,"start");
-	return 0;
-}
+REPLY_FUNC(status);
+REPLY_FUNC(start);
+REPLY_FUNC(stop);
+REPLY_FUNC(ping);
 
 static unsigned int
 vstatus_panic(struct http_request *request, void *data)
@@ -155,7 +128,7 @@ vstatus_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/status", M_GET, vstatus_reply, core);
+	http_register_url(core, "/status", M_GET, vstatus_status, core);
 	http_register_url(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
 	http_register_url(core, "/start", M_PUT | M_POST, vstatus_start, core);
 	http_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
