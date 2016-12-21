@@ -412,7 +412,7 @@ vcl_delete(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vcl_active(struct http_request *request, void *data)
+vcl_active(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -420,6 +420,8 @@ vcl_active(struct http_request *request, void *data)
 	char **tp, *tok[5];
 	char *p, *last;
 	char *line;
+
+	(void)arg;
 
 	assert(STARTS_WITH(request->url, "/vclactive/"));
 	assert(request->method == M_GET);
@@ -506,7 +508,7 @@ vcl_init(struct agent_core_t *core)
 	http_register_path(core, "/vcl/", M_GET, vcl_listshow, core);
 	http_register_path(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
 	http_register_path(core, "/vcl/", M_DELETE, vcl_delete, core);
-	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
+	http_register_path(core, "/vclactive", M_GET , vcl_active, core);
 	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }
