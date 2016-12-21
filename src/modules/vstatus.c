@@ -84,11 +84,12 @@ REPLY_FUNC(stop);
 REPLY_FUNC(ping);
 
 static unsigned int
-vstatus_panic(struct http_request *request, void *data)
+vstatus_panic(struct http_request *request, const char *arg, void *data)
 {
 	struct vstatus_priv_t *vstatus;
 	struct agent_core_t *core = data;
 
+	(void)arg;
 	GET_PRIV(core, vstatus);
 	if (request->method == M_GET)
 		run_and_respond_eok(vstatus->vadmin,request->connection,
@@ -132,7 +133,8 @@ vstatus_init(struct agent_core_t *core)
 	http_register_url2(core, "/status", M_GET, vstatus_status, core);
 	http_register_url2(core, "/stop", M_PUT | M_POST, vstatus_stop, core);
 	http_register_url2(core, "/start", M_PUT | M_POST, vstatus_start, core);
-	http_register_url(core, "/panic", M_GET | M_DELETE, vstatus_panic, core);
+	http_register_url2(core, "/panic", M_GET | M_DELETE, vstatus_panic,
+			core);
 	http_register_url(core, "/help/panic", M_GET, help_reply, strdup(PANIC_HELP));
 	http_register_url(core, "/version", M_GET, vstatus_version, core);
 	http_register_url(core, "/package_string", M_GET, vstatus_package_string, core);
