@@ -133,22 +133,32 @@ static void backends_json(struct http_request *request,
 }
 
 static unsigned int
+vbackends_json_reply(struct http_request *request, const char *arg, void *data)
+{
+	struct vbackends_priv_t *vbackends;
+	struct agent_core_t *core = data;
+	struct agent_plugin_t *plug;
+
+	(void)arg;
+	plug = plugin_find(core,"vbackends");
+	vbackends = plug->data;
+
+	backends_json(request, vbackends);
+	return (1);
+}
+
+static unsigned int
 vbackends_reply(struct http_request *request, void *data)
 {
 	const char *arg;
+	struct vbackends_priv_t *vbackends;
 	struct agent_core_t *core = data;
 	struct agent_plugin_t *plug;
-	struct vbackends_priv_t *vbackends;
 	char *body;
 
 	plug = plugin_find(core,"vbackends");
 	vbackends = plug->data;
 
-	if (!strcmp(request->url, "/backendjson/") &&
-	    request->method == M_GET) {
-		backends_json(request, vbackends);
-		return (1);
-	}
 	if (request->method == M_PUT) {
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
@@ -181,7 +191,8 @@ vbackends_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	http_register_url(core, "/backend/", M_PUT, vbackends_reply, core);
-	http_register_url(core, "/backendjson/", M_GET, vbackends_reply, core);
+	http_register_url2(core, "/backendjson/", M_GET,
+			vbackends_json_reply, core);
 	http_register_url(core, "/help/backend", M_GET,
 	    help_reply, strdup(BACKENDS_HELP));
 }
