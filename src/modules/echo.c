@@ -44,9 +44,11 @@ struct echo_priv_t {
 };
 
 static unsigned int
-echo_reply(struct http_request *request, void *data)
+echo_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct echo_priv_t *echo = data;
+	
+	(void)arg;
 
 	if (request->method == M_PUT || request->method == M_POST) {
 		if (((char *)request->data)[request->ndata] == '\0' &&
@@ -95,6 +97,6 @@ echo_init(struct agent_core_t *core)
 	 * request like that is encountered, the echo_reply function will
 	 * be called with "priv" as the last argument.
 	 */
-	http_register_url(core, "/echo", M_POST | M_PUT | M_GET,
+	http_register_path(core, "/echo", M_POST | M_PUT | M_GET,
 	    echo_reply, priv);
 }
