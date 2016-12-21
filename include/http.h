@@ -129,8 +129,6 @@ int http_reply_len(struct MHD_Connection *, int, const char *, unsigned);
  * Note that you can not have multiple listeners for the same URL even if
  * they don't have overlapping methods.
  */
-int http_register_url(struct agent_core_t *core, const char *url,
-		       unsigned int method, callback_t cb, void *data);
 
 int http_register_url2(struct agent_core_t *core, const char *url,
 		       unsigned int method, callback2_t cb, void *data);

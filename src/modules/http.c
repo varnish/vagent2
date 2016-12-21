@@ -476,27 +476,6 @@ http_run(void *data)
 }
 
 int
-http_register_url(struct agent_core_t *core, const char *url,
-    unsigned int method, callback_t cb, void *data)
-{
-	struct http_listener *lp;
-	struct http_priv_t *http;
-
-	assert(cb);
-
-	ALLOC_OBJ(lp);
-	GET_PRIV(core, http);
-	lp->url = strdup(url);
-	assert(lp->url);
-	lp->method = method;
-	lp->cb = cb;
-	lp->data = data;
-	lp->next = http->listener;
-	http->listener = lp;
-	return (1);
-}
-
-int
 http_register_url2(struct agent_core_t *core, const char *url,
     unsigned int method, callback2_t cb, void *data)
 {
