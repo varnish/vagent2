@@ -53,8 +53,7 @@
 struct http_listener {
 	char *url;
 	unsigned int method;
-	callback_t cb;
-	http_cb_f cb2;
+	http_cb_f cb;
 	void *data;
 	struct http_listener *next;
 };
@@ -282,19 +281,15 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
 		if (STARTS_WITH(request->url, lp->url) &&
-		    (lp->method & request->method)) {
-			if (lp->cb)
-				lp->cb(request, lp->data);
-			else {
-				arg = request->url + strlen(lp->url);
-				if (arg[0] == '\0')
-					arg = NULL;
-				else if (arg[0] != '/')
-					continue;
-				while (*arg == '/')
-					arg++;
-				lp->cb2(request, arg, lp->data);
-			}
+				(lp->method & request->method)) {
+			arg = request->url + strlen(lp->url);
+			if (arg[0] == '\0')
+				arg = NULL;
+			else if (arg[0] != '/')
+				continue;
+			while (*arg == '/')
+				arg++;
+			lp->cb(request, arg, lp->data);
 			return (1);
 		}
 	}
@@ -476,27 +471,6 @@ http_run(void *data)
 }
 
 int
-http_register_url(struct agent_core_t *core, const char *url,
-    unsigned int method, callback_t cb, void *data)
-{
-	struct http_listener *lp;
-	struct http_priv_t *http;
-
-	assert(cb);
-
-	ALLOC_OBJ(lp);
-	GET_PRIV(core, http);
-	lp->url = strdup(url);
-	assert(lp->url);
-	lp->method = method;
-	lp->cb = cb;
-	lp->data = data;
-	lp->next = http->listener;
-	http->listener = lp;
-	return (1);
-}
-
-int
 http_register_path(struct agent_core_t *core, const char *url,
     unsigned int method, http_cb_f cb, void *data)
 {
@@ -510,7 +484,7 @@ http_register_path(struct agent_core_t *core, const char *url,
 	lp->url = strdup(url);
 	assert(lp->url);
 	lp->method = method;
-	lp->cb2 = cb;
+	lp->cb = cb;
 	lp->data = data;
 	lp->next = http->listener;
 	http->listener = lp;
