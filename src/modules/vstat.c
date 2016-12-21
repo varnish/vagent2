@@ -267,11 +267,12 @@ vstat_push_test(struct http_request *request, const char *arg, void *data)
 }
 
 static unsigned int
-vstat_push_url(struct http_request *request, void *data)
+vstat_push_url(struct http_request *request, const char *arg, void *data)
 {
 	struct vstat_priv_t *vstat;
 	struct agent_core_t *core = data;
 
+	(void)arg;
 	GET_PRIV(core, vstat);
 	pthread_rwlock_wrlock(&vstat->lck);
 	if (vstat->push_url)
@@ -342,5 +343,5 @@ vstat_init(struct agent_core_t *core)
 
 	http_register_path(core, "/stats", M_GET, vstat_reply, core);
 	http_register_path(core, "/push/test/stats", M_PUT, vstat_push_test, core);
-	http_register_url(core, "/push/url/stats", M_PUT, vstat_push_url, core);
+	http_register_path(core, "/push/url/stats", M_PUT, vstat_push_url, core);
 }
