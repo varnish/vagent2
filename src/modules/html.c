@@ -62,7 +62,9 @@ html_reply(struct http_request *request, const char *arg, void *data)
 	struct html_priv_t *html;
 
 	GET_PRIV(core, html);
-	if (!arg) {
+	if (!arg)
+		arg = "index.html";
+	if (!strcmp(request->url, "/html")) {
 		char *host_header = http_get_header(request->connection,"Host");
 		char *tmp = NULL;
 		resp = http_mkresp(request->connection, 301, NULL);
