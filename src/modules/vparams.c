@@ -451,8 +451,8 @@ vparams_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_path(core, "/param/", M_PUT | M_GET, vparams_reply, core);
-	http_register_path(core, "/paramjson/", M_GET, vparams_json_reply,
+	http_register_path(core, "/param", M_PUT | M_GET, vparams_reply, core);
+	http_register_path(core, "/paramjson", M_GET, vparams_json_reply,
 			core);
 	http_register_path(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }
