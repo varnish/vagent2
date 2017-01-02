@@ -84,13 +84,14 @@ send_curl(struct vac_register_priv_t *private, struct ipc_ret_t *vret)
 }
 
 static unsigned int
-vac_register_reply(struct http_request *request, void *data)
+vac_register_reply(struct http_request *request, const char *arg, void *data)
 {
 	//reply callback for the vac_register module to the vac_register module
 	struct vac_register_priv_t *vdata = (struct vac_register_priv_t *)data;
 	struct ipc_ret_t vret;
 	int ret;
 
+	(void)arg;
 	if (request->ndata) {
 		free(vdata->vac_url);
 		DUP_OBJ(vdata->vac_url, request->data, request->ndata);

@@ -92,7 +92,7 @@ struct http_response {
 	unsigned int ndata;
 };
 
-typedef unsigned int (*callback_t)(struct http_request *, void *);
+typedef unsigned int (*callback_t)(struct http_request *, const char *, void *);
 
 void http_add_header(struct http_response *resp, const char *key, const char *value);
 char *http_get_header(struct MHD_Connection *connection, const char *key);
@@ -128,7 +128,7 @@ int http_reply_len(struct MHD_Connection *, int, const char *, unsigned);
  * Note that you can not have multiple listeners for the same URL even if
  * they don't have overlapping methods.
  */
+
 int http_register_url(struct agent_core_t *core, const char *url,
 		       unsigned int method, callback_t cb, void *data);
-
 #endif

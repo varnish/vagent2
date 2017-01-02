@@ -46,11 +46,13 @@ struct vdirect_priv_t {
 };
 
 static unsigned int
-vdirect_reply(struct http_request *request, void *data)
+vdirect_reply(struct http_request *request, const char * arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vdirect_priv_t *vdirect;
 	char *cmd, *p;
+
+	(void)arg;
 
 	GET_PRIV(core, vdirect);
 	DUP_OBJ(cmd, request->data, request->ndata);

@@ -296,7 +296,7 @@ vcl_list_json(char *raw)
 }
 
 static unsigned int
-vcl_json(struct http_request *request, void *data)
+vcl_json(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -306,11 +306,10 @@ vcl_json(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(STARTS_WITH(request->url, "/vcljson/"));
+	assert(STARTS_WITH(request->url, "/vcljson"));
 	assert(request->method == M_GET);
 
-	if (strcmp(request->url, "/vcljson") &&
-	    strcmp(request->url, "/vcljson/")) {
+	if (arg) {
 		http_reply(request->connection, 404,
 		    "/vcljson takes no argument");
 		return (0);
@@ -337,7 +336,7 @@ vcl_json(struct http_request *request, void *data)
 
 
 static unsigned int
-vcl_listshow(struct http_request *request, void *data)
+vcl_listshow(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -345,14 +344,13 @@ vcl_listshow(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(STARTS_WITH(request->url, "/vcl/"));
+	assert(STARTS_WITH(request->url, "/vcl"));
 	assert(request->method == M_GET);
 
-	if (!strcmp(request->url, "/vcl/"))
+	if (!arg)
 		ipc_run(vcl->vadmin, &vret, "vcl.list");
 	else
-		ipc_run(vcl->vadmin, &vret, "vcl.show %s",
-		    url_arg(request->url, "/vcl/"));
+		ipc_run(vcl->vadmin, &vret, "vcl.show %s", arg);
 
 	if (vret.status == 200)
 		http_reply(request->connection, 200, vret.answer);
@@ -364,7 +362,7 @@ vcl_listshow(struct http_request *request, void *data)
 }
 
 static unsigned int
-vcl_push(struct http_request *request, void *data)
+vcl_push(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -374,13 +372,13 @@ vcl_push(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(STARTS_WITH(request->url, "/vcl/"));
+	assert(STARTS_WITH(request->url, "/vcl"));
 	assert(request->method == M_POST || request->method == M_PUT);
 
 	if (request->method == M_POST)
 		snprintf(id, sizeof(id), "vcl%ju", (uintmax_t) time(NULL));
 	else
-		snprintf(id, sizeof(id), "%s", url_arg(request->url, "/vcl/"));
+		snprintf(id, sizeof(id), "%s", arg);
 
 	if (!strlen(id))
 		http_reply(request->connection, 400, "Bad URL?");
@@ -393,7 +391,7 @@ vcl_push(struct http_request *request, void *data)
 }
 
 static unsigned int
-vcl_delete(struct http_request *request, void *data)
+vcl_delete(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -402,10 +400,9 @@ vcl_delete(struct http_request *request, void *data)
 	GET_PRIV(core, vcl);
 
 	assert(request->method == M_DELETE);
-	assert(STARTS_WITH(request->url, "/vcl/"));
+	assert(STARTS_WITH(request->url, "/vcl"));
 
-	ipc_run(vcl->vadmin, &vret, "vcl.discard %s",
-	    url_arg(request->url, "/vcl/"));
+	ipc_run(vcl->vadmin, &vret, "vcl.discard %s", arg);
 	if (vret.status == 400 || vret.status == 106)
 		http_reply(request->connection, 500, vret.answer);
 	else
@@ -415,7 +412,7 @@ vcl_delete(struct http_request *request, void *data)
 }
 
 static unsigned int
-vcl_active(struct http_request *request, void *data)
+vcl_active(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -424,7 +421,9 @@ vcl_active(struct http_request *request, void *data)
 	char *p, *last;
 	char *line;
 
-	assert(STARTS_WITH(request->url, "/vclactive/"));
+	(void)arg;
+
+	assert(STARTS_WITH(request->url, "/vclactive"));
 	assert(request->method == M_GET);
 	GET_PRIV(core, vcl);
 
@@ -464,7 +463,7 @@ vcl_active(struct http_request *request, void *data)
 }
 
 static unsigned int
-vcl_deploy(struct http_request *request, void *data)
+vcl_deploy(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
@@ -473,15 +472,12 @@ vcl_deploy(struct http_request *request, void *data)
 
 	GET_PRIV(core, vcl);
 
-	assert(STARTS_WITH(request->url, "/vcldeploy/"));
+	assert(STARTS_WITH(request->url, "/vcldeploy"));
 	assert(request->method == M_PUT);
 
-	ipc_run(vcl->vadmin, &vret, "vcl.use %s",
-	    url_arg(request->url, "/vcldeploy/"));
-	if (vret.status == 200) {
-		ret = vcl_persist_active(vcl->logger,
-		    url_arg(request->url, "/vcldeploy/"), core);
-	}
+	ipc_run(vcl->vadmin, &vret, "vcl.use %s", arg);
+	if (vret.status == 200)
+		ret = vcl_persist_active(vcl->logger, arg, core);
 	if (vret.status == 200 && ret)
 		http_reply(request->connection, 500,
 		    "Deployed ok, but NOT PERSISTED.");
@@ -505,11 +501,11 @@ vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	mk_help(core, priv);
-	http_register_url(core, "/vcljson/", M_GET, vcl_json, core);
-	http_register_url(core, "/vcl/", M_GET, vcl_listshow, core);
-	http_register_url(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
-	http_register_url(core, "/vcl/", M_DELETE, vcl_delete, core);
+	http_register_url(core, "/vcljson", M_GET, vcl_json, core);
+	http_register_url(core, "/vcl", M_GET, vcl_listshow, core);
+	http_register_url(core, "/vcl", M_PUT | M_POST, vcl_push, core);
+	http_register_url(core, "/vcl", M_DELETE, vcl_delete, core);
 	http_register_url(core, "/vclactive", M_GET , vcl_active, core);
-	http_register_url(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
+	http_register_url(core, "/vcldeploy", M_PUT , vcl_deploy, core);
 	http_register_url(core, "/help/vcl", M_GET, help_reply, priv->help);
 }

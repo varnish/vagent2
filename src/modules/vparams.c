@@ -365,14 +365,18 @@ vparams_show_json(struct vsb *json, char *raw)
 	VSB_cat(json, "\n}");
 }
 
-static void
-param_json(struct http_request *request, struct vparams_priv_t *vparams)
+static unsigned int
+vparams_json_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct ipc_ret_t vret;
 	struct http_response *resp;
+	struct vparams_priv_t *vparams;
+	struct agent_core_t *core = data;
 	struct vsb *json;
-	const char *param = url_arg(request->url, "/paramjson");
-	ipc_run(vparams->vadmin, &vret, "param.show %s", *param ? param : "-l");
+
+	GET_PRIV(core, vparams);
+
+	ipc_run(vparams->vadmin, &vret, "param.show %s", arg ? arg : "-l");
 	if (vret.status == 200) {
 		json = VSB_new_auto();
 		assert(json);
@@ -385,35 +389,28 @@ param_json(struct http_request *request, struct vparams_priv_t *vparams)
 		http_free_resp(resp);
 	}
 	else
-	    http_reply(request->connection, 500, vret.answer);
+	    http_reply(request->connection, 500, "foo");
 	free(vret.answer);
+	return (1);
 }
 
 /*
  * FIXME: Should be simplified/split up.
  */
 static unsigned int
-vparams_reply(struct http_request *request, void *data)
+vparams_reply(struct http_request *request, const char *arg, void *data)
 {
-	const char *arg;
 	struct agent_core_t *core = data;
 	struct vparams_priv_t *vparams;
 	char *body;
 
 	GET_PRIV(core, vparams);
 
-	if (STARTS_WITH(request->url, "/paramjson/") &&
-	    request->method == M_GET) {
-		param_json(request, vparams);
-		return (1);
-	}
 	if (request->method == M_GET) {
-		arg = url_arg(request->url, "/param");
 		run_and_respond(vparams->vadmin, request->connection,
 		    "param.show %s", arg);
 		return (1);
-	}
-	else if (request->method == M_PUT) {
+	} else if (request->method == M_PUT) {
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
 		body = strdup(request->data);
@@ -424,7 +421,6 @@ vparams_reply(struct http_request *request, void *data)
 			run_and_respond(vparams->vadmin, request->connection,
 			    "param.set %s", body);
 		else {
-			arg = url_arg(request->url, "/param");
 			run_and_respond(vparams->vadmin, request->connection,
 			    "param.set %s %s", arg, body);
 		}
@@ -447,7 +443,8 @@ vparams_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
-	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
+	http_register_url(core, "/param", M_PUT | M_GET, vparams_reply, core);
+	http_register_url(core, "/paramjson", M_GET, vparams_json_reply,
+			core);
 	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }

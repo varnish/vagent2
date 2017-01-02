@@ -276,12 +276,23 @@ static int
 find_listener(struct http_request *request, struct http_priv_t *http)
 {
 	struct http_listener *lp;
+	const char *arg;
 
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
 		if (STARTS_WITH(request->url, lp->url) &&
-		    (lp->method & request->method)) {
-			lp->cb(request, lp->data);
+				(lp->method & request->method)) {
+			arg = request->url + strlen(lp->url);
+			if (arg[0] == '\0')
+				arg = NULL;
+			else if (arg[0] != '/')
+				continue;
+			else
+				while (*arg == '/')
+					arg++;
+			if (arg && *arg == '\0')
+				arg = NULL;
+			lp->cb(request, arg, lp->data);
 			return (1);
 		}
 	}
