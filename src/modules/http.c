@@ -290,6 +290,8 @@ find_listener(struct http_request *request, struct http_priv_t *http)
 			else
 				while (*arg == '/')
 					arg++;
+			if (arg && *arg == '\0')
+				arg = NULL;
 			lp->cb(request, arg, lp->data);
 			return (1);
 		}
