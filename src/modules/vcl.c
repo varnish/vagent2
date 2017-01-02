@@ -501,11 +501,11 @@ vcl_init(struct agent_core_t *core)
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
 	mk_help(core, priv);
-	http_register_path(core, "/vcljson/", M_GET, vcl_json, core);
-	http_register_path(core, "/vcl/", M_GET, vcl_listshow, core);
-	http_register_path(core, "/vcl/", M_PUT | M_POST, vcl_push, core);
-	http_register_path(core, "/vcl/", M_DELETE, vcl_delete, core);
+	http_register_path(core, "/vcljson", M_GET, vcl_json, core);
+	http_register_path(core, "/vcl", M_GET, vcl_listshow, core);
+	http_register_path(core, "/vcl", M_PUT | M_POST, vcl_push, core);
+	http_register_path(core, "/vcl", M_DELETE, vcl_delete, core);
 	http_register_path(core, "/vclactive", M_GET , vcl_active, core);
-	http_register_path(core, "/vcldeploy/", M_PUT , vcl_deploy, core);
+	http_register_path(core, "/vcldeploy", M_PUT , vcl_deploy, core);
 	http_register_path(core, "/help/vcl", M_GET, help_reply, priv->help);
 }
