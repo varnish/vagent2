@@ -47,7 +47,7 @@ static unsigned int
 echo_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct echo_priv_t *echo = data;
-	
+
 	(void)arg;
 
 	if (request->method == M_PUT || request->method == M_POST) {
