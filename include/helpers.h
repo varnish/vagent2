@@ -33,7 +33,8 @@
  * Generic http resonder that takes a char * as data and echos it back.
  * Used for /help/ stuff.
  */
-unsigned int help_reply(struct http_request *request, void *data);
+unsigned int help_reply(struct http_request *request, const char *arg,
+		void *data);
 
 /*
  * Run the command given on fmt and respond to the connection.
@@ -42,4 +43,6 @@ void run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, .
 void run_and_respond_eok(int vadmin, struct MHD_Connection *conn,
 			 unsigned min, unsigned max, const char *fmt, ...);
 
+size_t check_endpoint(const char *url, const char *endpoint);
+const char *url_arg(const char *url, const char *endpoint);
 #endif

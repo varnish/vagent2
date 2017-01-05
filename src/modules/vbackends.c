@@ -41,158 +41,157 @@
 
 #define BACKENDS_HELP \
 "GET /backendsjson/ - fetches a list of backends and values\n" \
-"PUT /backend/foo - Takes a single value as input (e.g: 1000) and let you change the admin health value\n" \
+"PUT /backend/foo - Takes a single value as input (e.g: 1000)" \
+" and let you change the admin health value\n" \
 "For more tricks go to the HTML backend page\n"
 
-char* format_line(char*);
-
 struct vbackends_priv_t {
-        int logger;
-        int vadmin;
+	int logger;
+	int vadmin;
 };
 
 struct backend_opt {
-        char *name;
-        char *admin;
-        char *probe;
+	char *name;
+	char *admin;
+	char *probe;
 };
 
-char *format_line(char* line)
+static char *
+format_line(char *line)
 {
-        struct backend_opt backend = {};
-        char *out = NULL, *ptr = NULL;
-        int state = 0;
+	struct backend_opt backend = {};
+	char *out = NULL, *ptr = NULL;
 
-	    if(line == NULL)
-		    return NULL;
+	if(line == NULL)
+		return (NULL);
 
-        backend.name = strtok_r(line, " ", &ptr);
-        backend.admin = strtok_r(NULL, " ",&ptr);
-        backend.probe =  strtok_r(NULL, "\n",&ptr);
+	backend.name = strtok_r(line, " ", &ptr);
+	backend.admin = strtok_r(NULL, " ",&ptr);
+	backend.probe =  strtok_r(NULL, "\n",&ptr);
 
-        state = asprintf(&out,  "\t{\n"
-            "\t\t\"name\": \"%s\",\n"
-            "\t\t\"admin\": \"%s\",\n"
-            "\t\t\"probe\": \"%s\"\n"
-            "\t}",
-            backend.name, backend.admin,
-            backend.probe);
-        assert(state);
-        return out;
+	AN(asprintf(&out,
+	    "\t{\n"
+	    "\t\t\"name\": \"%s\",\n"
+	    "\t\t\"admin\": \"%s\",\n"
+	    "\t\t\"probe\": \"%s\"\n"
+	    "\t}",
+	    backend.name, backend.admin, backend.probe));
+	return (out);
 }
 
-static char *vbackends_show_json(char *raw)
+static void
+vbackends_show_json(struct vsb *json, char *raw)
 {
-        char  *out1 = NULL,  *out2 = NULL, *out3 = NULL ;
-        struct vsb *final= VSB_new_auto();
-        char *tokens = NULL, *ptr = NULL;
-        char tmp[1000];
-        int raw_len = 0;
-        int state = 0;
-        int cont = 0;
-        int sum = 0;
+	char *tokens = NULL, *ptr = NULL;
+	char tmp[1000];
+	int raw_len = 0;
+	int cont = 0;
+	int sum = 0;
 
-        raw_len = strlen(raw);
-        tokens = strtok(raw, "\n");
-        sum = sum + strlen(tokens);
+	raw_len = strlen(raw);
+	tokens = strtok(raw, "\n");
+	sum = sum + strlen(tokens);
 
-        while(tokens != NULL){
-                strcpy(tmp, (tokens));
-                tokens = strtok(NULL, "\n");
-                sum = sum + strlen(tmp);
-                if(cont > 0){
-                        ptr = format_line(tmp);
-                        VSB_cat(final, ptr);
-                        if(sum < raw_len)
-                                VSB_cat(final, ",\n");
-                        free(ptr);
-                }
-                cont++;
-        }
+	VSB_cat(json, "{\n \"backends\" : [\n");
+	while(tokens != NULL){
+		strcpy(tmp, (tokens));
+		tokens = strtok(NULL, "\n");
+		sum = sum + strlen(tmp);
+		if(cont > 0){
+			ptr = format_line(tmp);
+			VSB_cat(json, ptr);
+			if(sum < raw_len)
+				VSB_cat(json, ",\n");
+			free(ptr);
+		}
+		cont++;
+	}
 
-        VSB_finish(final);
-
-        state = asprintf(&out1, "{\n \"backends\" : [\n");
-        state = asprintf(&out2, "%s",VSB_data(final));
-        state = asprintf(&out3, "%s%s\n]\n}\n", out1, out2);
-        VSB_delete(final);
-        free(out1);
-        free(out2);
-
-        assert(state);
-        return out3;
+	VSB_cat(json, "\n]\n}\n");
 }
 
 static void backends_json(struct http_request *request,
     struct vbackends_priv_t *vbackends)
 {
-        struct ipc_ret_t vret;
-        char *tmp;
-        ipc_run(vbackends->vadmin, &vret, "backend.list");
-        if (vret.status == 200) {
-                tmp = vbackends_show_json(vret.answer);
-                struct http_response *resp = http_mkresp(request->connection,
-                    200, tmp);
-                http_add_header(resp,"Content-Type","application/json");
-                send_response(resp);
-                free(tmp);
-                http_free_resp(resp);
-        } else {
-                http_reply(request->connection, 500, vret.answer);
-        }
-        free(vret.answer);
+	struct vsb *json;
+	struct ipc_ret_t vret;
+	ipc_run(vbackends->vadmin, &vret, "backend.list");
+	if (vret.status == 200) {
+		json = VSB_new_auto();
+		assert(json);
+		vbackends_show_json(json, vret.answer);
+		AZ(VSB_finish(json));
+		struct http_response *resp = http_mkresp(request->connection,
+		    200, VSB_data(json));
+		http_add_header(resp,"Content-Type","application/json");
+		send_response(resp);
+		VSB_delete(json);
+		http_free_resp(resp);
+	} else
+		http_reply(request->connection, 500, vret.answer);
+	free(vret.answer);
 }
 
-static unsigned int vbackends_reply(struct http_request *request, void *data)
+static unsigned int
+vbackends_json_reply(struct http_request *request, const char *arg, void *data)
 {
-        const char *arg;
-        struct agent_core_t *core = data;
-        struct agent_plugin_t *plug;
-        struct vbackends_priv_t *vbackends;
-        char *body;
+	struct vbackends_priv_t *vbackends;
+	struct agent_core_t *core = data;
+	struct agent_plugin_t *plug;
 
-        plug = plugin_find(core,"vbackends");
-        vbackends = plug->data;
+	(void)arg;
+	plug = plugin_find(core,"vbackends");
+	vbackends = plug->data;
 
-        if (!strcmp(request->url, "/backendjson/") &&
-            request->method == M_GET) {
-                backends_json(request, vbackends);
-                return 1;
-        }
-        if (request->method == M_PUT) {
-                char *mark;
-                assert(((char *)request->data)[request->ndata] == '\0');
-                body = strdup(request->data);
-                mark = strchr(body,'\n');
-                if (mark)
-                        *mark = '\0';
-                arg = request->url + strlen("/backend/");
-                assert(arg && *arg);
-                run_and_respond(vbackends->vadmin,
-                    request->connection,
-                    "backend.set_health %s %s", arg, body);
-                free(body);
-                return 1;
-        }
+	backends_json(request, vbackends);
+	return (1);
+}
 
-        http_reply(request->connection, 500, "Failed");
-        return 1;
+static unsigned int
+vbackends_reply(struct http_request *request, const char *arg, void *data)
+{
+	struct vbackends_priv_t *vbackends;
+	struct agent_core_t *core = data;
+	struct agent_plugin_t *plug;
+	char *body;
+	char *mark;
+
+	assert(request->method == M_PUT);
+
+	if (!arg) {
+		http_reply(request->connection, 500, "Failed");
+		return (1);
+	}
+
+	plug = plugin_find(core,"vbackends");
+	vbackends = plug->data;
+
+	assert(((char *)request->data)[request->ndata] == '\0');
+	body = strdup(request->data);
+	mark = strchr(body,'\n');
+	if (mark)
+		*mark = '\0';
+	run_and_respond(vbackends->vadmin, request->connection,
+			"backend.set_health %s %s", arg, body);
+	free(body);
+	return (1);
 }
 
 void
 vbackends_init(struct agent_core_t *core)
 {
-        struct agent_plugin_t *plug;
-        struct vbackends_priv_t *priv;
+	struct agent_plugin_t *plug;
+	struct vbackends_priv_t *priv;
 
-        ALLOC_OBJ(priv);
-        plug = plugin_find(core,"vbackends");
+	ALLOC_OBJ(priv);
+	plug = plugin_find(core,"vbackends");
 
-        priv->logger = ipc_register(core,"logger");
-        priv->vadmin = ipc_register(core,"vadmin");
-        plug->data = (void *)priv;
-        http_register_url(core, "/backend/", M_PUT, vbackends_reply, core);
-        http_register_url(core, "/backendjson/", M_GET, vbackends_reply, core);
-        http_register_url(core, "/help/backend", M_GET,
-            help_reply, strdup(BACKENDS_HELP));
+	priv->logger = ipc_register(core,"logger");
+	priv->vadmin = ipc_register(core,"vadmin");
+	plug->data = (void *)priv;
+	http_register_path(core, "/backend/", M_PUT, vbackends_reply, core);
+	http_register_path(core, "/backendjson/", M_GET,
+			vbackends_json_reply, core);
+	http_register_path(core, "/help/backend", M_GET,
+	    help_reply, strdup(BACKENDS_HELP));
 }

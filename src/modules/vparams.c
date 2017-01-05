@@ -40,6 +40,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <vsb.h>
+
 #include "common.h"
 #include "http.h"
 #include "helpers.h"
@@ -102,7 +104,7 @@ param_free(struct param_opt *p)
 	free(p->max);
 	next = p->next;
 	free(p);
-	return next;
+	return (next);
 }
 
 /*
@@ -111,9 +113,9 @@ param_free(struct param_opt *p)
 static const char *
 skip_space(const char *p)
 {
-	while (*p && (*p == ' ' || *p == '\t'))
+	while (*p && isblank(*p))
 		p++;
-	return p;
+	return (p);
 }
 
 /*
@@ -270,57 +272,41 @@ fill_entry(struct param_opt *p, const char *pos)
 	assert(*pos);
 	tmp = skip_space(pos);
 	assert(tmp);
-	if (!strncmp("Value is: ", tmp, strlen("Value is: "))) {
+	if (STARTS_WITH(tmp, "Value is: ")) {
 		tmp = parse_value(tmp+strlen("Value is: "), p);
 		assert(tmp);
 		tmp++;
 		tmp = skip_space(tmp);
 	}
-	if (!strncmp("Default is: ", tmp, strlen("Default is: "))) {
-		assert(p->def == NULL);
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->def = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
+#define PARSE_VALUE(name, field)			\
+	if (STARTS_WITH(tmp, #name " is: ")) {		\
+		tmp += sizeof #name " is:";		\
+		assert(p->field == NULL);		\
+		tmp2 = strchr(tmp,'\n');		\
+		assert(tmp2);				\
+		p->field = strndup(tmp, tmp2 - tmp);	\
+		tmp = tmp2+1;				\
+		tmp = skip_space(tmp);			\
 	}
-	if (!strncmp("Minimum is: ", tmp, strlen("Minimum is: "))) {
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->min = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
-	}
-	if (!strncmp("Maximum is: ", tmp, strlen("Maximum is: "))) {
-		tmp2 = strchr(tmp,'\n');
-		assert(tmp2);
-		p->max = strndup(tmp, tmp2 - tmp);
-		tmp = tmp2+1;
-		tmp = skip_space(tmp);
-	}
+	PARSE_VALUE(Default, def)
+	PARSE_VALUE(Minimum, min)
+	PARSE_VALUE(Maximum, max)
+#undef PARSE_VALUE
 
 	char desc[2048];
 	tmp = extract_description(tmp, desc, sizeof desc);
 	p->description = strdup(desc);
-	return tmp;
+	return (tmp);
 }
 
 /*
- * I hate myself and I want to die.
- *
- * This should be cleaned up considerably. Numerous flaws (e.g: word-size
- * mix). Unmanageable. Ugly. Fugly. Etc.
- *
  * Newer Varnish versions makes this redundant.
  * (Parses param.show -l and outputs json. Caller must issue free();
  */
-static char *
-vparams_show_json(char *raw)
+static void
+vparams_show_json(struct vsb *json, char *raw)
 {
-	struct param_opt *tmp, *top;
-	char *out = NULL, *out2 = NULL, *out3 = NULL;
-	int state = 0;
-	top = NULL;
+	struct param_opt *tmp = NULL, *top = NULL;
 
 	/*
 	 * param.show -l output:
@@ -349,94 +335,81 @@ vparams_show_json(char *raw)
 		/*
 		 * Sort of silly, but simplifies cleanup
 		 */
-		if (!tmp->unit) {
+		if (!tmp->unit)
 			tmp->unit = strdup("");
-		}
-		if (!tmp->min) {
+		if (!tmp->min)
 			tmp->min = strdup("");
-		}
-		if (!tmp->max) {
+		if (!tmp->max)
 			tmp->max = strdup("");
-		}
 		param_assert(tmp);
 	}
 
-	state = asprintf(&out3, "{\n");
-	assert(state);
-	for (tmp = top; tmp != NULL; ) {
+	VSB_cat(json, "{\n");
+	for (tmp = top; tmp != NULL;) {
 		param_assert(tmp);
-		state = asprintf(&out, "\t\"%s\": {\n"
-			"\t\t\"value\": \"%s\",\n"
-			"\t\t\"default\": \"%s\",\n"
-			"\t\t\"unit\": \"%s\",\n"
-			"\t\t\"description\": \"%s\"\n"
-			"\t}",
-			tmp->name, tmp->value, tmp->def,
-			tmp->unit, tmp->description);
-		assert(state);
-		state = asprintf(&out2, "%s%s%s", out3, out, (tmp->next) ? ",\n":"");
-		assert(state);
-		free(out);
-		free(out3);
-		out3 = out2;
+		if (tmp != top)
+			VSB_cat(json, ",\n");
+		VSB_printf(json,
+		    "\t\"%s\": {\n"
+		    "\t\t\"value\": \"%s\",\n"
+		    "\t\t\"default\": \"%s\",\n"
+		    "\t\t\"min\": \"%s\",\n"
+		    "\t\t\"max\": \"%s\",\n"
+		    "\t\t\"unit\": \"%s\",\n"
+		    "\t\t\"description\": \"%s\"\n"
+		    "\t}",
+		    tmp->name, tmp->value, tmp->def, tmp->min, tmp->max,
+		    tmp->unit, tmp->description);
 		tmp = param_free(tmp);
 	}
-	state = asprintf(&out2, "%s\n}\n", out3);
-	free(out3);
-	return out2;
+	VSB_cat(json, "\n}");
 }
 
-static void
-param_json(struct http_request *request, struct vparams_priv_t *vparams)
+static unsigned int
+vparams_json_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct ipc_ret_t vret;
-	char *tmp;
-	const char *param = (request->url) + strlen("/paramjson/");
-	ipc_run(vparams->vadmin, &vret, "param.show %s", *param ? param : "-l");
+	struct http_response *resp;
+	struct vparams_priv_t *vparams;
+	struct agent_core_t *core = data;
+	struct vsb *json;
+
+	GET_PRIV(core, vparams);
+
+	ipc_run(vparams->vadmin, &vret, "param.show %s", arg ? arg : "-l");
 	if (vret.status == 200) {
-		tmp = vparams_show_json(vret.answer);
-		struct http_response *resp = http_mkresp(request->connection, 200, tmp);
+		json = VSB_new_auto();
+		assert(json);
+		vparams_show_json(json, vret.answer);
+		AZ(VSB_finish(json));
+		resp = http_mkresp(request->connection, 200, VSB_data(json));
 		http_add_header(resp,"Content-Type","application/json");
 		send_response(resp);
-		free(tmp);
+		VSB_delete(json);
 		http_free_resp(resp);
-	} else {
-		http_reply(request->connection, 500, vret.answer);
 	}
+	else
+	    http_reply(request->connection, 500, "foo");
 	free(vret.answer);
+	return (1);
 }
 
 /*
  * FIXME: Should be simplified/split up.
  */
 static unsigned int
-vparams_reply(struct http_request *request, void *data)
+vparams_reply(struct http_request *request, const char *arg, void *data)
 {
-	const char *arg;
 	struct agent_core_t *core = data;
 	struct vparams_priv_t *vparams;
 	char *body;
 
 	GET_PRIV(core, vparams);
 
-	if (!strncmp(request->url, "/paramjson/", strlen("/paramjson/")) && request->method == M_GET) {
-		param_json(request, vparams);
-		return 1;
-	}
 	if (request->method == M_GET) {
-		if (!strcmp(request->url,"/param/")) {
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.show");
-			return 1;
-		} else {
-			arg = request->url + strlen("/param/");
-			assert(arg && *arg);
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.show %s", arg);
-			return 1;
-		}
+		run_and_respond(vparams->vadmin, request->connection,
+		    "param.show %s", arg);
+		return (1);
 	} else if (request->method == M_PUT) {
 		char *mark;
 		assert(((char *)request->data)[request->ndata] == '\0');
@@ -444,23 +417,18 @@ vparams_reply(struct http_request *request, void *data)
 		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';
-		if (!strcmp(request->url, "/param/")) {
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.set %s",body);
-		} else {
-			arg = request->url + strlen("/param/");
-			assert(arg && *arg);
-			run_and_respond(vparams->vadmin,
-				request->connection,
-				"param.set %s %s",arg, body);
+		if (!strcmp(request->url, "/param/"))
+			run_and_respond(vparams->vadmin, request->connection,
+			    "param.set %s", body);
+		else {
+			run_and_respond(vparams->vadmin, request->connection,
+			    "param.set %s %s", arg, body);
 		}
 		free(body);
-		return 1;
-
+		return (1);
 	}
 	http_reply(request->connection, 500, "Failed");
-	return 1;
+	return (1);
 }
 
 void
@@ -475,7 +443,8 @@ vparams_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/param/", M_PUT | M_GET, vparams_reply, core);
-	http_register_url(core, "/paramjson/", M_GET, vparams_reply, core);
-	http_register_url(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
+	http_register_path(core, "/param", M_PUT | M_GET, vparams_reply, core);
+	http_register_path(core, "/paramjson", M_GET, vparams_json_reply,
+			core);
+	http_register_path(core, "/help/param", M_GET, help_reply, strdup(PARAM_HELP));
 }

@@ -53,7 +53,7 @@
 struct http_listener {
 	char *url;
 	unsigned int method;
-	callback_t cb;
+	http_cb_f cb;
 	void *data;
 	struct http_listener *next;
 };
@@ -129,7 +129,7 @@ send_auth_response(struct MHD_Connection *connection)
 	resp = http_mkresp(connection, 401, "Authorize, please.\n\n"
 	    "If Varnish Agent was installed from packages, the "
 	    "/etc/varnish/agent_secret file contains generated "
-	    "credentials.");
+	    "credentials.\n");
 	http_add_header(resp, "WWW-Authenticate",
 	    "Basic realm=varnish-agent");
 	send_response(resp);
@@ -276,13 +276,23 @@ static int
 find_listener(struct http_request *request, struct http_priv_t *http)
 {
 	struct http_listener *lp;
+	const char *arg;
 
 	assert(request);
 	for (lp = http->listener; lp != NULL; lp = lp->next) {
-		if (!strncmp(lp->url, request->url, strlen(lp->url))) {
-			if (!(lp->method & request->method))
-				return (0);
-			lp->cb(request, lp->data);
+		if (STARTS_WITH(request->url, lp->url) &&
+				(lp->method & request->method)) {
+			arg = request->url + strlen(lp->url);
+			if (arg[0] == '\0')
+				arg = NULL;
+			else if (arg[0] != '/')
+				continue;
+			else
+				while (*arg == '/')
+					arg++;
+			if (arg && *arg == '\0')
+				arg = NULL;
+			lp->cb(request, arg, lp->data);
 			return (1);
 		}
 	}
@@ -364,6 +374,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 	assert(core->config->userpass);
 
 	log_request(connection, http, method, url);
+	request.method = 0;
 	if (core->config->r_arg && strcmp(method, "GET") &&
 	    strcmp(method, "HEAD") && strcmp(method, "OPTIONS")) {
 		logger(http->logger,
@@ -462,9 +473,9 @@ http_run(void *data)
 	return (NULL);
 }
 
-int
-http_register_url(struct agent_core_t *core, const char *url,
-    unsigned int method, callback_t cb, void *data)
+void
+http_register_path(struct agent_core_t *core, const char *url,
+    unsigned int method, http_cb_f cb, void *data)
 {
 	struct http_listener *lp;
 	struct http_priv_t *http;
@@ -480,7 +491,6 @@ http_register_url(struct agent_core_t *core, const char *url,
 	lp->data = data;
 	lp->next = http->listener;
 	http->listener = lp;
-	return (1);
 }
 
 void

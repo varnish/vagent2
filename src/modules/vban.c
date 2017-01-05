@@ -57,38 +57,37 @@ struct vban_priv_t {
 };
 
 static unsigned int
-vban_reply(struct http_request *request, void *data)
+vban_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct agent_core_t *core = data;
 	struct vban_priv_t *vban;
 	char *body;
+	char *mark;
 
 	GET_PRIV(core, vban);
 
 	if (request->method == M_GET) {
 		run_and_respond(vban->vadmin, request->connection, "ban.list");
 		return 0;
-	} else {
-		char *mark;
-		assert(((char *)request->data)[request->ndata] == '\0');
-		body = strdup(request->data);
-		mark = strchr(body,'\n');
-		if (mark)
-			*mark = '\0';
-		if (strlen(request->url) == strlen("/ban"))
-			run_and_respond(vban->vadmin, request->connection, "ban %s",body);
-		else {
-			const char *path = request->url + strlen("/ban");
-			if (request->ndata != 0) {
-				http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
-			} else {
-				assert(request->ndata == 0);
-				run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "%s",path);
-			}
-		}
-		free(body);
-		return 0;
 	}
+
+	assert(((char *)request->data)[request->ndata] == '\0');
+	body = strdup(request->data);
+	mark = strchr(body,'\n');
+	if (mark)
+		*mark = '\0';
+	if (!arg)
+		run_and_respond(vban->vadmin, request->connection, "ban %s", body);
+	else {
+		const char *path = request->url + strlen("/ban");
+		if (request->ndata != 0) {
+			http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
+		} else {
+			assert(request->ndata == 0);
+			run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "/%s",path);
+		}
+	}
+	free(body);
 
 	return 0;
 }
@@ -104,6 +103,6 @@ vban_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_url(core, "/ban", M_GET | M_POST, vban_reply, core);
-	http_register_url(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
+	http_register_path(core, "/ban", M_GET | M_POST, vban_reply, core);
+	http_register_path(core, "/help/ban", M_GET, help_reply, strdup(BAN_HELP_TEXT));
 }

@@ -135,11 +135,11 @@ next_slash(const char *p)
 }
 
 static unsigned int
-vlog_reply(struct http_request *request, void *data)
+vlog_reply(struct http_request *request, const char *arg, void *data)
 {
 	struct vlog_req_priv vrp = { .limit = 10 };
 	int disp_status;
-	char *p;
+	const char *p;
 	char *tag = NULL;
 	char *tag_re = NULL;
 	struct VSL_data *vsl = NULL;
@@ -148,7 +148,7 @@ vlog_reply(struct http_request *request, void *data)
 	enum VSL_grouping_e grouping = VSL_g_request;
 	struct agent_core_t *core = data;
 
-	p = next_slash(request->url + 1);
+	p = arg;
 	if (p) {
 		char *lim = strdup(p);
 		assert(lim);
@@ -177,7 +177,6 @@ vlog_reply(struct http_request *request, void *data)
 		tag_re = strdup(p);
 		char *tmp2 = strchr(tag_re, '/');
 		if (tmp2 && *tmp2) *tmp2 = '\0';
-		p = next_slash(p);
 	}
 	
 	vrp.answer = VSB_new_auto();
@@ -283,5 +282,5 @@ vlog_init(struct agent_core_t *core)
 	plug = plugin_find(core,"vlog");
 	plug->data = priv;
 
-	http_register_url(core, "/log", M_GET, vlog_reply, core);
+	http_register_path(core, "/log", M_GET, vlog_reply, core);
 }
