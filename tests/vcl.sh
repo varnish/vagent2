@@ -37,7 +37,7 @@ test_vcl_file() {
 }
 
 is_running
-test_it_long GET vcl/ "" "active"
+test_it_long GET vcl "" "active"
 test_it_long GET vcl/ "" "active"
 test_it_long GET vcl/boot "" "backend"
 test_it_fail GET vcljson/foo "" "/vcljson takes no argument"
