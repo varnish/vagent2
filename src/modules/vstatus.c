@@ -37,7 +37,7 @@
 #include "helpers.h"
 #include "ipc.h"
 #include "plugins.h"
-#include "vcs_version.h"
+#include "vagent_version.h"
 
 
 #define PANIC_HELP \
@@ -122,7 +122,7 @@ vstatus_init(struct agent_core_t *core)
 	http_register_path(core, "/help/panic", M_GET, help_reply,
 			strdup(PANIC_HELP));
 	http_register_path(core, "/version", M_GET, help_reply,
-			strdup(VCS_Version "\n"));
+			strdup(VAGENT_VERSION "\n"));
 	http_register_path(core, "/package_string", M_GET, help_reply,
 			strdup(PACKAGE_STRING "\n"));
 	http_register_path(core, "/ping", M_GET, vstatus_ping, core);

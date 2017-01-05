@@ -27,7 +27,7 @@ test-driver
 **.o
 src/varnish-agent
 varnish-agent.1
-include/vcs_version.h
+include/vagent_version.h
 
 # Test stuff
 tests/*.log
