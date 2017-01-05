@@ -473,7 +473,7 @@ http_run(void *data)
 	return (NULL);
 }
 
-int
+void
 http_register_path(struct agent_core_t *core, const char *url,
     unsigned int method, http_cb_f cb, void *data)
 {
@@ -491,7 +491,6 @@ http_register_path(struct agent_core_t *core, const char *url,
 	lp->data = data;
 	lp->next = http->listener;
 	http->listener = lp;
-	return (1);
 }
 
 void

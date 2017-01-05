@@ -43,10 +43,10 @@
  *
  * Examples:
  *
- * GET /vcl/ - fetches list of VCL
- * POST /vcl/ - uploads a VCL to a dynamic url, multiple uploads leads to
+ * GET /vcl - fetches list of VCL
+ * POST /vcl - uploads a VCL to a dynamic url, multiple uploads leads to
  *              multiple copies.
- * PUT /vcl/ - Error
+ * PUT /vcl - Error
  * PUT /vcl/name - uploads a VCL to the name specified. Multiple uploads
  *                 will try to overwrite the VCL (which fails, since
  *                 Varnish disallows this)
@@ -129,6 +129,6 @@ int http_reply_len(struct MHD_Connection *, int, const char *, unsigned);
  * they don't have overlapping methods.
  */
 
-int http_register_path(struct agent_core_t *core, const char *url,
+void http_register_path(struct agent_core_t *core, const char *url,
 		       unsigned int method, http_cb_f cb, void *data);
 #endif
