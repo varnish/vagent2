@@ -40,6 +40,7 @@ struct curl_priv_t {
 	void *data;
 	char *pos;
 	char *cainfo;
+	int skipsslverifypeer;
 	unsigned int ndata;
 };
 
@@ -118,6 +119,8 @@ issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
 		if (private->cainfo)
 			curl_easy_setopt(curl, CURLOPT_CAINFO, private->cainfo);
+		if (private->skipsslverifypeer == 1)
+			curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 		if (data) {
 			curl_easy_setopt(curl, CURLOPT_NOBODY, 0);
 			curl_easy_setopt(curl, CURLOPT_UPLOAD, 1);
@@ -156,6 +159,7 @@ curl_init(struct agent_core_t *core)
 	plug = plugin_find(core, "curl");
 	priv->logger = ipc_register(core, "logger");
 	priv->cainfo = core->config->C_arg;
+	priv->skipsslverifypeer = core->config->k_arg;
 	plug->data = (void *)priv;
 	plug->start = ipc_start;
 	plug->ipc->priv = priv;
