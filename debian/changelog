@@ -1,3 +1,9 @@
+varnish-agent (4.1.2) unstable; urgency=low
+
+  * Various bug fixes
+
+ -- Dridi Boukelmoune <dridi@varnish-software.com>  Thu, 19 Jan 2017 13:52:14 +0200
+
 varnish-agent (4.1.1) unstable; urgency=low
 
   * Several memory leak fixes
