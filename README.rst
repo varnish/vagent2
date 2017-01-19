@@ -20,10 +20,10 @@ SYNOPSIS
 ::
 
         varnish-agent [-C cafile] [-c port] [-d] [-g group] [-H directory]
-                      [-h] [-K agent-secret-file] [-n name] [-P pidfile]
-                      [-p directory] [-q] [-r] [-S varnishd-secret-file]
-                      [-T host:port] [-t timeout] [-u user] [-V] [-v]
-                      [-z vac_register_url]
+                      [-h] [-k allow-insecure-vac] [-K agent-secret-file]
+                      [-n name] [-P pidfile] [-p directory] [-q] [-r]
+                      [-S varnishd-secret-file] [-T host:port] [-t timeout]
+                      [-u user] [-V] [-v] [-z vac_register_url]
 
 DESCRIPTION
 ===========
@@ -64,6 +64,10 @@ OPTIONS
             concept front end.
 
 -h          Print help.
+
+-k allow-insecure-vac
+            This option explicitly allows curl to perform 'insecure' SSL
+            connections and transfers.
 
 -K agent-secret-file
             Path to a file containing a single line representing the

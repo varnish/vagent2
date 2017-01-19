@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 4.1.1
+Version: 4.1.2
 Release: 1%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -93,8 +93,10 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Thu Jan 19 2017 Dridi Boukelmoune <dridi.boukelmoune@gmail.com> - 4.1.2
+- Various bug fixes
 
-* Thu Aug 4 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.1
+* Thu Aug 04 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.1
 - Several memory leak fixes
 
 * Tue Jan 26 2016 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.0

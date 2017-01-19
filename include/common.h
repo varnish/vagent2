@@ -51,6 +51,7 @@ struct agent_config_t {
 	int loglevel;
 	const char *c_arg; // Listening port for incoming requests
 	char *C_arg; // CURLOPT_CAINFO param
+	int k_arg; // CURLOPT_SSL_VERIFYPEER param
 	const char *p_arg; // Persistence directory
 	const char *H_arg; // HTML directory
 	char *P_arg; // Pid file

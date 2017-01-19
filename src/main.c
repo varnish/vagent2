@@ -112,6 +112,8 @@ usage(const char *argv0)
 	    "    -g group              Group to run as (default: varnish)\n"
 	    "    -H directory          Where /html/ is located. Default: " AGENT_HTML_DIR "\n"
 	    "    -h                    This help.\n"
+	    "    -k                    This option explicitly allows curl to perform 'insecure'\n"
+	    "                          SSL connections and transfers.\n"
 	    "    -K agent-secret-file  File containing username:password for authentication.\n"
 	    "                          Default: " AGENT_CONF_DIR "/agent_secret\n"
 	    "    -n name               Name. Should match varnishd -n option.\n"
@@ -147,7 +149,8 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->H_arg = AGENT_HTML_DIR;
 	core->config->K_arg = AGENT_CONF_DIR "/agent_secret";
 	core->config->loglevel = 2;
-	while ((opt = getopt(argc, argv, "C:c:dg:H:hK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
+	core->config->k_arg = 0;
+	while ((opt = getopt(argc, argv, "C:c:dg:H:hkK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
 		case 'C':
 			core->config->C_arg = optarg;
@@ -169,6 +172,9 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 			exit(1);
 		case 'K':
 			core->config->K_arg = optarg;
+			break;
+		case 'k':
+			core->config->k_arg = 1;
 			break;
 		case 'n':
 			core->config->n_arg = optarg;
@@ -340,7 +346,7 @@ main(int argc, char **argv)
 	core_opt(&core, argc, argv);
 	base64_init();
 	core_plugins(&core);
-	
+
 	if (core.config->P_arg)
 		p_open(&pfh, core.config->P_arg);
 
@@ -349,7 +355,7 @@ main(int argc, char **argv)
 		logger(-1, "Plugins initialized. -d argument given, so not forking.");
 	else
 		v_daemon(&pfh);
-		
+
 	if (pfh)
 		pidfile_write(pfh);
 	ipc_sanity(&core);
