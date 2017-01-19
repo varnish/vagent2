@@ -20,10 +20,10 @@ SYNOPSIS
 ::
 
         varnish-agent [-C cafile] [-c port] [-d] [-g group] [-H directory]
-                      [-h] [-k allow-insecure-vac][-K agent-secret-file] [-n name] [-P pidfile]
-                      [-p directory] [-q] [-r] [-S varnishd-secret-file]
-                      [-T host:port] [-t timeout] [-u user] [-V] [-v]
-                      [-z vac_register_url]
+                      [-h] [-k allow-insecure-vac] [-K agent-secret-file]
+                      [-n name] [-P pidfile] [-p directory] [-q] [-r]
+                      [-S varnishd-secret-file] [-T host:port] [-t timeout]
+                      [-u user] [-V] [-v] [-z vac_register_url]
 
 DESCRIPTION
 ===========
