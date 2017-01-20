@@ -252,6 +252,7 @@ vcl_list_json(char *raw)
 	int ret;
 	char *pos;
 	char ref_temp[10];
+	const char *sep = "";
 	struct vsb *vsb;
 	vsb = VSB_new_auto();
 	pos = raw;
@@ -274,15 +275,16 @@ vcl_list_json(char *raw)
 		}
 		assert(ret>0);
 		VSB_printf(vsb,
-			"%s\n"
-			"\t\t{\n"
-			"\t\t\t\"name\": \"%s\",\n"
-			"\t\t\t\"status\": \"%s\",\n"
-			"\t\t\t\"temp\": \"%s\",\n"
-			"\t\t\t\"mode\": \"%s\"\n"
-			"\t\t}",
-			pos != raw ? "," : "", tmp.name, tmp.available,
-			tmp.temp, tmp.state);
+		    "%s\n"
+		    "\t\t{\n"
+		    "\t\t\t\"name\": \"%s\",\n"
+		    "\t\t\t\"status\": \"%s\",\n"
+		    "\t\t\t\"temp\": \"%s\",\n"
+		    "\t\t\t\"mode\": \"%s\"\n"
+		    "\t\t}",
+		    sep, tmp.name, tmp.available, tmp.temp, tmp.state);
+
+		sep = ",";
 
 		pos = strstr(pos,"\n");
 		if (pos == NULL)
