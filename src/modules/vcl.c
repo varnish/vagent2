@@ -255,9 +255,8 @@ vcl_list_json(char *raw)
 	struct vsb *vsb;
 	vsb = VSB_new_auto();
 	pos = raw;
-	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
+	VSB_printf(vsb,"{\n\t\"vcls\": [");
 	while (1) {
-		assert(strlen(pos) > 30);
 		if (pos[30] != ' ')
 			ret = sscanf(pos, "%10s %4s/%4s  %6s %s\n",
 			    tmp.available, tmp.state, tmp.temp, ref_temp,
@@ -275,13 +274,14 @@ vcl_list_json(char *raw)
 		}
 		assert(ret>0);
 		VSB_printf(vsb,
-			"\t\t%s{\n"
+			"%s\n"
+			"\t\t{\n"
 			"\t\t\t\"name\": \"%s\",\n"
 			"\t\t\t\"status\": \"%s\",\n"
 			"\t\t\t\"temp\": \"%s\",\n"
 			"\t\t\t\"mode\": \"%s\"\n"
 			"\t\t}",
-			pos != raw ? ",\n" : "", tmp.name, tmp.available,
+			pos != raw ? "," : "", tmp.name, tmp.available,
 			tmp.temp, tmp.state);
 
 		pos = strstr(pos,"\n");
