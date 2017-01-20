@@ -66,4 +66,12 @@ inc
 sleep 1
 test_it_long POST vcl/ "$DUMMYVCL" "VCL compiled."
 
+# GH-184
+VCL_184=test_58820ba00cf27d988340b974_58820ba00cf27d988340b975
+test_it_long PUT vcl/$VCL_184 "$DUMMYVCL" "VCL compiled."
+test_it_long GET vcl "" ${VCL_184:0:13}
+test_it_long GET vcl "" $VCL_184
+test_it_long GET vcljson "" ${VCL_184:0:13}
+test_it_long GET vcljson "" $VCL_184
+
 exit $ret

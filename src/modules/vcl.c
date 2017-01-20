@@ -47,7 +47,7 @@
 #include "plugins.h"
 #include "vsb.h"
 
-#define ID_LEN	10
+#define ID_LEN	256
 
 struct vcl_priv_t {
 	int logger;
@@ -367,7 +367,7 @@ vcl_push(struct http_request *request, const char *arg, void *data)
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
 	struct ipc_ret_t vret;
-	char id[ID_LEN + 3 + 1];
+	char id[ID_LEN];
 	int status;
 
 	GET_PRIV(core, vcl);
