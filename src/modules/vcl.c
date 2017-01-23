@@ -47,7 +47,7 @@
 #include "plugins.h"
 #include "vsb.h"
 
-#define ID_LEN	10
+#define ID_LEN	256
 
 struct vcl_priv_t {
 	int logger;
@@ -252,12 +252,12 @@ vcl_list_json(char *raw)
 	int ret;
 	char *pos;
 	char ref_temp[10];
+	const char *sep = "";
 	struct vsb *vsb;
 	vsb = VSB_new_auto();
 	pos = raw;
-	VSB_printf(vsb,"{\n\t\"vcls\": [\n");
+	VSB_printf(vsb,"{\n\t\"vcls\": [");
 	while (1) {
-		assert(strlen(pos) > 30);
 		if (pos[30] != ' ')
 			ret = sscanf(pos, "%10s %4s/%4s  %6s %s\n",
 			    tmp.available, tmp.state, tmp.temp, ref_temp,
@@ -275,14 +275,16 @@ vcl_list_json(char *raw)
 		}
 		assert(ret>0);
 		VSB_printf(vsb,
-			"\t\t%s{\n"
-			"\t\t\t\"name\": \"%s\",\n"
-			"\t\t\t\"status\": \"%s\",\n"
-			"\t\t\t\"temp\": \"%s\",\n"
-			"\t\t\t\"mode\": \"%s\"\n"
-			"\t\t}",
-			pos != raw ? ",\n" : "", tmp.name, tmp.available,
-			tmp.temp, tmp.state);
+		    "%s\n"
+		    "\t\t{\n"
+		    "\t\t\t\"name\": \"%s\",\n"
+		    "\t\t\t\"status\": \"%s\",\n"
+		    "\t\t\t\"temp\": \"%s\",\n"
+		    "\t\t\t\"mode\": \"%s\"\n"
+		    "\t\t}",
+		    sep, tmp.name, tmp.available, tmp.temp, tmp.state);
+
+		sep = ",";
 
 		pos = strstr(pos,"\n");
 		if (pos == NULL)
@@ -367,7 +369,7 @@ vcl_push(struct http_request *request, const char *arg, void *data)
 	struct agent_core_t *core = data;
 	struct vcl_priv_t *vcl;
 	struct ipc_ret_t vret;
-	char id[ID_LEN + 3 + 1];
+	char id[ID_LEN];
 	int status;
 
 	GET_PRIV(core, vcl);
