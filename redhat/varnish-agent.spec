@@ -1,7 +1,7 @@
 Summary: varnish-agent
 Name: varnish-agent
 Version: 4.1.2
-Release: 1%{?dist}
+Release: %{vrelease}%{?dist}
 License: BSD
 Group: System Environment/Daemons
 Source0: %{name}-%{version}.tar.gz
