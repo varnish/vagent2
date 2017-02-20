@@ -33,16 +33,14 @@ Pre-built packages
 ------------------
 
 Pre-built varnish-agent packages for Debian and RedHat are available
-from [Packagecloud](https://packagecloud.io).
+from `Packagecloud <https://packagecloud.io/>`_
 
-[For Varnish 4.1](https://packagecloud.io/varnishcache/varnish41) [[Installation guidelines]](https://packagecloud.io/varnishcache/varnish41/install)
+`Varnish Agent for Varnish 4.1.x <https://packagecloud.io/varnishcache/varnish41/>`_  - `Repo setup 4.1 <https://packagecloud.io/varnishcache/varnish41/install/>`_
 
-[For Varnish 4.0](https://packagecloud.io/varnishcache/varnish40) [[Installation guidelines]](https://packagecloud.io/varnishcache/varnish40/install)
+`Varnish Agent for Varnish 4.0.x <https://packagecloud.io/varnishcache/varnish40/>`_ - `Repo setup 4.0 <https://packagecloud.io/varnishcache/varnish40/install/>`_
 
-Previous packages are available in [repo.varnish-cache.org](repo.varnish-cache.org)
 
-See https://www.varnish-cache.org/installation/debian
-or https://www.varnish-cache.org/installation/redhat for further details.
+Previous packages are available in `repo.varnish-cache.org <repo.varnish-cache.org/>`_
 
 Running
 -------
