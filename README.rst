@@ -42,6 +42,8 @@ For default values of options, including but not limited to where username
 and password is read from (``-K``), where VCL is saved to (``-p``) and
 where HTML is read from (``-H``), see ``varnish-agent -h``.
 
+`Installation <../INSTALL.rst>`_
+
 OPTIONS
 =======
 
