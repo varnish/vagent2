@@ -19,5 +19,8 @@ override_dh_gencontrol:
 		dh_gencontrol ; \
 	fi
 
+override_dh_installinit:
+	dh_installinit --update-rcd-params='start 40 2 3 4 5 . stop 40 0 1 6 .'
+
 %:
 	dh $@
