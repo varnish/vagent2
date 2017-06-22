@@ -20,7 +20,7 @@ BuildRequires: varnish
 %if 0%{?el5}
 BuildRequires: libmicrohttpd-devel varnish-libs-devel curl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel
 %else
-BuildRequires: libmicrohttpd-devel varnish-libs-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel strace
+BuildRequires: libmicrohttpd-devel varnish-devel libcurl-devel python-docutils varnish perl-libwww-perl nc python-demjson libedit-devel strace
 %endif
 
 %description
