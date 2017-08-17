@@ -20,6 +20,8 @@ override_dh_gencontrol:
 	fi
 
 override_dh_install:
+	dh_installdocs -a
+	dh_installchangelogs -a
 	dh_install --fail-missing
 
 override_dh_systemd_enable:
