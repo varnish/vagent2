@@ -1,0 +1,14 @@
+[Unit]
+Description=Varnish Agent
+After=varnish.service
+
+[Service]
+Type=forking
+# Give varnish a little startup pause
+# Could be improved with notify functionality
+ExecStartPre=/bin/sleep 2
+ExecStart=/usr/bin/varnish-agent -P /var/run/varnish-agent.pid 
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

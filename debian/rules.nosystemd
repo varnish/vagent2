@@ -19,12 +19,8 @@ override_dh_gencontrol:
 		dh_gencontrol ; \
 	fi
 
-override_dh_systemd_enable:
-	dh_systemd_enable -pvarnish-agent --name=varnish-agent varnish-agent.service
-
-override_dh_systemd_start:
-	dh_systemd_start -pvarnish-agent varnish-agent.service
-
+override_dh_installinit:
+	dh_installinit --update-rcd-params='start 40 2 3 4 5 . stop 40 0 1 6 .'
 
 %:
-	dh $@ --with systemd
+	dh $@
