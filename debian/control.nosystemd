@@ -2,9 +2,7 @@ Source: varnish-agent
 Section: varnish-4.1/web
 Priority: optional
 Maintainer: Varnish Software <support@varnish-software.com>
-Build-Depends:
- debhelper (>= 7),
- dh-systemd,
+Build-Depends: debhelper (>= 7),
  netcat-openbsd,
  varnish-dev (>= 4.1) | varnish-plus-dev (>= 4.1),
  pkg-config,

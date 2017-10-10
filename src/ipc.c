@@ -81,6 +81,7 @@ static pthread_t tid_to_fd[1024];
 static void
 ipc_verify_sock_thread(int sock)
 {
+
 	if (sock < 1024) {
 		if (tid_to_fd[sock] == 0)
 			tid_to_fd[sock] = pthread_self();
@@ -100,13 +101,14 @@ static int
 ipc_write(int sock, const char *s, int len)
 {
 	int l;
+
 	ipc_verify_sock_thread(sock);
 	l = write (sock, s, len);
 	if (len == l)
-		return 1;
+		return (1);
 	perror("Write error CLI socket");
 	assert(close(sock));
-	return 0;
+	return (0);
 }
 
 /*
@@ -116,11 +118,13 @@ ipc_write(int sock, const char *s, int len)
 void
 ipc_send(int handle, void *data, int len, struct ipc_ret_t *ret)
 {
-	assert(data);
 	char buffer[12];
+
+	assert(data);
 	assert(len < 1000000000);
 	assert(len >= 0);
 	assert(threads_started > 0);
+
 	snprintf(buffer,11,"%09d ",len);
 	ipc_write(handle, buffer, 10);
 	ipc_write(handle, data, len);
@@ -137,6 +141,7 @@ ipc_run(int handle, struct ipc_ret_t *ret, const char *fmt, ...)
 	va_list ap;
 	char *buffer;
 	int iret;
+
 	assert(fmt);
 	va_start(ap, fmt);
 	iret = vasprintf(&buffer, fmt, ap);
@@ -159,13 +164,15 @@ ipc_register(struct agent_core_t *core, const char *name)
 	struct agent_plugin_t *v;
 	int sv[2];
 	int ret;
+
 	v  = plugin_find(core, name);
 
 	ret = socketpair(AF_UNIX, SOCK_STREAM, 0, sv);
 	assert(ret == 0);
 	assert(v->ipc->nlisteners < MAX_LISTENERS);
 	v->ipc->listeners[v->ipc->nlisteners++] = sv[0];
-	return sv[1];
+
+	return (sv[1]);
 }
 
 /*
@@ -193,17 +200,16 @@ ipc_cmd(int fd, struct ipc_t *ipc)
 	assert(buffer[9] == ' ');
 	length = atoi(buffer);
 	assert(length >= 0);
-	
+
 	data = malloc(length+1);
 	assert(data);
 	for (i = 0, oldi = 0; i < length; ) {
 		i += read(fd, data + i, length - i);
 		assert(i != oldi);
 	}
-		
-	if (i != length) {
+
+	if (i != length)
 		fprintf(stderr,"Wanted %d data, got %d", length, i);
-	}
 	assert(i == length);
 	data[length] = '\0';
 	ipc->cb(ipc->priv, data, &ret);
@@ -212,7 +218,7 @@ ipc_cmd(int fd, struct ipc_t *ipc)
 	free(data);
 	if (ret.answer)
 		free(ret.answer);
-	return 1;
+	return (1);
 }
 
 /*
@@ -242,7 +248,7 @@ ipc_loop(void *data)
 			}
 		}
 	}
-	return NULL;
+	return (NULL);
 }
 
 /*
@@ -251,6 +257,8 @@ ipc_loop(void *data)
 void
 ipc_init(struct ipc_t *ipc)
 {
+
+	assert(ipc != NULL);
 	ipc->nlisteners = 0;
 }
 
@@ -262,7 +270,7 @@ ipc_start(struct agent_core_t *core, const char *name)
 {
 	struct agent_plugin_t *plug;
 	pthread_t *thread;
-	
+
 	ALLOC_OBJ(thread);
 	plug = plugin_find(core, name);
 	AZ(pthread_create(thread, NULL, (ipc_loop), plug->ipc));
@@ -278,15 +286,16 @@ void
 ipc_sanity(struct agent_core_t *core)
 {
 	struct agent_plugin_t *plug;
+
 	for (plug = core->plugins; plug != NULL; plug = plug->next) {
-		if (plug->ipc->cb)
-			if (!plug->start) {
-				fprintf(stderr, "Plugin %s defines a callback for the IPC,"
-						" but does not have a start function.\n"
-						"Consider setting plug->start to ipc_start in "
-						"the init-function of the plugin.\n",
-						plug->name);
-				assert((plug->ipc->cb == NULL) || (plug->start != NULL));
-			}
+		if (plug->ipc->cb && !plug->start) {
+			fprintf(stderr,
+			    "Plugin %s defines a callback for the IPC,"
+			    " but does not have a start function.\n"
+			    "Consider setting plug->start to ipc_start in "
+			    "the init-function of the plugin.\n",
+			    plug->name);
+			assert((plug->ipc->cb == NULL) || (plug->start != NULL));
+		}
 	}
 }

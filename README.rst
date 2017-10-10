@@ -11,8 +11,8 @@ Varnish Agent
 
 :Manual section: 1
 :Authors: Kristian Lyngstøl, Yves Hwang, Dag Haavi Finstad
-:Date: 04-11-2015
-:Version: 4.1.0
+:Date: 10-10-2017
+:Version: 4.1.3
 
 SYNOPSIS
 ========
@@ -41,6 +41,8 @@ value.
 For default values of options, including but not limited to where username
 and password is read from (``-K``), where VCL is saved to (``-p``) and
 where HTML is read from (``-H``), see ``varnish-agent -h``.
+
+`Installation <INSTALL.rst>`_
 
 OPTIONS
 =======

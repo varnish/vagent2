@@ -41,7 +41,7 @@
 
 #define BACKENDS_HELP \
 "GET /backendsjson/ - fetches a list of backends and values\n" \
-"PUT /backend/foo - Takes a single value as input (e.g: 1000)" \
+"PUT /backend/foo - Takes a single value as input (e.g: sick)" \
 " and let you change the admin health value\n" \
 "For more tricks go to the HTML backend page\n"
 
@@ -110,12 +110,14 @@ vbackends_show_json(struct vsb *json, char *raw)
 	VSB_cat(json, "\n]\n}\n");
 }
 
-static void backends_json(struct http_request *request,
-    struct vbackends_priv_t *vbackends)
+static void
+backends_json(struct http_request *request, struct vbackends_priv_t *vbackends)
 {
 	struct vsb *json;
 	struct ipc_ret_t vret;
+
 	ipc_run(vbackends->vadmin, &vret, "backend.list");
+
 	if (vret.status == 200) {
 		json = VSB_new_auto();
 		assert(json);
@@ -189,8 +191,8 @@ vbackends_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_path(core, "/backend/", M_PUT, vbackends_reply, core);
-	http_register_path(core, "/backendjson/", M_GET,
+	http_register_path(core, "/backend", M_PUT, vbackends_reply, core);
+	http_register_path(core, "/backendjson", M_GET,
 			vbackends_json_reply, core);
 	http_register_path(core, "/help/backend", M_GET,
 	    help_reply, strdup(BACKENDS_HELP));

@@ -85,9 +85,9 @@ run_and_respond(int vadmin, struct MHD_Connection *conn, const char *fmt, ...)
 	assert(iret >= 0);
 	va_end(ap);
 	ipc_run(vadmin, &vret, "%s", buffer);
-	free(buffer);
 
 	http_reply(conn, vret.status == 200 ? 200 : 500, vret.answer);
+	free(buffer);
 	free(vret.answer);
 }
 
