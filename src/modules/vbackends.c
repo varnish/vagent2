@@ -41,7 +41,7 @@
 
 #define BACKENDS_HELP \
 "GET /backendsjson/ - fetches a list of backends and values\n" \
-"PUT /backend/foo - Takes a single value as input (e.g: 1000)" \
+"PUT /backend/foo - Takes a single value as input (e.g: sick)" \
 " and let you change the admin health value\n" \
 "For more tricks go to the HTML backend page\n"
 

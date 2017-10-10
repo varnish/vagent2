@@ -1,5 +1,6 @@
 LOG_COMPILER = $(srcdir)/test-wrapper
 TESTS = ban.sh \
+	backendhealth.sh \
 	arguments.sh \
 	buffers.sh \
 	vac_register.sh \
