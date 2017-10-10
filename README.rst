@@ -11,8 +11,8 @@ Varnish Agent
 
 :Manual section: 1
 :Authors: Kristian Lyngstøl, Yves Hwang, Dag Haavi Finstad
-:Date: 20-02-2017
-:Version: 4.1.2
+:Date: 10-10-2017
+:Version: 4.1.3
 
 SYNOPSIS
 ========
