@@ -191,8 +191,8 @@ vbackends_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core,"logger");
 	priv->vadmin = ipc_register(core,"vadmin");
 	plug->data = (void *)priv;
-	http_register_path(core, "/backend/", M_PUT, vbackends_reply, core);
-	http_register_path(core, "/backendjson/", M_GET,
+	http_register_path(core, "/backend", M_PUT, vbackends_reply, core);
+	http_register_path(core, "/backendjson", M_GET,
 			vbackends_json_reply, core);
 	http_register_path(core, "/help/backend", M_GET,
 	    help_reply, strdup(BACKENDS_HELP));
