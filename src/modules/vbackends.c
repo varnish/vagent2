@@ -110,12 +110,14 @@ vbackends_show_json(struct vsb *json, char *raw)
 	VSB_cat(json, "\n]\n}\n");
 }
 
-static void backends_json(struct http_request *request,
-    struct vbackends_priv_t *vbackends)
+static void
+backends_json(struct http_request *request, struct vbackends_priv_t *vbackends)
 {
 	struct vsb *json;
 	struct ipc_ret_t vret;
+
 	ipc_run(vbackends->vadmin, &vret, "backend.list");
+
 	if (vret.status == 200) {
 		json = VSB_new_auto();
 		assert(json);
