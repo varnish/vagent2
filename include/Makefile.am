@@ -2,7 +2,7 @@ nobase_noinst_HEADERS = common.h helpers.h plugins.h ipc.h http.h vss-hack.h vag
 BUILT_SOURCES = vagent_version.h
 MAINTAINERCLEANFILES = vagent_version.h
 vagent_version.h: FORCE
-	ls -Rl $(top_srcdir) \
+	ls -Rl ../ \
 	if [ -d "$(top_srcdir)/.git" ]; then \
 		V=$$(git describe --always --tags --dirty 2>/dev/null || echo NOGIT); \
 		echo "V: $$V"; \
