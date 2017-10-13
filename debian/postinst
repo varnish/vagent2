@@ -8,14 +8,14 @@ case ${1:-} in
         install -o varnish -g varnish -d /var/lib/varnish-agent
         test -f /var/lib/varnish-agent/boot.vcl || \
             cat > /var/lib/varnish-agent/boot.vcl <<EOF
-            # Placeholder file installed by varnish-agent
+# Placeholder file installed by varnish-agent
 
-            vcl 4.0;
+vcl 4.0;
 
-            backend {
-                .host = "127.0.0.1";
-                .port = "8080";
-            }
+backend {
+    .host = "127.0.0.1";
+    .port = "8080";
+}
 EOF
         test -f /etc/varnish/agent_secret || \
             (echo "varnish:$(head -c 8 /dev/urandom | base64)" > /etc/varnish/agent_secret && \
