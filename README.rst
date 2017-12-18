@@ -118,6 +118,12 @@ tell Varnish to use ``/var/lib/varnish-agent/boot.vcl``. E.g by modifying
 ``/etc/sysconfig/varnish`` or ``/etc/default/varnish`` and changing the
 ``-f`` argument.
 
+VARNISH VERSION
+=====================
+
+Varnish Agent 4.0.x is for Varnish 4.0 series.
+Varnish Agent 4.1.x is for Varnish 4.1 series.
+
 DESIGN
 ======
 
