@@ -122,6 +122,7 @@ VARNISH VERSION
 =====================
 
 Varnish Agent 4.0.x is for Varnish 4.0 series.
+
 Varnish Agent 4.1.x is for Varnish 4.1 series.
 
 DESIGN
