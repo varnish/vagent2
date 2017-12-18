@@ -193,4 +193,4 @@ COPYRIGHT
 This document is licensed under the same license as the Varnish Agent
 itself. See LICENSE for details.
 
-* Copyright 2012-2015 Varnish Software Group
+* Copyright 2012-2017 Varnish Software Group
