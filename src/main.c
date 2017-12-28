@@ -221,6 +221,12 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 		}
 	}
 
+	if (optind < argc) {
+		fprintf(stderr, "Error: too many arguments.\n\n");
+		usage(*argv);
+		exit(1);
+	}
+
 	assert(core->config->K_arg);
 	core->config->userpass = get_first_line(core->config->K_arg);
 	if (!core->config->userpass)
