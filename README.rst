@@ -19,11 +19,12 @@ SYNOPSIS
 
 ::
 
-        varnish-agent [-C cafile] [-c port] [-d] [-g group] [-H directory]
-                      [-h] [-k allow-insecure-vac] [-K agent-secret-file]
-                      [-n name] [-P pidfile] [-p directory] [-q] [-r]
-                      [-S varnishd-secret-file] [-T host:port] [-t timeout]
-                      [-u user] [-V] [-v] [-z vac_register_url]
+        varnish-agent [-C cafile] [-c local-port[:remote-port]] [-d]
+                      [-g group] [-H directory] [-h] [-k allow-insecure-vac]
+                      [-K agent-secret-file] [-n name] [-P pidfile]
+                      [-p directory] [-q] [-r] [-S varnishd-secret-file]
+                      [-T host:port] [-t timeout] [-u user] [-V] [-v]
+                      [-z vac_register_url]
 
 DESCRIPTION
 ===========
@@ -55,6 +56,13 @@ OPTIONS
 
 -c port     Port number to listen for incoming connections. Defaults to
             6085.
+
+            The port argument can take the form of local-port:remote-port
+            for cases where the API should be called remotely using a
+            different port (due to some translation occurring). When
+            omitted the remote port is the same as the local port. The
+            local port is bound by the agent, and the remote port is
+            reached by the VAC.
 
 -d          Run in foreground.
 

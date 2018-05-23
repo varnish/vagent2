@@ -137,26 +137,36 @@ static void
 core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
+	char *sep;
 	const char *argv0 = argv[0];
 
 	assert(core->config != NULL);
 
 	memset(core->config, '\0', sizeof(*core->config));
 	core->config->S_arg_fd = -1;
-	core->config->c_arg = "6085";
+	core->config->local_port = "6085";
+	core->config->remote_port = "6085";
 	core->config->timeout = 5;
 	core->config->p_arg = AGENT_PERSIST_DIR;
 	core->config->H_arg = AGENT_HTML_DIR;
 	core->config->K_arg = AGENT_CONF_DIR "/agent_secret";
 	core->config->loglevel = 2;
 	core->config->k_arg = 0;
+	core->config->n_arg = strdup("");
+	AN(core->config->n_arg);
 	while ((opt = getopt(argc, argv, "C:c:dg:H:hkK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
 		case 'C':
 			core->config->C_arg = optarg;
 			break;
 		case 'c':
-			core->config->c_arg = optarg;
+			sep = strchr(optarg, ':');
+			if (sep) {
+				*sep = '\0';
+				core->config->remote_port = sep + 1;
+			} else
+				core->config->remote_port = optarg;
+			core->config->local_port = optarg;
 			break;
 		case 'd':
 			core->config->d_arg = 1;

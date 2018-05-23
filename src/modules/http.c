@@ -451,7 +451,7 @@ http_run(void *data)
 	int port;
 
 	GET_PRIV(core, http);
-	port = atoi(core->config->c_arg);
+	port = atoi(core->config->local_port);
 	assert(port > 0);
 	logger(http->logger2, "HTTP starting on port %i", port);
 	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
