@@ -26,6 +26,7 @@
  * SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -255,6 +256,7 @@ http_reply_len(struct MHD_Connection *conn, int status, const char *data,
 	return (send_response(&resp));
 }
 
+
 static void
 request_completed(void *cls, struct MHD_Connection *connection,
     void **con_cls, enum MHD_RequestTerminationCode code)
@@ -271,6 +273,7 @@ request_completed(void *cls, struct MHD_Connection *connection,
 		*con_cls = NULL;
 	}
 }
+
 
 static int
 find_listener(struct http_request *request, struct http_priv_t *http)
@@ -450,16 +453,31 @@ http_run(void *data)
 	struct MHD_Daemon *d;
 	int port;
 
-	GET_PRIV(core, http);
+        struct sockaddr_in agent_daemon_addr;
+
 	port = atoi(core->config->local_port);
+        const char* addr = core->config->bind_address;
+
 	assert(port > 0);
-	logger(http->logger2, "HTTP starting on port %i", port);
-	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
-	    &answer_to_connection, data, MHD_OPTION_NOTIFY_COMPLETED,
-	    request_completed, NULL, MHD_OPTION_END);
+	
+        memset (&agent_daemon_addr, 0, sizeof (struct sockaddr_in));
+        agent_daemon_addr.sin_family = AF_INET;
+        agent_daemon_addr.sin_port = htons (port);
+
+        inet_pton (AF_INET, addr, &agent_daemon_addr.sin_addr);
+
+ 	GET_PRIV(core, http);
+	logger(http->logger2, "HTTP starting on %s:%i", addr, port);
+
+	// passing an invalid port nr just for spite, mhd should ignore
+	// the port arg and just use agent_daemon_addr..
+	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
+	    &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &agent_daemon_addr, 
+            MHD_OPTION_NOTIFY_COMPLETED, request_completed, MHD_OPTION_END);
+	
 	if (!d) {
-		warnlog(http->logger2, "HTTP failed to start on port %i. "
-		    "Agent already running?", port);
+		warnlog(http->logger2, "HTTP failed to start on %s:%i. "
+		    "Agent already running?", addr, port);
 		sleep(1);
 		exit(1);
 	}

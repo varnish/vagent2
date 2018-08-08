@@ -49,6 +49,7 @@ struct agent_config_t {
 
 	int d_arg; // 0 - fork. 1 - foreground.
 	int loglevel;
+	const char *bind_address;
 	const char *local_port; // Listening port for incoming requests
 	const char *remote_port; // Port to connect to from the outside
 	char *C_arg; // CURLOPT_CAINFO param
