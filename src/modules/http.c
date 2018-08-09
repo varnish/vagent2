@@ -464,9 +464,16 @@ http_run(void *data)
         agent_daemon_addr.sin_family = AF_INET;
         agent_daemon_addr.sin_port = htons (port);
 
-        inet_pton (AF_INET, addr, &agent_daemon_addr.sin_addr);
-
  	GET_PRIV(core, http);
+
+       int addr_ok = inet_pton (AF_INET, addr, &agent_daemon_addr.sin_addr);
+
+	if (addr_ok <= 0) {
+		warnlog(http->logger2, "Could not extract network address out of %s, Inet returned %d.", addr, addr_ok);
+		sleep(1);
+		exit(1);
+	}
+
 	logger(http->logger2, "HTTP starting on %s:%i", addr, port);
 
 	// passing an invalid port nr just for spite, mhd should ignore

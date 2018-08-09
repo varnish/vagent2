@@ -106,7 +106,7 @@ usage(const char *argv0)
 {
 	fprintf(stderr,
 	    "usage %s [options]\n"
-	    "    -a bind_address       Adress to bind against. (default: 127.0.0.1)\n"
+	    "    -a bind_address       Address to bind against. (default: 0.0.0.0)\n"
 	    "    -c port               HTTP listen port (default: 6085).\n"
 	    "    -C cafile             CA certificate file for cURL outgoing requests.\n"
 	    "    -d                    Debug. Runs in foreground.\n"
@@ -145,7 +145,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 
 	memset(core->config, '\0', sizeof(*core->config));
 	core->config->S_arg_fd = -1;
-	core->config->bind_address = "127.0.0.1";
+	core->config->bind_address = "0.0.0.0";
 	core->config->local_port = "6085";
 	core->config->remote_port = "6085";
 	core->config->timeout = 5;
