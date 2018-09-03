@@ -477,15 +477,15 @@ http_run(void *data)
         int addr_ok = inet_pton(AF_INET, addr, &v4.sin_addr);
 
         if (!addr_ok) {
-               addr_ok = inet_pton(AF_INET6, addr, &v6.sin6_addr);
-               is_ipv6 = true;
+            addr_ok = inet_pton(AF_INET6, addr, &v6.sin6_addr);
+            is_ipv6 = true;
         }
 
 	assert(addr_ok >= 0);
 
 	if (addr_ok <= 0) {
-		warnlog(http->logger2, "Could not extract network address out of %s, Inet returned %d.", addr, addr_ok);
-		exit(1);
+	    warnlog(http->logger2, "Could not extract network address out of %s, Inet returned %d.", addr, addr_ok);
+	    exit(1);
 	}
 
 	logger(http->logger2, "HTTP starting on %s:%i", addr, port);
@@ -493,16 +493,16 @@ http_run(void *data)
 	// passing an invalid port nr just for spite, mhd should ignore
 	// the port arg and just use agent_daemon_addr..
         if (is_ipv6) {
-                 warnlog(http->logger2, "running ipv6");
-                 d = MHD_start_daemon(
-                      MHD_USE_SELECT_INTERNALLY | MHD_USE_DUAL_STACK, 0, NULL, NULL,
-                      &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &v6,
-                      MHD_OPTION_NOTIFY_COMPLETED, request_completed, MHD_OPTION_END);
+            warnlog(http->logger2, "running ipv6");
+            d = MHD_start_daemon(
+                 MHD_USE_SELECT_INTERNALLY | MHD_USE_DUAL_STACK, 0, NULL, NULL,
+                 &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &v6,
+                 MHD_OPTION_NOTIFY_COMPLETED, request_completed, MHD_OPTION_END);
          } else {
-                 d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
-                      &answer_to_connection, data, MHD_OPTION_SOCK_ADDR,
-                      &v4, MHD_OPTION_NOTIFY_COMPLETED,
-                      request_completed, MHD_OPTION_END);
+            d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
+                 &answer_to_connection, data, MHD_OPTION_SOCK_ADDR,
+                 &v4, MHD_OPTION_NOTIFY_COMPLETED,
+                 request_completed, MHD_OPTION_END);
          }
 
 	if (!d) {
