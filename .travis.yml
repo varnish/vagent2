@@ -12,6 +12,6 @@ before_install:
     make && sudo make install && cd ..
   - ./autogen.sh
 script:
-  - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check
+  - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check VERBOSE=1
   - cat tests/test-suite.log
 
