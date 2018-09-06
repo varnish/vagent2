@@ -13,3 +13,5 @@ before_install:
   - ./autogen.sh
 script:
   - ./configure && make CFLAGS="-Wall -Wextra -Werror" && make check
+  - cat tests/test-suite.log
+
