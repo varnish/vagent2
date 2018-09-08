@@ -497,12 +497,12 @@ http_run(void *data)
             d = MHD_start_daemon(
                  MHD_USE_SELECT_INTERNALLY | MHD_USE_DUAL_STACK, 0, NULL, NULL,
                  &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &v6,
-                 MHD_OPTION_NOTIFY_COMPLETED, request_completed, MHD_OPTION_END);
+                 MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL, MHD_OPTION_END);
          } else {
             d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
                  &answer_to_connection, data, MHD_OPTION_SOCK_ADDR,
                  &v4, MHD_OPTION_NOTIFY_COMPLETED,
-                 request_completed, MHD_OPTION_END);
+                 request_completed, NULL, MHD_OPTION_END);
          }
 
 	if (!d) {
