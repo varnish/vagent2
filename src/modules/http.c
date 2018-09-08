@@ -26,7 +26,9 @@
  * SUCH DAMAGE.
  */
 
+#include <arpa/inet.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -255,6 +257,7 @@ http_reply_len(struct MHD_Connection *conn, int status, const char *data,
 	return (send_response(&resp));
 }
 
+
 static void
 request_completed(void *cls, struct MHD_Connection *connection,
     void **con_cls, enum MHD_RequestTerminationCode code)
@@ -271,6 +274,7 @@ request_completed(void *cls, struct MHD_Connection *connection,
 		*con_cls = NULL;
 	}
 }
+
 
 static int
 find_listener(struct http_request *request, struct http_priv_t *http)
@@ -449,17 +453,61 @@ http_run(void *data)
 	struct http_priv_t *http;
 	struct MHD_Daemon *d;
 	int port;
+	bool is_ipv6 = false;
 
-	GET_PRIV(core, http);
+        struct sockaddr_in6 v6;
+        struct sockaddr_in v4;
+
 	port = atoi(core->config->local_port);
+        const char* addr = core->config->bind_address;
+
 	assert(port > 0);
-	logger(http->logger2, "HTTP starting on port %i", port);
-	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
-	    &answer_to_connection, data, MHD_OPTION_NOTIFY_COMPLETED,
-	    request_completed, NULL, MHD_OPTION_END);
+	
+        memset(&v4, 0, sizeof(struct sockaddr_in));
+        memset(&v6, 0, sizeof(struct sockaddr_in6));
+
+        v4.sin_family = AF_INET;
+        v4.sin_port = htons(port);
+
+	v6.sin6_family = AF_INET6;
+	v6.sin6_port = htons(port);
+
+ 	GET_PRIV(core, http);
+
+        int addr_ok = inet_pton(AF_INET, addr, &v4.sin_addr);
+
+        if (!addr_ok) {
+            addr_ok = inet_pton(AF_INET6, addr, &v6.sin6_addr);
+            is_ipv6 = true;
+        }
+
+	assert(addr_ok >= 0);
+
+	if (addr_ok <= 0) {
+	    warnlog(http->logger2, "Could not extract network address out of %s, Inet returned %d.", addr, addr_ok);
+	    exit(1);
+	}
+
+	logger(http->logger2, "HTTP starting on %s:%i", addr, port);
+
+	// passing an invalid port nr just for spite, mhd should ignore
+	// the port arg and just use agent_daemon_addr..
+        if (is_ipv6) {
+            warnlog(http->logger2, "running ipv6");
+            d = MHD_start_daemon(
+                 MHD_USE_SELECT_INTERNALLY | MHD_USE_DUAL_STACK, 0, NULL, NULL,
+                 &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &v6,
+                 MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL, MHD_OPTION_END);
+         } else {
+            d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
+                 &answer_to_connection, data, MHD_OPTION_SOCK_ADDR,
+                 &v4, MHD_OPTION_NOTIFY_COMPLETED,
+                 request_completed, NULL, MHD_OPTION_END);
+         }
+
 	if (!d) {
-		warnlog(http->logger2, "HTTP failed to start on port %i. "
-		    "Agent already running?", port);
+		warnlog(http->logger2, "HTTP failed to start on %s:%i. "
+		    "Agent already running?", addr, port);
 		sleep(1);
 		exit(1);
 	}
