@@ -47,7 +47,8 @@ where HTML is read from (``-H``), see ``varnish-agent -h``.
 
 OPTIONS
 =======
-
+-a bind_address
+            Address to bind against. Defaults to ``0.0.0.0``.
 -C cafile   CA certificate for use by the cURL module. For use when
             the VAC register URL is specified as https using a
             certificate that can not be validated with the
