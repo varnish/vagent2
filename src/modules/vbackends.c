@@ -57,6 +57,24 @@ struct backend_opt {
 };
 
 static char *
+trim(char *line)
+{
+	char *end;
+
+	while(isspace((unsigned char)*line)) line++;
+
+	if(*line== 0)  
+	    return line;
+
+	end = line + strlen(line) - 1;
+	while(end > line && isspace((unsigned char)*end)) end--;
+
+	end[1] = '\0';
+
+	return line;
+}
+
+static char *
 format_line(char *line)
 {
 	struct backend_opt backend = {};
@@ -65,9 +83,11 @@ format_line(char *line)
 	if(line == NULL)
 		return (NULL);
 
+
 	backend.name = strtok_r(line, " ", &ptr);
-	backend.admin = strtok_r(NULL, " ",&ptr);
-	backend.probe =  strtok_r(NULL, "\n",&ptr);
+	backend.admin = strtok_r(NULL, " ", &ptr);
+	ptr = trim(ptr);
+	backend.probe =  strtok_r(NULL, "\n", &ptr);
 
 	AN(asprintf(&out,
 	    "\t{\n"
