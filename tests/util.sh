@@ -314,6 +314,7 @@ test_it_long() {
 	FOO=$(echo -e "$3" | lwp-request -m $1 http://${PASS}@localhost:${AGENT_PORT}/$2)
 	if [ "x$?" = "x0" ]; then pass; else fail "$*: $FOO"; fi
 	inc
+	printf "test_it_long response:\n%s\n" "$FOO" >&2
 	if echo $FOO | grep -q "$4";then pass; else fail "$*: $FOO"; fi
 	inc
 }
