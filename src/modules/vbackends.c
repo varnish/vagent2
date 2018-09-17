@@ -54,6 +54,7 @@ struct backend_opt {
 	char *name;
 	char *admin;
 	char *probe;
+	char *probe_extra;
 };
 
 static char *
@@ -67,15 +68,16 @@ format_line(char *line)
 
 	backend.name = strtok_r(line, " ", &ptr);
 	backend.admin = strtok_r(NULL, " ",&ptr);
-	backend.probe =  strtok_r(NULL, "\n",&ptr);
+	backend.probe =  strtok_r(NULL, " ", &ptr);
+	backend.probe_extra =  strtok_r(NULL, "\n", &ptr);
 
 	AN(asprintf(&out,
 	    "\t{\n"
 	    "\t\t\"name\": \"%s\",\n"
 	    "\t\t\"admin\": \"%s\",\n"
-	    "\t\t\"probe\": \"%s\"\n"
+	    "\t\t\"probe\": \"%s %s\"\n"
 	    "\t}",
-	    backend.name, backend.admin, backend.probe));
+	    backend.name, backend.admin, backend.probe, backend.probe_extra));
 	return (out);
 }
 
