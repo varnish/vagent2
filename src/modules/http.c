@@ -45,7 +45,7 @@
 #include "http.h"
 #include "base64.h"
 
-#define RCV_BUFFER	2 * 1000 * 1024
+#define MAX_RCV_BUFFER	6 * 1000 * 1024
 #define HELP_TEXT							\
 	"This is the varnish agent.\n\n"				\
 	"GET requests never modify state\n"				\
@@ -75,7 +75,7 @@ struct http_priv_t {
 };
 
 struct connection_info_struct {
-	char answerstring[RCV_BUFFER];
+	char *answerstring;
 	int progress;
 	int authed;
 };
@@ -271,6 +271,10 @@ request_completed(void *cls, struct MHD_Connection *connection,
 	(void)code;
 
 	if (con_info) {
+		if (con_info->answerstring) {
+			free(con_info->answerstring);
+			con_info->answerstring = NULL;
+		}
 		free(con_info);
 		*con_cls = NULL;
 	}
@@ -371,6 +375,9 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	if (*con_cls == NULL) {
 		ALLOC_OBJ(con_info);
+		con_info->answerstring = malloc(1);
+		assert(con_info->answerstring);
+		con_info->answerstring[0] = '\0';
 		*con_cls = con_info;
 		return (MHD_YES);
 	}
@@ -404,12 +411,15 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 			return (MHD_YES);
 	} else if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
 		if (*upload_data_size != 0) {
-			if (*upload_data_size + con_info->progress >=
-			    RCV_BUFFER) {
+			con_info->answerstring = realloc(con_info->answerstring,
+			    *upload_data_size + con_info->progress + 1);
+			request.data = con_info->answerstring;
+			if ((*upload_data_size + con_info->progress >=
+			    MAX_RCV_BUFFER) || !con_info->answerstring) {
 				warnlog(http->logger,
-				    "Client input exceeded buffer size "
-				    "of %u bytes. Dropping client.",
-				    RCV_BUFFER);
+				    "Client input exceeded allocation size "
+				    "of %zu bytes. Dropping client.",
+				    *upload_data_size + con_info->progress);
 				return (MHD_NO);
 			}
 			memcpy(con_info->answerstring + con_info->progress,
