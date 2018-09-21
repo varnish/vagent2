@@ -354,6 +354,28 @@ check_auth(struct MHD_Connection *connection, struct agent_core_t *core,
 	return (0);
 }
 
+static enum http_method
+parse_method(const char *method)
+{
+
+	AN(method);
+
+#define CMP_METHOD(name) \
+	if (!strcmp(method, #name)) \
+		return (M_##name);
+	CMP_METHOD(GET);
+	CMP_METHOD(POST);
+	CMP_METHOD(PUT);
+	CMP_METHOD(DELETE);
+	CMP_METHOD(OPTIONS);
+#undef CMP_METHOD
+
+	if (!strcmp(method, "HEAD"))
+		return (M_GET);
+
+	return (M_UNKNOWN);
+}
+
 static int
 answer_to_connection(void *cls, struct MHD_Connection *connection,
     const char *url, const char *method,
@@ -378,31 +400,27 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 	assert(core->config->userpass);
 
 	log_request(connection, http, method, url);
-	request.method = 0;
-	if (core->config->r_arg && strcmp(method, "GET") &&
-	    strcmp(method, "HEAD") && strcmp(method, "OPTIONS")) {
+	request.method = parse_method(method);
+	if (core->config->r_arg && request.method != M_GET &&
+	    request.method != M_OPTIONS) {
 		logger(http->logger,
 		    "Read-only mode and not a GET, HEAD or OPTIONS request");
 		return (http_reply(connection, 405, "Read-only mode"));
 	}
 
-	if (!strcmp(method, "OPTIONS")) {
-		/* We need this for preflight requests (CORS). */
+	/* We need this for preflight requests (CORS). */
+	if (request.method == M_OPTIONS)
 		return (http_reply(connection, 200, NULL));
-	} else if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
-	    !strcmp(method, "DELETE")) {
+
+	if (request.method == M_GET || request.method == M_DELETE) {
 		if (check_auth(connection, core, con_info))
 			return (MHD_YES);
-		if (!strcmp(method, "DELETE"))
-			request.method = M_DELETE;
-		else
-			request.method = M_GET;
 		request.connection = connection;
 		request.url = url;
 		request.ndata = 0;
 		if (find_listener(&request, http))
 			return (MHD_YES);
-	} else if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
+	} else if (request.method == M_POST || request.method == M_PUT) {
 		if (*upload_data_size != 0) {
 			if (*upload_data_size + con_info->progress >=
 			    RCV_BUFFER) {
@@ -420,10 +438,6 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		} else if ((char *)con_info->answerstring != NULL) {
 			if (check_auth(connection, core, con_info))
 				return (MHD_YES);
-			if (!strcmp(method, "POST"))
-				request.method = M_POST;
-			else
-				request.method = M_PUT;
 			request.connection = connection;
 			request.url = url;
 			request.ndata = con_info->progress;
