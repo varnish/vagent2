@@ -330,30 +330,27 @@ static int
 check_auth(struct MHD_Connection *connection, struct agent_core_t *core,
     struct connection_info_struct *con_info)
 {
-	char *auth, *token;
+	char *auth, *token, *next;
 
 	assert(con_info);
 	if (con_info->authed == 0) {
 		auth = http_get_header(connection, "Authorization");
 
-		if (!auth || strncmp(auth, "Basic ", strlen("Basic "))) {
-			send_auth_response(connection);
+		token = strtok_r(auth, " ", &next);
+		if (strcasecmp("basic", token)) {
 			free(auth);
 			return (1);
 		}
 
-		token = auth + sizeof "Basic";
-
-		if (strcmp(VSB_data(core->config->auth_token), token)) {
-			send_auth_response(connection);
-			free(auth);
-			return (1);
-		}
+		/* XXX: no realm? */
+		token = strtok_r(NULL, " ", &next);
+		if (!strcmp(VSB_data(core->config->auth_token), token))
+			con_info->authed = 1;
 
 		free(auth);
-		con_info->authed = 1;
 	}
-	return (0);
+
+	return (!con_info->authed);
 }
 
 static enum http_method
@@ -415,8 +412,10 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		return (http_reply(connection, 200, NULL));
 
 	if (request.method == M_GET || request.method == M_DELETE) {
-		if (check_auth(connection, core, con_info))
+		if (check_auth(connection, core, con_info)) {
+			send_auth_response(connection);
 			return (MHD_YES);
+		}
 		request.connection = connection;
 		request.url = url;
 		request.ndata = 0;
@@ -438,8 +437,10 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 			*upload_data_size = 0;
 			return (MHD_YES);
 		} else if ((char *)con_info->answerstring != NULL) {
-			if (check_auth(connection, core, con_info))
+			if (check_auth(connection, core, con_info)) {
+				send_auth_response(connection);
 				return (MHD_YES);
+			}
 			request.connection = connection;
 			request.url = url;
 			request.ndata = con_info->progress;
