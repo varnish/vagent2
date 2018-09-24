@@ -434,6 +434,10 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		request.bodylen = 0;
 	}
 
+	/* We need this for preflight requests (CORS). */
+	if (request.method == M_OPTIONS)
+		return (http_reply(connection, 200, NULL));
+
 	if (check_auth(connection, core, con_info)) {
 		send_auth_response(connection);
 		return (MHD_YES);
@@ -441,10 +445,6 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	if (find_listener(&request, http))
 		return (MHD_YES);
-
-	/* We need this for preflight requests (CORS). */
-	if (request.method == M_OPTIONS)
-		return (http_reply(connection, 200, NULL));
 
 	if (request.method == M_GET && !strcmp(url, "/")) {
 		if (http->help_page == NULL)
