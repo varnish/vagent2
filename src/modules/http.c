@@ -76,8 +76,6 @@ struct http_priv_t {
 
 struct connection_info_struct {
 	struct vsb *req_body;
-	char answerstring[RCV_BUFFER];
-	int progress;
 	int authed;
 };
 
@@ -415,52 +413,39 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		return (http_reply(connection, 405, "Read-only mode"));
 	}
 
+	if (*upload_data_size != 0) {
+		if (con_info->req_body)
+			AZ(VSB_bcat(con_info->req_body, upload_data,
+			    *upload_data_size));
+		*upload_data_size = 0;
+		return (MHD_YES);
+	}
+
+	request.connection = connection;
+	request.url = url;
+
+	if (con_info->req_body) {
+		AZ(VSB_putc(con_info->req_body, '\0'));
+		AZ(VSB_finish(con_info->req_body));
+		request.body = VSB_data(con_info->req_body);
+		request.bodylen = VSB_len(con_info->req_body) - 1;
+	} else {
+		request.body = NULL;
+		request.bodylen = 0;
+	}
+
+	if (check_auth(connection, core, con_info)) {
+		send_auth_response(connection);
+		return (MHD_YES);
+	}
+
+	if (find_listener(&request, http))
+		return (MHD_YES);
+
 	/* We need this for preflight requests (CORS). */
 	if (request.method == M_OPTIONS)
 		return (http_reply(connection, 200, NULL));
 
-	if (request.method == M_GET || request.method == M_DELETE) {
-		if (check_auth(connection, core, con_info)) {
-			send_auth_response(connection);
-			return (MHD_YES);
-		}
-		request.connection = connection;
-		request.url = url;
-		request.bodylen = 0;
-		if (find_listener(&request, http))
-			return (MHD_YES);
-	} else if (request.method == M_POST || request.method == M_PUT) {
-		if (*upload_data_size != 0) {
-			if (*upload_data_size + con_info->progress >=
-			    RCV_BUFFER) {
-				warnlog(http->logger,
-				    "Client input exceeded buffer size "
-				    "of %u bytes. Dropping client.",
-				    RCV_BUFFER);
-				return (MHD_NO);
-			}
-			memcpy(con_info->answerstring + con_info->progress,
-			    upload_data, *upload_data_size);
-			con_info->progress += *upload_data_size;
-			*upload_data_size = 0;
-			return (MHD_YES);
-		} else if ((char *)con_info->answerstring != NULL) {
-			if (check_auth(connection, core, con_info)) {
-				send_auth_response(connection);
-				return (MHD_YES);
-			}
-			request.connection = connection;
-			request.url = url;
-			request.bodylen = con_info->progress;
-			request.body = con_info->answerstring;
-			/*
-			 * FIXME
-			 */
-			((char *)request.body)[con_info->progress] = '\0';
-			if (find_listener(&request, http))
-				return (MHD_YES);
-		}
-	}
 	if (request.method == M_GET && !strcmp(url, "/")) {
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
