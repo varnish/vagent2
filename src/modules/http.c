@@ -75,6 +75,7 @@ struct http_priv_t {
 };
 
 struct connection_info_struct {
+	struct vsb *req_body;
 	char answerstring[RCV_BUFFER];
 	int progress;
 	int authed;
@@ -271,6 +272,8 @@ request_completed(void *cls, struct MHD_Connection *connection,
 	(void)code;
 
 	if (con_info) {
+		if (con_info->req_body)
+			VSB_delete(con_info->req_body);
 		free(con_info);
 		*con_cls = NULL;
 	}
@@ -390,16 +393,21 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	GET_PRIV(core, http);
 
+	request.method = parse_method(method);
+	log_request(connection, http, method, url);
+
 	if (*con_cls == NULL) {
 		ALLOC_OBJ(con_info);
+		if (!check_auth(connection, core, con_info)) {
+			con_info->req_body = VSB_new_auto();
+			AN(con_info->req_body);
+		}
 		*con_cls = con_info;
 		return (MHD_YES);
 	}
 	con_info = *con_cls;
 	AN(core->config->auth_token);
 
-	log_request(connection, http, method, url);
-	request.method = parse_method(method);
 	if (core->config->r_arg && request.method != M_GET &&
 	    request.method != M_OPTIONS) {
 		logger(http->logger,
