@@ -243,19 +243,22 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	}
 
 	assert(core->config->K_arg);
-	core->config->userpass = get_first_line(core->config->K_arg);
-	if (!core->config->userpass)
+	core->config->user = get_first_line(core->config->K_arg);
+	if (!core->config->user)
 		errx(1,
 		    "No password present."
 		    " Put one in %s using \"user:password\" format",
 		    core->config->K_arg);
-	core->config->user = strdup(core->config->userpass);
 	core->config->password = strchr(core->config->user, ':');
 	if (core->config->password == NULL ||
 	    *(core->config->password + 1)== '\0')
 		errx(1,
 		    "Username and password string does not contain a colon.\n"
 		    "Format: \"username:password\"");
+
+	core->config->auth_token = base64_encode(BASE64, core->config->user);
+	AN(core->config->auth_token);
+
 	*core->config->password = '\0';
 	core->config->password++;
 }
@@ -364,8 +367,8 @@ main(int argc, char **argv)
 	assert(core.config);
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
-	core_opt(&core, argc, argv);
 	base64_init();
+	core_opt(&core, argc, argv);
 	core_plugins(&core);
 
 	if (core.config->P_arg)

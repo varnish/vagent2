@@ -26,15 +26,20 @@
  * SUCH DAMAGE.
  */
 
-/*
- * Borrowed from libvmod-digest. Author: Kristian Lyngstol
- */
+#include "config.h"
 
 #include <stdio.h>
+#include <string.h>
+
 #include "base64.h"
 #include "common.h"
+#include "vsb.h"
 
-static struct e_alphabet alphabet[N_ALPHA];
+struct e_alphabet {
+	const char *b64;
+	char i64[256];
+	char padding;
+} alphabet[N_ALPHA];
 
 static void
 digest_alpha_init(struct e_alphabet *alpha)
@@ -71,133 +76,59 @@ base64_init(void)
 	return (0);
 }
 
-/*
- * Decodes the string s into the buffer d (size dlen), using the alphabet
- * specified.
- *
- * Modified slightly from varnishncsa's decoder. Mainly because the
- * input-length is known, so padding is optional (this is per the RFC and
- * allows this code to be used regardless of whether padding is present).
- * Also returns the length of data when it succeeds.
- */
-int
-base64_decode(enum alphabets al, char *d, unsigned dlen, const char *s)
+struct vsb *
+base64_encode(enum alphabets al, const char *in)
 {
-	unsigned u, v, l;
-	int i;
+	struct vsb *out;
+	unsigned char t[3];
+	size_t inlen;
 	struct e_alphabet *alpha = &alphabet[al];
+	int outlen;
 
-	u = 0;
-	l = 0;
-	while (*s) {
-		for (v = 0; v < 4; v++) {
-			if (*s)
-				i = alpha->i64[(int)*s++];
-			else
-				i = 0;
-			if (i < 0)
-				return (-1);
-			u <<= 6;
-			u |= i;
+	assert(al >= 0);
+	assert(al < N_ALPHA);
+	AN(in);
+
+	inlen = strlen(in);
+	out = VSB_new_auto();
+	AN(out);
+	outlen = 0;
+
+	while (inlen > 0) {
+
+		t[outlen] = (unsigned char)*in;
+		in++;
+		inlen--;
+		outlen++;
+
+		if (outlen == 3) {
+			AZ(VSB_putc(out, alpha->b64[t[0] >> 2]));
+			AZ(VSB_putc(out,
+			    alpha->b64[(t[0] & 0x03) << 4 | (t[1] >> 4)]));
+			AZ(VSB_putc(out,
+			    alpha->b64[(t[1] & 0x0f) << 2 | (t[2] >> 6)]));
+			AZ(VSB_putc(out, alpha->b64[t[2] & 0x3f]));
+			outlen = 0;
 		}
-		for (v = 0; v < 3; v++) {
-			if (l >= dlen - 1)
-				return (-1);
-			*d = (u >> 16) & 0xff;
-			u <<= 8;
-			l++;
-			d++;
-		}
-		if (!*s)
-			break;
-	}
-	*d = '\0';
-	l++;
-	return (l);
-}
-
-/*
- * Base64-encode *in (size: inlen) into *out, max outlen bytes. If there is
- * insufficient space, it will bail out and return -1. Otherwise, it will
- * null-terminate and return the used space.
- * The alphabet `a` defines... the alphabet. Padding is optional.
- * Inspired heavily by gnulib/Simon Josefsson (as referenced in RFC4648)
- *
- * XXX: tmp[] and idx are used to ensure the reader (and author) retains
- * XXX: a limited amount of sanity. They are strictly speaking not
- * XXX: necessary, if you don't mind going crazy.
- *
- * FIXME: outlenorig is silly. Flip the logic.
- */
-size_t
-base64_encode (enum alphabets al, const char *in,
-		size_t inlen, char *out, size_t outlen)
-{
-	size_t outlenorig = outlen;
-	unsigned char tmp[3], idx;
-	struct e_alphabet *alpha = &alphabet[al];
-
-	if (outlen<4)
-		return -1;
-
-	if (inlen == 0) {
-		*out = '\0';
-		return (1);
 	}
 
-	while (1) {
-		assert(inlen);
-		assert(outlen>3);
+	if (outlen > 0) {
+		if (outlen == 1)
+			t[1] = '\0';
 
-		tmp[0] = (unsigned char) in[0];
-		tmp[1] = (unsigned char) in[1];
-		tmp[2] = (unsigned char) in[2];
+		AZ(VSB_putc(out, alpha->b64[t[0] >> 2]));
+		AZ(VSB_putc(out, alpha->b64[(t[0] & 0x03) << 4 | (t[1] >> 4)]));
 
-		*out++ = alpha->b64[(tmp[0] >> 2) & 0x3f];
+		if (outlen == 2)
+			AZ(VSB_putc(out, alpha->b64[(t[1] & 0x0f) << 2]));
+		else
+			AZ(VSB_putc(out, alpha->padding));
 
-		idx = (tmp[0] << 4);
-		if (inlen>1)
-			idx += (tmp[1] >> 4);
-		idx &= 0x3f;
-		*out++ = alpha->b64[idx];
-			
-		if (inlen>1) {
-			idx = (tmp[1] << 2);
-			if (inlen>2)
-				idx += tmp[2] >> 6;
-			idx &= 0x3f;
-
-			*out++ = alpha->b64[idx];
-		} else {
-			if (alpha->padding)
-				*out++ = alpha->padding;
-		}
-
-		if (inlen>2) {
-			*out++ = alpha->b64[tmp[2] & 0x3f];
-		} else {
-			if (alpha->padding)
-				*out++ = alpha->padding;
-		}
-
-		/*
-		 * XXX: Only consume 4 bytes, but since we need a fifth for
-		 * XXX: NULL later on, we might as well test here.
-		 */
-		if (outlen<5)
-			return -1;
-
-		outlen -= 4;
-
-		if (inlen<4)
-			break;
-		
-		inlen -= 3;
-		in += 3;
+		AZ(VSB_putc(out, alpha->padding));
 	}
 
-	assert(outlen);
-	outlen--;
-	*out = '\0';
-	return outlenorig-outlen;
+	AZ(VSB_putc(out, '\0'));
+	AZ(VSB_finish(out));
+
+	return (out);
 }

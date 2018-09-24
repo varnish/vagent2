@@ -60,7 +60,7 @@ struct agent_config_t {
 	char *vac_arg;
 	char *password;
 	char *user;
-	char *userpass;
+	struct vsb *auth_token;
 };
 
 /*

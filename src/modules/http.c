@@ -43,7 +43,7 @@
 #include "plugins.h"
 #include "ipc.h"
 #include "http.h"
-#include "base64.h"
+#include "vsb.h"
 
 #define RCV_BUFFER	2 * 1000 * 1024
 #define HELP_TEXT							\
@@ -330,24 +330,26 @@ static int
 check_auth(struct MHD_Connection *connection, struct agent_core_t *core,
     struct connection_info_struct *con_info)
 {
-	char passwd[1024];
-	char *auth;
+	char *auth, *token;
 
 	assert(con_info);
 	if (con_info->authed == 0) {
 		auth = http_get_header(connection, "Authorization");
-		/*
-		 * XXX: Should be stored somewhere...
-		 */
-		base64_encode(BASE64, core->config->userpass,
-		    strlen(core->config->userpass), passwd,
-		    sizeof(passwd));
-		if (!auth || strncmp(auth, "Basic ", strlen("Basic ")) ||
-		    strcmp(auth + strlen("Basic "), passwd)) {
+
+		if (!auth || strncmp(auth, "Basic ", strlen("Basic "))) {
 			send_auth_response(connection);
 			free(auth);
 			return (1);
 		}
+
+		token = auth + sizeof "Basic";
+
+		if (strcmp(VSB_data(core->config->auth_token), token)) {
+			send_auth_response(connection);
+			free(auth);
+			return (1);
+		}
+
 		free(auth);
 		con_info->authed = 1;
 	}
@@ -397,7 +399,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		return (MHD_YES);
 	}
 	con_info = *con_cls;
-	assert(core->config->userpass);
+	AN(core->config->auth_token);
 
 	log_request(connection, http, method, url);
 	request.method = parse_method(method);
