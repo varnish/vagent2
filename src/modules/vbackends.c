@@ -170,8 +170,8 @@ vbackends_reply(struct http_request *request, const char *arg, void *data)
 	plug = plugin_find(core,"vbackends");
 	vbackends = plug->data;
 
-	assert(((char *)request->data)[request->ndata] == '\0');
-	body = strdup(request->data);
+	assert(((char *)request->body)[request->bodylen] == '\0');
+	body = strdup(request->body);
 	mark = strchr(body,'\n');
 	if (mark)
 		*mark = '\0';

@@ -277,7 +277,7 @@ vstat_push_url(struct http_request *request, const char *arg, void *data)
 	pthread_rwlock_wrlock(&vstat->lck);
 	if (vstat->push_url)
 		free(vstat->push_url);
-	DUP_OBJ(vstat->push_url, request->data, request->ndata);
+	DUP_OBJ(vstat->push_url, request->body, request->bodylen);
 	logger(vstat->http.logger, "Got url: \"%s\"", vstat->push_url);
 	pthread_rwlock_unlock(&vstat->lck);
 	http_reply(request->connection, 200, "Url stored");

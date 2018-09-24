@@ -96,9 +96,9 @@ vac_register_reply(struct http_request *request, const char *arg, void *data)
 	int ret;
 
 	(void)arg;
-	if (request->ndata) {
+	if (request->bodylen) {
 		free(vdata->vac_url);
-		DUP_OBJ(vdata->vac_url, request->data, request->ndata);
+		DUP_OBJ(vdata->vac_url, request->body, request->bodylen);
 		logger(vdata->logger, "Set new VAC URL: %s", vdata->vac_url);
 	}
 	

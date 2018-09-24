@@ -55,7 +55,7 @@ vdirect_reply(struct http_request *request, const char * arg, void *data)
 	(void)arg;
 
 	GET_PRIV(core, vdirect);
-	DUP_OBJ(cmd, request->data, request->ndata);
+	DUP_OBJ(cmd, request->body, request->bodylen);
 	p = strchr(cmd, '\n');
 	if (p)
 		*p = '\0';

@@ -67,8 +67,8 @@ enum http_method {
  * HTTP rquest passed to the cb.
  *
  * connection is the connection handle used by MHD.
- * data is the actual data, not guaranteed to be nul-terminated.
- * ndata is the length of data. can be 0.
+ * body is the request body, guaranteed to be nul-terminated.
+ * bodylen is the length of the request body. can be 0.
  */
 struct http_request {
 	struct MHD_Connection *connection;
@@ -76,8 +76,8 @@ struct http_request {
 	const char *url;
 	char **headers;
 	unsigned int nheaders;
-	void *data;
-	unsigned int ndata;
+	void *body;
+	unsigned int bodylen;
 };
 
 struct http_header {

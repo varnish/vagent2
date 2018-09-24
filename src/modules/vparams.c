@@ -412,8 +412,8 @@ vparams_reply(struct http_request *request, const char *arg, void *data)
 		return (1);
 	} else if (request->method == M_PUT) {
 		char *mark;
-		assert(((char *)request->data)[request->ndata] == '\0');
-		body = strdup(request->data);
+		assert(((char *)request->body)[request->bodylen] == '\0');
+		body = strdup(request->body);
 		mark = strchr(body,'\n');
 		if (mark)
 			*mark = '\0';

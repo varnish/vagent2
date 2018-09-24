@@ -71,8 +71,8 @@ vban_reply(struct http_request *request, const char *arg, void *data)
 		return 0;
 	}
 
-	assert(((char *)request->data)[request->ndata] == '\0');
-	body = strdup(request->data);
+	assert(((char *)request->body)[request->bodylen] == '\0');
+	body = strdup(request->body);
 	mark = strchr(body,'\n');
 	if (mark)
 		*mark = '\0';
@@ -80,10 +80,10 @@ vban_reply(struct http_request *request, const char *arg, void *data)
 		run_and_respond(vban->vadmin, request->connection, "ban %s", body);
 	else {
 		const char *path = request->url + strlen("/ban");
-		if (request->ndata != 0) {
+		if (request->bodylen != 0) {
 			http_reply(request->connection, 500, "Banning with both a url and request body? Pick one or the other please.");
 		} else {
-			assert(request->ndata == 0);
+			assert(request->bodylen == 0);
 			run_and_respond(vban->vadmin, request->connection, "ban " BAN_SHORTHAND "/%s",path);
 		}
 	}

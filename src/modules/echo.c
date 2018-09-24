@@ -51,14 +51,14 @@ echo_reply(struct http_request *request, const char *arg, void *data)
 	(void)arg;
 
 	if (request->method == M_PUT || request->method == M_POST) {
-		if (((char *)request->data)[request->ndata] == '\0' &&
-		    strlen((char *)request->data) == request->ndata)
+		if (((char *)request->body)[request->bodylen] == '\0' &&
+		    strlen((char *)request->body) == request->bodylen)
 			debuglog(echo->logger, "Data being printed: \n%s",
-			    (char *)request->data);
+			    (char *)request->body);
 	}
 	logger(echo->logger, "Responding to request");
-	http_reply_len(request->connection, 200, request->data,
-	    request->ndata);
+	http_reply_len(request->connection, 200, request->body,
+	    request->bodylen);
 	return (0);
 }
 

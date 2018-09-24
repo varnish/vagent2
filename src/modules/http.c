@@ -418,7 +418,7 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 		}
 		request.connection = connection;
 		request.url = url;
-		request.ndata = 0;
+		request.bodylen = 0;
 		if (find_listener(&request, http))
 			return (MHD_YES);
 	} else if (request.method == M_POST || request.method == M_PUT) {
@@ -443,12 +443,12 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 			}
 			request.connection = connection;
 			request.url = url;
-			request.ndata = con_info->progress;
-			request.data = con_info->answerstring;
+			request.bodylen = con_info->progress;
+			request.body = con_info->answerstring;
 			/*
 			 * FIXME
 			 */
-			((char *)request.data)[con_info->progress] = '\0';
+			((char *)request.body)[con_info->progress] = '\0';
 			if (find_listener(&request, http))
 				return (MHD_YES);
 		}
