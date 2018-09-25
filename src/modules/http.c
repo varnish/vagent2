@@ -331,20 +331,20 @@ static int
 check_auth(struct MHD_Connection *connection, struct agent_core_t *core,
     struct connection_info_struct *con_info)
 {
-	char *auth, *token, *next;
+	char *auth, *token;
 
-	assert(con_info);
+	AN(con_info);
+
 	if (con_info->authed == 0) {
 		auth = http_get_header(connection, "Authorization");
 
-		token = strtok_r(auth, " ", &next);
-		if (strcasecmp("basic", token)) {
+		if (!auth || strncmp(auth, "Basic ", strlen("Basic "))) {
 			free(auth);
 			return (1);
 		}
 
-		/* XXX: no realm? */
-		token = strtok_r(NULL, " ", &next);
+		token = auth + sizeof "Basic";
+
 		if (!strcmp(VSB_data(core->config->auth_token), token))
 			con_info->authed = 1;
 
