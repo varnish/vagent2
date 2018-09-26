@@ -85,7 +85,6 @@ base64_encode(enum alphabets al, const char *in)
 	struct e_alphabet *alpha = &alphabet[al];
 	int outlen;
 
-	assert(al >= 0);
 	assert(al < N_ALPHA);
 	AN(in);
 
