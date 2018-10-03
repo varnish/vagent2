@@ -26,20 +26,24 @@
  * SUCH DAMAGE.
  */
 
+#include "config.h"
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <string.h>
 #include <stdint.h>
 #include <microhttpd.h>
-#include <netinet/in.h>
 
 #include "common.h"
 #include "plugins.h"
 #include "ipc.h"
 #include "http.h"
-#include "base64.h"
+#include "vsb.h"
 
 #define RCV_BUFFER	2 * 1000 * 1024
 #define HELP_TEXT							\
@@ -71,8 +75,7 @@ struct http_priv_t {
 };
 
 struct connection_info_struct {
-	char answerstring[RCV_BUFFER];
-	int progress;
+	struct vsb *req_body;
 	int authed;
 };
 
@@ -267,6 +270,8 @@ request_completed(void *cls, struct MHD_Connection *connection,
 	(void)code;
 
 	if (con_info) {
+		if (con_info->req_body)
+			VSB_delete(con_info->req_body);
 		free(con_info);
 		*con_cls = NULL;
 	}
@@ -326,28 +331,49 @@ static int
 check_auth(struct MHD_Connection *connection, struct agent_core_t *core,
     struct connection_info_struct *con_info)
 {
-	char passwd[1024];
-	char *auth;
+	char *auth, *token;
 
-	assert(con_info);
+	AN(con_info);
+
 	if (con_info->authed == 0) {
 		auth = http_get_header(connection, "Authorization");
-		/*
-		 * XXX: Should be stored somewhere...
-		 */
-		base64_encode(BASE64, core->config->userpass,
-		    strlen(core->config->userpass), passwd,
-		    sizeof(passwd));
-		if (!auth || strncmp(auth, "Basic ", strlen("Basic ")) ||
-		    strcmp(auth + strlen("Basic "), passwd)) {
-			send_auth_response(connection);
+
+		if (!auth || strncmp(auth, "Basic ", strlen("Basic "))) {
 			free(auth);
 			return (1);
 		}
+
+		token = auth + sizeof "Basic";
+
+		if (!strcmp(VSB_data(core->config->auth_token), token))
+			con_info->authed = 1;
+
 		free(auth);
-		con_info->authed = 1;
 	}
-	return (0);
+
+	return (!con_info->authed);
+}
+
+static enum http_method
+parse_method(const char *method)
+{
+
+	AN(method);
+
+#define CMP_METHOD(name) \
+	if (!strcmp(method, #name)) \
+		return (M_##name);
+	CMP_METHOD(GET);
+	CMP_METHOD(POST);
+	CMP_METHOD(PUT);
+	CMP_METHOD(DELETE);
+	CMP_METHOD(OPTIONS);
+#undef CMP_METHOD
+
+	if (!strcmp(method, "HEAD"))
+		return (M_GET);
+
+	return (M_UNKNOWN);
 }
 
 static int
@@ -365,73 +391,61 @@ answer_to_connection(void *cls, struct MHD_Connection *connection,
 
 	GET_PRIV(core, http);
 
+	request.method = parse_method(method);
+	log_request(connection, http, method, url);
+
 	if (*con_cls == NULL) {
 		ALLOC_OBJ(con_info);
+		if (!check_auth(connection, core, con_info)) {
+			con_info->req_body = VSB_new_auto();
+			AN(con_info->req_body);
+		}
 		*con_cls = con_info;
 		return (MHD_YES);
 	}
 	con_info = *con_cls;
-	assert(core->config->userpass);
+	AN(core->config->auth_token);
 
-	log_request(connection, http, method, url);
-	request.method = 0;
-	if (core->config->r_arg && strcmp(method, "GET") &&
-	    strcmp(method, "HEAD") && strcmp(method, "OPTIONS")) {
+	if (core->config->r_arg && request.method != M_GET &&
+	    request.method != M_OPTIONS) {
 		logger(http->logger,
 		    "Read-only mode and not a GET, HEAD or OPTIONS request");
 		return (http_reply(connection, 405, "Read-only mode"));
 	}
 
-	if (!strcmp(method, "OPTIONS")) {
-		/* We need this for preflight requests (CORS). */
-		return (http_reply(connection, 200, NULL));
-	} else if (!strcmp(method, "GET") || !strcmp(method, "HEAD") ||
-	    !strcmp(method, "DELETE")) {
-		if (check_auth(connection, core, con_info))
-			return (MHD_YES);
-		if (!strcmp(method, "DELETE"))
-			request.method = M_DELETE;
-		else
-			request.method = M_GET;
-		request.connection = connection;
-		request.url = url;
-		request.ndata = 0;
-		if (find_listener(&request, http))
-			return (MHD_YES);
-	} else if (!strcmp(method, "POST") || !strcmp(method, "PUT")) {
-		if (*upload_data_size != 0) {
-			if (*upload_data_size + con_info->progress >=
-			    RCV_BUFFER) {
-				warnlog(http->logger,
-				    "Client input exceeded buffer size "
-				    "of %u bytes. Dropping client.",
-				    RCV_BUFFER);
-				return (MHD_NO);
-			}
-			memcpy(con_info->answerstring + con_info->progress,
-			    upload_data, *upload_data_size);
-			con_info->progress += *upload_data_size;
-			*upload_data_size = 0;
-			return (MHD_YES);
-		} else if ((char *)con_info->answerstring != NULL) {
-			if (check_auth(connection, core, con_info))
-				return (MHD_YES);
-			if (!strcmp(method, "POST"))
-				request.method = M_POST;
-			else
-				request.method = M_PUT;
-			request.connection = connection;
-			request.url = url;
-			request.ndata = con_info->progress;
-			request.data = con_info->answerstring;
-			/*
-			 * FIXME
-			 */
-			((char *)request.data)[con_info->progress] = '\0';
-			if (find_listener(&request, http))
-				return (MHD_YES);
-		}
+	if (*upload_data_size != 0) {
+		if (con_info->req_body)
+			AZ(VSB_bcat(con_info->req_body, upload_data,
+			    *upload_data_size));
+		*upload_data_size = 0;
+		return (MHD_YES);
 	}
+
+	request.connection = connection;
+	request.url = url;
+
+	if (con_info->req_body) {
+		AZ(VSB_putc(con_info->req_body, '\0'));
+		AZ(VSB_finish(con_info->req_body));
+		request.body = VSB_data(con_info->req_body);
+		request.bodylen = VSB_len(con_info->req_body) - 1;
+	} else {
+		request.body = NULL;
+		request.bodylen = 0;
+	}
+
+	/* We need this for preflight requests (CORS). */
+	if (request.method == M_OPTIONS)
+		return (http_reply(connection, 200, NULL));
+
+	if (check_auth(connection, core, con_info)) {
+		send_auth_response(connection);
+		return (MHD_YES);
+	}
+
+	if (find_listener(&request, http))
+		return (MHD_YES);
+
 	if (request.method == M_GET && !strcmp(url, "/")) {
 		if (http->help_page == NULL)
 			http->help_page = make_help(http);
@@ -449,17 +463,64 @@ http_run(void *data)
 	struct http_priv_t *http;
 	struct MHD_Daemon *d;
 	int port;
+	bool is_ipv6 = false;
+
+	struct sockaddr_in6 v6;
+	struct sockaddr_in v4;
+
+	port = atoi(core->config->local_port);
+	const char* addr = core->config->bind_address;
+
+	assert(port > 0);
+
+	memset(&v4, 0, sizeof(struct sockaddr_in));
+	memset(&v6, 0, sizeof(struct sockaddr_in6));
+
+	v4.sin_family = AF_INET;
+	v4.sin_port = htons(port);
+
+	v6.sin6_family = AF_INET6;
+	v6.sin6_port = htons(port);
 
 	GET_PRIV(core, http);
-	port = atoi(core->config->c_arg);
-	assert(port > 0);
-	logger(http->logger2, "HTTP starting on port %i", port);
-	d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL,
-	    &answer_to_connection, data, MHD_OPTION_NOTIFY_COMPLETED,
-	    request_completed, NULL, MHD_OPTION_END);
+
+	int addr_ok = inet_pton(AF_INET, addr, &v4.sin_addr);
+
+	if (!addr_ok) {
+		addr_ok = inet_pton(AF_INET6, addr, &v6.sin6_addr);
+		is_ipv6 = true;
+	}
+
+	assert(addr_ok >= 0);
+
+	if (addr_ok <= 0) {
+		warnlog(http->logger2,
+		    "Could not extract network address out of %s, Inet returned %d.",
+		    addr, addr_ok);
+		exit(1);
+	}
+
+	logger(http->logger2, "HTTP starting on %s:%i", addr, port);
+
+	// passing an invalid port nr just for spite, mhd should ignore
+	// the port arg and just use agent_daemon_addr..
+	if (is_ipv6) {
+		warnlog(http->logger2, "running ipv6");
+		d = MHD_start_daemon(
+		    MHD_USE_SELECT_INTERNALLY | MHD_USE_DUAL_STACK, 0, NULL, NULL,
+		    &answer_to_connection, data, MHD_OPTION_SOCK_ADDR, &v6,
+		    MHD_OPTION_NOTIFY_COMPLETED, request_completed, NULL,
+		    MHD_OPTION_END);
+	} else {
+		d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, 0, NULL, NULL,
+		    &answer_to_connection, data, MHD_OPTION_SOCK_ADDR,
+		    &v4, MHD_OPTION_NOTIFY_COMPLETED,
+		    request_completed, NULL, MHD_OPTION_END);
+	}
+
 	if (!d) {
-		warnlog(http->logger2, "HTTP failed to start on port %i. "
-		    "Agent already running?", port);
+		warnlog(http->logger2, "HTTP failed to start on %s:%i. "
+		    "Agent already running?", addr, port);
 		sleep(1);
 		exit(1);
 	}

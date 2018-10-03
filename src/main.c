@@ -106,6 +106,7 @@ usage(const char *argv0)
 {
 	fprintf(stderr,
 	    "usage %s [options]\n"
+	    "    -a bind_address       Address to bind against. (default: 0.0.0.0)\n"
 	    "    -c port               HTTP listen port (default: 6085).\n"
 	    "    -C cafile             CA certificate file for cURL outgoing requests.\n"
 	    "    -d                    Debug. Runs in foreground.\n"
@@ -137,26 +138,40 @@ static void
 core_opt(struct agent_core_t *core, int argc, char **argv)
 {
 	int opt;
+	char *sep;
 	const char *argv0 = argv[0];
 
 	assert(core->config != NULL);
 
 	memset(core->config, '\0', sizeof(*core->config));
 	core->config->S_arg_fd = -1;
-	core->config->c_arg = "6085";
+	core->config->bind_address = "0.0.0.0";
+	core->config->local_port = "6085";
+	core->config->remote_port = "6085";
 	core->config->timeout = 5;
 	core->config->p_arg = AGENT_PERSIST_DIR;
 	core->config->H_arg = AGENT_HTML_DIR;
 	core->config->K_arg = AGENT_CONF_DIR "/agent_secret";
 	core->config->loglevel = 2;
 	core->config->k_arg = 0;
-	while ((opt = getopt(argc, argv, "C:c:dg:H:hkK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
+	core->config->n_arg = strdup("");
+	AN(core->config->n_arg);
+	while ((opt = getopt(argc, argv, "a:C:c:dg:H:hkK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
 		switch (opt) {
+		case 'a':
+			core->config->bind_address = optarg;
+			break;
 		case 'C':
 			core->config->C_arg = optarg;
 			break;
 		case 'c':
-			core->config->c_arg = optarg;
+			sep = strchr(optarg, ':');
+			if (sep) {
+				*sep = '\0';
+				core->config->remote_port = sep + 1;
+			} else
+				core->config->remote_port = optarg;
+			core->config->local_port = optarg;
 			break;
 		case 'd':
 			core->config->d_arg = 1;
@@ -221,20 +236,29 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 		}
 	}
 
+	if (optind < argc) {
+		fprintf(stderr, "Error: too many arguments.\n\n");
+		usage(*argv);
+		exit(1);
+	}
+
 	assert(core->config->K_arg);
-	core->config->userpass = get_first_line(core->config->K_arg);
-	if (!core->config->userpass)
+	core->config->user = get_first_line(core->config->K_arg);
+	if (!core->config->user)
 		errx(1,
 		    "No password present."
 		    " Put one in %s using \"user:password\" format",
 		    core->config->K_arg);
-	core->config->user = strdup(core->config->userpass);
 	core->config->password = strchr(core->config->user, ':');
 	if (core->config->password == NULL ||
 	    *(core->config->password + 1)== '\0')
 		errx(1,
 		    "Username and password string does not contain a colon.\n"
 		    "Format: \"username:password\"");
+
+	core->config->auth_token = base64_encode(BASE64, core->config->user);
+	AN(core->config->auth_token);
+
 	*core->config->password = '\0';
 	core->config->password++;
 }
@@ -343,8 +367,8 @@ main(int argc, char **argv)
 	assert(core.config);
 	core.plugins = NULL;
 	core_alloc_plugins(&core);
-	core_opt(&core, argc, argv);
 	base64_init();
+	core_opt(&core, argc, argv);
 	core_plugins(&core);
 
 	if (core.config->P_arg)

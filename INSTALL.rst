@@ -40,8 +40,6 @@ from `Packagecloud <https://packagecloud.io/>`_
 `Varnish Agent for Varnish 4.0.x <https://packagecloud.io/varnishcache/varnish40/>`_ - `Repo setup 4.0 <https://packagecloud.io/varnishcache/varnish40/install/>`_
 
 
-Previous packages are available in `repo.varnish-cache.org <http://repo.varnish-cache.org/>`_
-
 See https://www.varnish-cache.org/installation/debian or https://www.varnish-cache.org/installation/redhat for further details.
 
 Running

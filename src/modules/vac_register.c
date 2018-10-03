@@ -55,17 +55,21 @@ struct vac_register_priv_t {
 static void
 generate_json(struct vac_register_priv_t *priv)
 {
+	struct agent_config_t *config;
+
+	config = priv->core->config;
 	assert(priv->vsb_out);
+
 	VSB_clear(priv->vsb_out);
 	VSB_printf(priv->vsb_out, "{\n");
-	VSB_printf(priv->vsb_out, "\t\"port\": \"%s\",\n", priv->core->config->c_arg);
+	VSB_printf(priv->vsb_out, "\t\"port\": \"%s\",\n", config->remote_port);
 	VSB_printf(priv->vsb_out, "\t\"user\": ");
-	VSB_quote(priv->vsb_out, priv->core->config->user, strlen(priv->core->config->user), 0);
+	VSB_quote(priv->vsb_out, config->user, strlen(config->user), 0);
 	VSB_printf(priv->vsb_out, ",\n");
 	VSB_printf(priv->vsb_out, "\t\"password\": ");
-	VSB_quote(priv->vsb_out, priv->core->config->password, strlen(priv->core->config->password), 0);
+	VSB_quote(priv->vsb_out, config->password, strlen(config->password), 0);
 	VSB_printf(priv->vsb_out, ",\n");
-	VSB_printf(priv->vsb_out, "\t\"dash-n\": \"%s\"\n", priv->core->config->n_arg ? priv->core->config->n_arg : "");
+	VSB_printf(priv->vsb_out, "\t\"dash-n\": \"%s\"\n", config->n_arg);
 	VSB_printf(priv->vsb_out, "}\n");
 	assert(VSB_finish(priv->vsb_out) == 0);
 }
@@ -92,9 +96,9 @@ vac_register_reply(struct http_request *request, const char *arg, void *data)
 	int ret;
 
 	(void)arg;
-	if (request->ndata) {
+	if (request->bodylen) {
 		free(vdata->vac_url);
-		DUP_OBJ(vdata->vac_url, request->data, request->ndata);
+		DUP_OBJ(vdata->vac_url, request->body, request->bodylen);
 		logger(vdata->logger, "Set new VAC URL: %s", vdata->vac_url);
 	}
 	

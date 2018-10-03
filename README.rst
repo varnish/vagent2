@@ -19,11 +19,12 @@ SYNOPSIS
 
 ::
 
-        varnish-agent [-C cafile] [-c port] [-d] [-g group] [-H directory]
-                      [-h] [-k allow-insecure-vac] [-K agent-secret-file]
-                      [-n name] [-P pidfile] [-p directory] [-q] [-r]
-                      [-S varnishd-secret-file] [-T host:port] [-t timeout]
-                      [-u user] [-V] [-v] [-z vac_register_url]
+        varnish-agent [-C cafile] [-c local-port[:remote-port]] [-d]
+                      [-g group] [-H directory] [-h] [-k allow-insecure-vac]
+                      [-K agent-secret-file] [-n name] [-P pidfile]
+                      [-p directory] [-q] [-r] [-S varnishd-secret-file]
+                      [-T host:port] [-t timeout] [-u user] [-V] [-v]
+                      [-z vac_register_url]
 
 DESCRIPTION
 ===========
@@ -46,7 +47,8 @@ where HTML is read from (``-H``), see ``varnish-agent -h``.
 
 OPTIONS
 =======
-
+-a bind_address
+            Address to bind against. Defaults to ``0.0.0.0``.
 -C cafile   CA certificate for use by the cURL module. For use when
             the VAC register URL is specified as https using a
             certificate that can not be validated with the
@@ -55,6 +57,13 @@ OPTIONS
 
 -c port     Port number to listen for incoming connections. Defaults to
             6085.
+
+            The port argument can take the form of local-port:remote-port
+            for cases where the API should be called remotely using a
+            different port (due to some translation occurring). When
+            omitted the remote port is the same as the local port. The
+            local port is bound by the agent, and the remote port is
+            reached by the VAC.
 
 -d          Run in foreground.
 
@@ -117,6 +126,13 @@ However, if you wish to boot Varnish up with the last known VCL, you may
 tell Varnish to use ``/var/lib/varnish-agent/boot.vcl``. E.g by modifying
 ``/etc/sysconfig/varnish`` or ``/etc/default/varnish`` and changing the
 ``-f`` argument.
+
+VARNISH VERSION
+=====================
+
+Varnish Agent 4.0.x is for Varnish 4.0 series.
+
+Varnish Agent 4.1.x is for Varnish 4.1 series.
 
 DESIGN
 ======
@@ -186,4 +202,4 @@ COPYRIGHT
 This document is licensed under the same license as the Varnish Agent
 itself. See LICENSE for details.
 
-* Copyright 2012-2015 Varnish Software Group
+* Copyright 2012-2017 Varnish Software Group

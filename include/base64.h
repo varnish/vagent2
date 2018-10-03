@@ -29,19 +29,12 @@
 #ifndef BASE64_H
 #define BASE64_H
 enum alphabets {
-	BASE64 = 0,
-	BASE64URL = 1,
-	BASE64URLNOPAD = 2,
+	BASE64,
+	BASE64URL,
+	BASE64URLNOPAD,
 	N_ALPHA
 };
 
-struct e_alphabet {
-	const char *b64;
-	char i64[256];
-	char padding;
-};
-
-size_t base64_encode(enum alphabets al, const char *in, size_t inlen, char *out, size_t outlen);
-int base64_decode(enum alphabets al, char *d, unsigned dlen, const char *s);
 int base64_init(void);
+struct vsb * base64_encode(enum alphabets, const char *);
 #endif

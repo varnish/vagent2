@@ -202,13 +202,13 @@ vcl_store(struct http_request *request, struct vcl_priv_t *vcl,
 	struct ipc_ret_t *vret, struct agent_core_t *core, const char *id)
 {
 	int ret;
-	assert(request->data);
-	if (request->ndata == 0) {
+	assert(request->body);
+	if (request->bodylen == 0) {
 		warnlog(vcl->logger, "vcl.inline with ndata == 0");
 		ANSWER(vret, 400, "No VCL found");
 		return (500);
 	}
-	assert(request->ndata > 0);
+	assert(request->bodylen > 0);
 	assert(id);
 	assert(strlen(id)>0);
 
@@ -216,14 +216,14 @@ vcl_store(struct http_request *request, struct vcl_priv_t *vcl,
 		ANSWER(vret, 400, "VCL name is not valid");
 		return (500);
 	}
-	const char *end = (((char*)request->data)[request->ndata-1] == '\n') ? "" : "\n";
+	const char *end = (((char*)request->body)[request->bodylen-1] == '\n') ? "" : "\n";
 
 	ipc_run(vcl->vadmin, vret,
 	    "vcl.inline %s << __EOF_%s__\n%s%s__EOF_%s__",
-	    id, id, (char *)request->data, end, id);
+	    id, id, (char *)request->body, end, id);
 	if (vret->status == 200) {
 		logger(vcl->logger, "VCL stored OK");
-		ret = vcl_persist(vcl->logger, id, request->data, core);
+		ret = vcl_persist(vcl->logger, id, request->body, core);
 		if (ret) {
 			warnlog(vcl->logger,
 			    "vcl.inline OK, but persisting to disk failed."

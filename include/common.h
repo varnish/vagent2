@@ -49,7 +49,9 @@ struct agent_config_t {
 
 	int d_arg; // 0 - fork. 1 - foreground.
 	int loglevel;
-	const char *c_arg; // Listening port for incoming requests
+	const char *bind_address;
+	const char *local_port; // Listening port for incoming requests
+	const char *remote_port; // Port to connect to from the outside
 	char *C_arg; // CURLOPT_CAINFO param
 	int k_arg; // CURLOPT_SSL_VERIFYPEER param
 	const char *p_arg; // Persistence directory
@@ -58,7 +60,7 @@ struct agent_config_t {
 	char *vac_arg;
 	char *password;
 	char *user;
-	char *userpass;
+	struct vsb *auth_token;
 };
 
 /*
