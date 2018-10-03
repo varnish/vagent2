@@ -1,6 +1,6 @@
 Summary: varnish-agent
 Name: varnish-agent
-Version: 4.1.3
+Version: 4.1.4
 Release: %{vrelease}%{?dist}
 License: BSD
 Group: System Environment/Daemons
@@ -93,6 +93,11 @@ if [ $1 -lt 1 ]; then
 fi
 
 %changelog
+* Wed Oct 03 2018 Marius Magureanu <marius@varnish-software.com> - 4.1.4
+- Fixed uploading larger VCL files
+- Added the option to set a host for running the agent
+- Various other small fixes
+
 * Tue Oct 10 2017 Hugo Cruz <hugocruz.software.developer@gmail.com> - 4.1.3
 - fixed regression in backend handling
 - Test coverage
