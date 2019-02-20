@@ -111,6 +111,10 @@ OPTIONS
 
 -u user     User to run as. Defaults to ``varnish``.
 
+-w curl-timeout
+            Timeout in seconds used for sending stats against the VAC.
+            Defaults to 2 seconds.
+
 -V          Print version.
 
 -v          Verbose mode. Be extra chatty, including all CLI chatter.

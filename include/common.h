@@ -54,6 +54,7 @@ struct agent_config_t {
 	const char *remote_port; // Port to connect to from the outside
 	char *C_arg; // CURLOPT_CAINFO param
 	int k_arg; // CURLOPT_SSL_VERIFYPEER param
+	long w_arg; // CURLOPT_TIMEOUT param
 	const char *p_arg; // Persistence directory
 	const char *H_arg; // HTML directory
 	char *P_arg; // Pid file
