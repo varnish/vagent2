@@ -42,6 +42,7 @@ struct curl_priv_t {
 	char *cainfo;
 	int skipsslverifypeer;
 	unsigned int ndata;
+	long timeout;
 };
 
 static size_t
@@ -113,7 +114,7 @@ issue_curl(void *priv, char *url, struct ipc_ret_t *ret)
 		curl_easy_setopt(curl, CURLOPT_IPRESOLVE, CURL_IPRESOLVE_V4);
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
 		curl_easy_setopt(curl, CURLOPT_URL, url);
-		curl_easy_setopt(curl, CURLOPT_TIMEOUT, 2);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, private->timeout);
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 0);
 		curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, dropdata);
@@ -160,6 +161,7 @@ curl_init(struct agent_core_t *core)
 	priv->logger = ipc_register(core, "logger");
 	priv->cainfo = core->config->C_arg;
 	priv->skipsslverifypeer = core->config->k_arg;
+	priv->timeout = core->config->w_arg;
 	plug->data = (void *)priv;
 	plug->start = ipc_start;
 	plug->ipc->priv = priv;

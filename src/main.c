@@ -128,6 +128,7 @@ usage(const char *argv0)
 	    "    -T host:port          Varnishd administrative interface.\n"
 	    "    -t timeout            Timeout for talking to varnishd (default: 5 seconds).\n"
 	    "    -u user               User to run as (default: varnish)\n"
+	    "    -w curl-timeout       Timeout for pushing stats against the VAC (default: 2 seconds).\n"
 	    "    -V                    Print version.\n"
 	    "    -v                    Verbose mode. Output everything.\n"
 	    "    -z vac_register_url   VAC interface.\n\n",
@@ -140,6 +141,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	int opt;
 	char *sep;
 	const char *argv0 = argv[0];
+	long curl_timeout;
 
 	assert(core->config != NULL);
 
@@ -148,6 +150,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->bind_address = "0.0.0.0";
 	core->config->local_port = "6085";
 	core->config->remote_port = "6085";
+	core->config->w_arg = 2;
 	core->config->timeout = 5;
 	core->config->p_arg = AGENT_PERSIST_DIR;
 	core->config->H_arg = AGENT_HTML_DIR;
@@ -156,7 +159,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	core->config->k_arg = 0;
 	core->config->n_arg = strdup("");
 	AN(core->config->n_arg);
-	while ((opt = getopt(argc, argv, "a:C:c:dg:H:hkK:n:P:p:qrS:T:t:u:Vvz:")) != -1) {
+	while ((opt = getopt(argc, argv, "a:C:c:dg:H:hkK:n:P:p:qrS:T:t:u:w:Vvz:")) != -1) {
 		switch (opt) {
 		case 'a':
 			core->config->bind_address = optarg;
@@ -218,6 +221,11 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 			break;
 		case 't':
 			core->config->timeout = strtod(optarg, NULL);
+			break;
+		case 'w':
+			curl_timeout = strtol(optarg, NULL, 10);
+			if (curl_timeout > 0)
+				core->config->w_arg = curl_timeout; 
 			break;
 		case 'u':
 			core->config->u_arg = optarg;
