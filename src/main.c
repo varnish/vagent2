@@ -141,6 +141,7 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 	int opt;
 	char *sep;
 	const char *argv0 = argv[0];
+	long curl_timeout;
 
 	assert(core->config != NULL);
 
@@ -222,7 +223,9 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 			core->config->timeout = strtod(optarg, NULL);
 			break;
 		case 'w':
-			core->config->w_arg = strtol(optarg, NULL, 10);
+			curl_timeout = strtol(optarg, NULL, 10);
+			if (curl_timeout > 0)
+				core->config->w_arg = curl_timeout; 
 			break;
 		case 'u':
 			core->config->u_arg = optarg;
