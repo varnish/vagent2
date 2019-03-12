@@ -223,9 +223,16 @@ core_opt(struct agent_core_t *core, int argc, char **argv)
 			core->config->timeout = strtod(optarg, NULL);
 			break;
 		case 'w':
-			curl_timeout = strtol(optarg, NULL, 10);
-			if (curl_timeout > 0)
-				core->config->w_arg = curl_timeout; 
+			/* repurposing sep to check the end of the string */
+			curl_timeout = strtol(optarg, &sep, 10);
+			/* XXX: should there be a maximum? */
+			/* XXX: should zero mean no timeout? */
+			if (*sep != '\0' || curl_timeout <= 0) {
+				fprintf(stderr,
+				    "Invalid timeout: '%s'\n", optarg);
+				exit(1);
+			}
+			core->config->w_arg = curl_timeout;
 			break;
 		case 'u':
 			core->config->u_arg = optarg;

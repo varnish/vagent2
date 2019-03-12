@@ -45,4 +45,13 @@ for a in $ARGS2; do
 
 done
 
+# curl timeout parsing (-h prevents the agent from actually running)
+for tmo in -1 0 2s; do
+	$ORIGPWD/../src/varnish-agent -w $tmo -h 2>&1 | grep -q "Invalid timeout"
+	if [ $? -eq "0" ]; then pass;
+	else fail "Invalid timeout not caught: $tmo"
+	fi
+	inc
+done
+
 exit $ret
