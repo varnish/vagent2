@@ -1,3 +1,18 @@
+==============
+Project status
+==============
+
+The code in this repository only targets Varnish versions 3.0 and 4.X, which are
+all retired. As a result, this repository is no longer maintained.
+
+Some commits may still find their way here, and bugfixing PRs will be
+considered, but tickets will be rejected. If you have any question or need help,
+please use the
+`Varnish help channels <http://varnish-cache.org/support/index.html>`_.
+
+Varnish Software offers an `enhanced version of the agent <https://docs.varnish-software.com/varnish-administration-console/varnish-agent/>`_,
+compatible with versions 4.X and 6.x, as part of `Varnish Plus <https://docs.varnish-software.com/varnish-cache-plus/>`_.
+
 =============
 varnish-agent
 =============
